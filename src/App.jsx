@@ -1,0 +1,365 @@
+import { useState } from "react";
+import Simulation3D from "./components/Simulation3D";
+import Charts from "./components/Charts";
+import Controls from "./components/Controls";
+
+/**
+ * SIMPLIFIED MOVING MAN REACT SIMULATION
+ *
+ * A physics simulation that demonstrates 1D kinematics with constant acceleration.
+ * Features record/playback functionality with real-time graphing.
+ *
+ * REFACTORED VERSION:
+ * - Separated into components: Simulation3D, Charts, Controls
+ * - All logic consolidated in App component
+ * - Maintained all original functionality
+ */
+
+// ============================================================================
+// HELPER UTILITIES
+// ============================================================================
+
+/**
+ * Simple number formatting utility
+ * Formats numbers to 2 decimal places, handles non-finite numbers
+ */
+function formatNumber(n) {
+  return Number.isFinite(Number(n)) ? Number(n).toFixed(1) : "0";
+}
+
+// ============================================================================
+// PHYSICS UTILITIES
+// ============================================================================
+
+/**
+ * Calculate physics step for recording mode
+ * Simple 1D kinematics with constant acceleration
+ */
+function calculatePhysicsStep(simulation, deltaTime, realElapsedTime) {
+  const newVelocity = simulation.velocity + simulation.acceleration * deltaTime;
+  const avgVelocity = (simulation.velocity + newVelocity) / 2;
+  const newPosition = simulation.position + avgVelocity * deltaTime;
+
+  // Use real elapsed time for display, but keep physics consistent
+  const newTime =
+    realElapsedTime !== undefined
+      ? realElapsedTime
+      : simulation.time + deltaTime;
+
+  return {
+    position: newPosition,
+    velocity: newVelocity,
+    time: newTime,
+    playing: simulation.playing,
+    acceleration: simulation.acceleration,
+  };
+}
+
+/**
+ * Find the closest recorded state to a given time
+ */
+function findClosestState(recordedData, targetTime) {
+  let closest = recordedData[0];
+  for (let i = 0; i < recordedData.length; i++) {
+    const state = recordedData[i];
+    if (
+      Math.abs(state.time - targetTime) < Math.abs(closest.time - targetTime)
+    ) {
+      closest = state;
+    }
+  }
+  return closest;
+}
+
+/**
+ * Handle playback mode simulation step
+ */
+function handlePlaybackStep(data, deltaTime) {
+  const newTime = data.playbackTime + deltaTime;
+  const maxTime =
+    data.recordedData.length > 0
+      ? data.recordedData[data.recordedData.length - 1].time
+      : 0;
+
+  if (newTime >= maxTime) {
+    // End of playback: stop at last recorded state
+    const lastState = data.recordedData[data.recordedData.length - 1];
+    return {
+      simulation: {
+        position: lastState.position,
+        velocity: lastState.velocity,
+        acceleration: lastState.acceleration,
+        time: lastState.time,
+        playing: false,
+      },
+      data: {
+        playbackTime: lastState.time,
+        isPlayback: false,
+      },
+      isEndOfPlayback: true,
+    };
+  } else {
+    // Find closest recorded state to current time
+    const closest = findClosestState(data.recordedData, newTime);
+    return {
+      simulation: {
+        position: closest.position,
+        velocity: closest.velocity,
+        acceleration: closest.acceleration,
+        time: newTime,
+        playing: true,
+      },
+      data: {
+        playbackTime: newTime,
+      },
+      isEndOfPlayback: false,
+    };
+  }
+}
+
+/**
+ * Handle recording mode simulation step
+ */
+function handleRecordingStep(simulation, deltaTime, realElapsedTime) {
+  const newSimulation = calculatePhysicsStep(
+    simulation,
+    deltaTime,
+    realElapsedTime
+  );
+
+  // Create new recorded state
+  const newRecordedState = {
+    time: newSimulation.time,
+    position: newSimulation.position,
+    velocity: newSimulation.velocity,
+    acceleration: simulation.acceleration,
+  };
+
+  return {
+    simulation: newSimulation,
+    recordedState: newRecordedState,
+  };
+}
+
+// ============================================================================
+// MAIN APP COMPONENT
+// ============================================================================
+
+function App() {
+  // ============================================================================
+  // STATE MANAGEMENT
+  // ============================================================================
+
+  // Core simulation state
+  const [simulation, setSimulation] = useState({
+    position: 0, // Current position (meters)
+    velocity: 0, // Current velocity (m/s)
+    acceleration: 0, // Current acceleration (m/s²)
+    time: 0, // Current simulation time (seconds)
+    playing: false, // Is simulation running?
+  });
+
+  // Data and mode state
+  const [data, setData] = useState({
+    recordedData: [{ time: 0, position: 0, velocity: 0, acceleration: 0 }], // All simulation states
+    selectedMode: "record", // 'record' or 'playback'
+    playbackTime: 0, // Current playback time
+    isPlayback: false, // Currently playing back?
+  });
+
+  // ============================================================================
+  // CONTROL FUNCTIONS
+  // ============================================================================
+
+  // Reset everything to initial state
+  const reset = () => {
+    setSimulation({
+      position: 0,
+      velocity: 0,
+      acceleration: 0,
+      time: 0,
+      playing: false,
+    });
+    setData((prev) => ({
+      ...prev,
+      recordedData: [{ time: 0, position: 0, velocity: 0, acceleration: 0 }],
+      playbackTime: 0,
+      isPlayback: false,
+      selectedMode: "record",
+    }));
+  };
+
+  // Toggle play/pause
+  const togglePlayPause = () => {
+    if (simulation.playing) {
+      // Stop current operation
+      setSimulation((prev) => ({ ...prev, playing: false }));
+      setData((prev) => ({ ...prev, isPlayback: false }));
+    } else {
+      // Start based on selected mode
+      setSimulation((prev) => ({ ...prev, playing: true }));
+      if (data.selectedMode === "playback" && data.recordedData.length > 0) {
+        setData((prev) => ({ ...prev, isPlayback: true }));
+      }
+    }
+  };
+
+  // Switch between Record and Playback modes
+  const switchMode = (mode) => {
+    setData((prev) => ({ ...prev, selectedMode: mode }));
+    console.log("data", data);
+
+    if (mode === "playback" && data.recordedData.length > 0) {
+      // Switch to playback: reset playback time
+      setSimulation((prev) => ({
+        ...prev,
+        time: 0,
+        playing: false,
+        position: data.recordedData[0].position,
+        velocity: data.recordedData[0].velocity,
+        acceleration: data.recordedData[0].acceleration,
+      }));
+      setData((prev) => ({
+        ...prev,
+        playbackTime: 0,
+        isPlayback: false,
+      }));
+    } else if (mode === "record") {
+      // Switch to record: continue from latest recorded data
+      if (data.recordedData.length > 0) {
+        const lastState = data.recordedData[data.recordedData.length - 1];
+        setSimulation({
+          position: lastState.position,
+          velocity: lastState.velocity,
+          acceleration: lastState.acceleration,
+          time: lastState.time,
+          playing: false,
+        });
+        setData((prev) => ({
+          ...prev,
+          isPlayback: false,
+        }));
+      } else {
+        // No recorded data: start from beginning
+        setSimulation({
+          position: 0,
+          velocity: 0,
+          acceleration: 0,
+          time: 0,
+          playing: false,
+        });
+        setData((prev) => ({
+          ...prev,
+          isPlayback: false,
+        }));
+      }
+    }
+  };
+
+  // Clear all recorded data
+  const clearRecordedData = () => {
+    setData((prev) => ({
+      ...prev,
+      recordedData: [{ time: 0, position: 0, velocity: 0, acceleration: 0 }],
+      playbackTime: 0,
+      selectedMode: "record",
+    }));
+    setSimulation((prev) => ({ ...prev, time: 0 }));
+  };
+
+  // ============================================================================
+  // PHYSICS STEP FUNCTION - Using extracted utilities
+  // ============================================================================
+
+  // Main simulation step using extracted physics utilities
+  const handleSimulationStep = (deltaTime, realElapsedTime) => {
+    if (data.isPlayback && data.selectedMode === "playback") {
+      // PLAYBACK MODE: Use recorded data
+      const result = handlePlaybackStep(data, deltaTime);
+      setSimulation(result.simulation);
+      setData((prev) => ({ ...prev, ...result.data }));
+    } else {
+      // RECORDING MODE: Calculate physics and record data
+      const result = handleRecordingStep(
+        simulation,
+        deltaTime,
+        realElapsedTime
+      );
+      setSimulation(result.simulation);
+
+      // Record state (always record for chart display)
+      setData((prev) => ({
+        ...prev,
+        recordedData: [...prev.recordedData, result.recordedState],
+      }));
+    }
+  };
+
+  // Handle timeline scrubbing from charts
+  const handleSetPlaybackTime = (newTime) => {
+    setData((prev) => ({ ...prev, playbackTime: newTime }));
+    const closestState = data.recordedData.find(
+      (s) => Math.abs(s.time - newTime) < 0.016
+    );
+    if (closestState) {
+      setSimulation({
+        position: closestState.position,
+        velocity: closestState.velocity,
+        acceleration: closestState.acceleration,
+        time: closestState.time,
+        playing: simulation.playing,
+      });
+    }
+  };
+
+  // Handler for simulation parameter changes
+  const handleSimulationChange = (changes) => {
+    setSimulation((prev) => ({ ...prev, ...changes }));
+  };
+
+  // ============================================================================
+  // RENDER - Using refactored components
+  // ============================================================================
+
+  return (
+    <div className="min-h-screen w-full p-2 flex flex-col gap-1 box-border bg-gradient-to-br bg-blue-700 text-gray-800 overflow-x-hidden">
+      {/* Simulation Display Area */}
+      <div className="relative w-full mb-1">
+        <Simulation3D
+          simulation={simulation}
+          onSimulationStep={handleSimulationStep}
+        />
+
+        {/* Time Display */}
+        <div
+          className="absolute top-2 right-4 font-mono text-3xl font-bold z-10 text-gray-800"
+          style={{ textShadow: "1px 1px 2px rgba(255, 255, 255, 0.8)" }}
+        >
+          {formatNumber(simulation.time)} s
+        </div>
+      </div>
+
+      {/* Main Content Area */}
+      <div className="flex gap-1 w-full">
+        {/* Left Panel: Charts */}
+        <Charts
+          data={data}
+          simulation={simulation}
+          onSetPlaybackTime={handleSetPlaybackTime}
+        />
+        {/* Right Panel: Controls */}
+        <Controls
+          simulation={simulation}
+          data={data}
+          onSimulationChange={handleSimulationChange}
+          onModeChange={switchMode}
+          onTogglePlayPause={togglePlayPause}
+          onReset={reset}
+          onClearRecordedData={clearRecordedData}
+        />
+      </div>
+    </div>
+  );
+}
+
+export default App;
