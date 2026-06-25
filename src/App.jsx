@@ -2,6 +2,7 @@ import { useState } from "react";
 import Simulation3D from "./components/Simulation3D";
 import Charts from "./components/Charts";
 import Controls from "./components/Controls";
+import { handlePlaybackStep, handleRecordingStep } from "./engine/playback";
 
 /**
  * SIMPLIFIED MOVING MAN REACT SIMULATION
@@ -25,120 +26,6 @@ import Controls from "./components/Controls";
  */
 function formatNumber(n) {
   return Number.isFinite(Number(n)) ? Number(n).toFixed(1) : "0";
-}
-
-// ============================================================================
-// PHYSICS UTILITIES
-// ============================================================================
-
-/**
- * Calculate physics step for recording mode
- * Simple 1D kinematics with constant acceleration
- */
-function calculatePhysicsStep(simulation, deltaTime, realElapsedTime) {
-  const newVelocity = simulation.velocity + simulation.acceleration * deltaTime;
-  const avgVelocity = (simulation.velocity + newVelocity) / 2;
-  const newPosition = simulation.position + avgVelocity * deltaTime;
-
-  // Use real elapsed time for display, but keep physics consistent
-  const newTime =
-    realElapsedTime !== undefined
-      ? realElapsedTime
-      : simulation.time + deltaTime;
-
-  return {
-    position: newPosition,
-    velocity: newVelocity,
-    time: newTime,
-    playing: simulation.playing,
-    acceleration: simulation.acceleration,
-  };
-}
-
-/**
- * Find the closest recorded state to a given time
- */
-function findClosestState(recordedData, targetTime) {
-  let closest = recordedData[0];
-  for (let i = 0; i < recordedData.length; i++) {
-    const state = recordedData[i];
-    if (
-      Math.abs(state.time - targetTime) < Math.abs(closest.time - targetTime)
-    ) {
-      closest = state;
-    }
-  }
-  return closest;
-}
-
-/**
- * Handle playback mode simulation step
- */
-function handlePlaybackStep(data, deltaTime) {
-  const newTime = data.playbackTime + deltaTime;
-  const maxTime =
-    data.recordedData.length > 0
-      ? data.recordedData[data.recordedData.length - 1].time
-      : 0;
-
-  if (newTime >= maxTime) {
-    // End of playback: stop at last recorded state
-    const lastState = data.recordedData[data.recordedData.length - 1];
-    return {
-      simulation: {
-        position: lastState.position,
-        velocity: lastState.velocity,
-        acceleration: lastState.acceleration,
-        time: lastState.time,
-        playing: false,
-      },
-      data: {
-        playbackTime: lastState.time,
-        isPlayback: false,
-      },
-      isEndOfPlayback: true,
-    };
-  } else {
-    // Find closest recorded state to current time
-    const closest = findClosestState(data.recordedData, newTime);
-    return {
-      simulation: {
-        position: closest.position,
-        velocity: closest.velocity,
-        acceleration: closest.acceleration,
-        time: newTime,
-        playing: true,
-      },
-      data: {
-        playbackTime: newTime,
-      },
-      isEndOfPlayback: false,
-    };
-  }
-}
-
-/**
- * Handle recording mode simulation step
- */
-function handleRecordingStep(simulation, deltaTime, realElapsedTime) {
-  const newSimulation = calculatePhysicsStep(
-    simulation,
-    deltaTime,
-    realElapsedTime
-  );
-
-  // Create new recorded state
-  const newRecordedState = {
-    time: newSimulation.time,
-    position: newSimulation.position,
-    velocity: newSimulation.velocity,
-    acceleration: simulation.acceleration,
-  };
-
-  return {
-    simulation: newSimulation,
-    recordedState: newRecordedState,
-  };
 }
 
 // ============================================================================
