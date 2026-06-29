@@ -1,16 +1,10 @@
 import { Canvas } from "@react-three/fiber";
-import { useSimulationLoop } from "../hooks/useSimulationLoop";
 
 /**
  * 3D Simulation Component - Combines Sprite, Ground, and Simulation logic
  * Much simpler than the original separate components
  */
-function Simulation3D({ simulation, onSimulationStep }) {
-  useSimulationLoop({
-    playing: simulation.playing,
-    time: simulation.time,
-    onSimulationStep,
-  });
+function Simulation3D({ simulation }) {
 
   return (
     <div className="relative">

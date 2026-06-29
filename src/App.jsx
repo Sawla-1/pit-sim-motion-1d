@@ -2,7 +2,7 @@ import { useState } from "react";
 import Simulation3D from "./components/Simulation3D";
 import Charts from "./components/Charts";
 import Controls from "./components/Controls";
-import { handlePlaybackStep, handleRecordingStep } from "./engine/playback";
+import { useSimulationLoop } from "./hooks/useSimulationLoop";
 
 /**
  * SIMPLIFIED MOVING MAN REACT SIMULATION
@@ -52,6 +52,15 @@ function App() {
     selectedMode: "record", // 'record' or 'playback'
     playbackTime: 0, // Current playback time
     isPlayback: false, // Currently playing back?
+  });
+
+  useSimulationLoop({
+    playing: simulation.playing,
+    time: simulation.time,
+    simulation,
+    data,
+    setSimulation,
+    setData,
   });
 
   // ============================================================================
@@ -154,34 +163,6 @@ function App() {
     setSimulation((prev) => ({ ...prev, time: 0 }));
   };
 
-  // ============================================================================
-  // PHYSICS STEP FUNCTION - Using extracted utilities
-  // ============================================================================
-
-  // Main simulation step using extracted physics utilities
-  const handleSimulationStep = (deltaTime, realElapsedTime) => {
-    if (data.isPlayback && data.selectedMode === "playback") {
-      // PLAYBACK MODE: Use recorded data
-      const result = handlePlaybackStep(data, deltaTime);
-      setSimulation(result.simulation);
-      setData((prev) => ({ ...prev, ...result.data }));
-    } else {
-      // RECORDING MODE: Calculate physics and record data
-      const result = handleRecordingStep(
-        simulation,
-        deltaTime,
-        realElapsedTime
-      );
-      setSimulation(result.simulation);
-
-      // Record state (always record for chart display)
-      setData((prev) => ({
-        ...prev,
-        recordedData: [...prev.recordedData, result.recordedState],
-      }));
-    }
-  };
-
   // Handle timeline scrubbing from charts
   const handleSetPlaybackTime = (newTime) => {
     setData((prev) => ({ ...prev, playbackTime: newTime }));
@@ -212,10 +193,7 @@ function App() {
     <div className="min-h-screen w-full p-2 flex flex-col gap-1 box-border bg-gradient-to-br bg-blue-700 text-gray-800 overflow-x-hidden">
       {/* Simulation Display Area */}
       <div className="relative w-full mb-1">
-        <Simulation3D
-          simulation={simulation}
-          onSimulationStep={handleSimulationStep}
-        />
+        <Simulation3D simulation={simulation} />
 
         {/* Time Display */}
         <div
