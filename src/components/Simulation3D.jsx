@@ -4,7 +4,7 @@ import { Canvas } from "@react-three/fiber";
  * 3D Simulation Component - Combines Sprite, Ground, and Simulation logic
  * Much simpler than the original separate components
  */
-function Simulation3D({ simulation }) {
+function Simulation3D({ position }) {
 
   return (
     <div className="relative">
@@ -51,7 +51,7 @@ function Simulation3D({ simulation }) {
         </group>
 
         {/* Orange moving sprite */}
-        <sprite position={[simulation.position, 0, 0]} scale={[0.8, 1.2, 1]}>
+        <sprite position={[position, 0, 0]} scale={[0.8, 1.2, 1]}>
           <spriteMaterial color="orange" />
         </sprite>
       </Canvas>
