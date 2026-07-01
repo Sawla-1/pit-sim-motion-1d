@@ -11,8 +11,8 @@ export function useSimulationLoop({
   setPlaying,
 }) {
   const last = useRef(performance.now());
-  const realTimeStart = useRef(null);
-  const pauseStartTime = useRef(null);
+  const recordRealTimeStart = useRef(null);
+  const recordPauseStartTime = useRef(null);
 
   // Always-current refs so the RAF callback reads fresh state every tick
   const simulationRef = useRef(simulation);
@@ -20,30 +20,31 @@ export function useSimulationLoop({
   const dataRef = useRef(data);
   dataRef.current = data;
 
-  // Reset realTimeStart when simulation time is reset to 0
+  // Reset record timing refs when simulation time is reset to 0
   useEffect(() => {
     if (time === 0) {
-      realTimeStart.current = null;
-      pauseStartTime.current = null;
+      recordRealTimeStart.current = null;
+      recordPauseStartTime.current = null;
     }
   }, [time]);
 
-  // Track pause/resume to adjust timing
+  // Track pause/resume for record-mode timing only; playback does not touch these refs
   useEffect(() => {
     if (playing) {
-      // Resuming from pause - adjust realTimeStart to account for pause duration
-      if (pauseStartTime.current !== null && realTimeStart.current !== null) {
+      // Resuming from a record-mode pause — adjust start time to exclude pause duration
+      if (recordPauseStartTime.current !== null && recordRealTimeStart.current !== null) {
         const pauseDuration =
-          (performance.now() - pauseStartTime.current) / 1000;
-        realTimeStart.current += pauseDuration * 1000; // Add pause time to start time
-        pauseStartTime.current = null;
+          (performance.now() - recordPauseStartTime.current) / 1000;
+        recordRealTimeStart.current += pauseDuration * 1000;
+        recordPauseStartTime.current = null;
       }
-    } else {
-      // Pausing - record when pause started
-      if (realTimeStart.current !== null) {
-        pauseStartTime.current = performance.now();
+    } else if (dataRef.current.selectedMode === "record") {
+      // Pausing in record mode — stamp when the pause started
+      if (recordRealTimeStart.current !== null) {
+        recordPauseStartTime.current = performance.now();
       }
     }
+    // Pausing in playback mode: no-op — playback has no timing refs to maintain
   }, [playing]);
 
   // Fixed timestep animation loop with frame accumulation for consistent physics
@@ -57,28 +58,24 @@ export function useSimulationLoop({
       last.current = now;
 
       if (playing) {
-        // Set start time when play button is first pressed
-        if (realTimeStart.current === null) {
-          realTimeStart.current = now;
-        }
-
-        // Calculate real elapsed time for display purposes
-        const realElapsedTime = (now - realTimeStart.current) / 1000;
-
-        // Frame accumulation: run multiple physics steps if needed
         accumulator += frameTime;
         while (accumulator >= FIXED_TIMESTEP) {
           const sim = simulationRef.current;
           const dat = dataRef.current;
 
           if (dat.selectedMode === "playback" && dat.recordedData.length > 1) {
-            // PLAYBACK MODE: advance through recorded data
+            // PLAYBACK MODE: advance through recorded data — no wall-clock refs needed
             const result = handlePlaybackStep(dat, FIXED_TIMESTEP);
             setSimulation(result.simulation);
             setData((prev) => ({ ...prev, ...result.data }));
             if (result.isEndOfPlayback) setPlaying(false);
           } else {
-            // RECORDING MODE: calculate physics and append to recorded data
+            // RECORDING MODE: anchor start time to current sim.time so that
+            // resuming after a mode round-trip begins the clock from the right offset
+            if (recordRealTimeStart.current === null) {
+              recordRealTimeStart.current = now - sim.time * 1000;
+            }
+            const realElapsedTime = (now - recordRealTimeStart.current) / 1000;
             const result = handleRecordingStep(sim, FIXED_TIMESTEP, realElapsedTime);
             setSimulation(result.simulation);
             setData((prev) => ({
