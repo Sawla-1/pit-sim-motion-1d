@@ -36,33 +36,22 @@ function Charts({ data, simulation, onSetPlaybackTime }) {
   const chartRefs = useRef([]);
 
   // Build chart data - simplified
-  const buildChartData = (valueKey, color) => {
-    const chartData = data.recordedData.map((state) => ({
-      t: state.time,
-      x: state.position,
-      v: state.velocity,
-      a: state.acceleration,
-    }));
-    return {
-      datasets: [
-        {
-          data: chartData.map((item) => ({ x: item.t, y: item[valueKey] })),
-          borderColor: color,
-          pointRadius: 0,
-          pointHoverRadius: 6,
-          pointHitRadius: 10,
-          tension: 0,
-        },
-      ],
-    };
-  };
+  const buildChartData = (valueKey, color) => ({
+    datasets: [
+      {
+        data: data.recordedData.map((state) => ({ x: state.time, y: state[valueKey] })),
+        borderColor: color,
+        pointRadius: 0,
+        pointHoverRadius: 6,
+        pointHitRadius: 10,
+        tension: 0,
+      },
+    ],
+  });
 
-  // Get max time for charts
-  const getMaxTime = () => {
-    return data.recordedData.length > 0
-      ? data.recordedData[data.recordedData.length - 1].time
-      : 0;
-  };
+  const maxTime = data.recordedData.length > 0
+    ? data.recordedData[data.recordedData.length - 1].time
+    : 0;
 
   // Drag handlers for timeline scrubbing
   const handleMouseDown = (event) => {
@@ -108,12 +97,12 @@ function Charts({ data, simulation, onSetPlaybackTime }) {
         // console.log("canvas.offsetLeft", canvas.offsetLeft); // chartcanvas start from left side of screen
         // console.log("x = event.clientX - canvas.offsetLeft", x);
 
-        const timeValue = (x / canvas.offsetWidth) * getMaxTime(); // time value
+        const timeValue = (x / canvas.offsetWidth) * maxTime; // time value
         // console.log("canvas.offsetWidth", canvas.offsetWidth); // chartcanvas width
         // console.log("getMaxTime()", getMaxTime());// max time
         // console.log("timeValue = (x / canvas.offsetWidth) * getMaxTime()", timeValue);
 
-        const clampedTime = Math.max(0, Math.min(getMaxTime(), timeValue)); // clamped time
+        const clampedTime = Math.max(0, Math.min(maxTime, timeValue)); // clamped time
         // console.log("Math.min(getMaxTime(), timeValue)", Math.min(getMaxTime(), timeValue));
         // console.log("clampedTime = Math.max(0, Math.min(getMaxTime(), timeValue))", clampedTime);
         // console.log("--------------------------------");
@@ -127,9 +116,7 @@ function Charts({ data, simulation, onSetPlaybackTime }) {
   };
 
   // Simplified chart options
-  const getChartOptions = (yLabel) => {
-    const maxTime = getMaxTime();
-
+  const getChartOptions = () => {
     return {
       responsive: true,
       animation: false,
@@ -219,8 +206,8 @@ function Charts({ data, simulation, onSetPlaybackTime }) {
               ✖
             </button>
             <Line
-              data={buildChartData("x", "#1976d2")}
-              options={getChartOptions("Position")}
+              data={buildChartData("position", "#1976d2")}
+              options={getChartOptions()}
               ref={(ref) => {
                 if (ref) chartRefs.current[0] = ref;
               }}
@@ -256,8 +243,8 @@ function Charts({ data, simulation, onSetPlaybackTime }) {
               ✖
             </button>
             <Line
-              data={buildChartData("v", "#d32f2f")}
-              options={getChartOptions("Velocity")}
+              data={buildChartData("velocity", "#d32f2f")}
+              options={getChartOptions()}
               ref={(ref) => {
                 if (ref) chartRefs.current[1] = ref;
               }}
@@ -293,8 +280,8 @@ function Charts({ data, simulation, onSetPlaybackTime }) {
               ✖
             </button>
             <Line
-              data={buildChartData("a", "#2e7d32")}
-              options={getChartOptions("Acceleration")}
+              data={buildChartData("acceleration", "#2e7d32")}
+              options={getChartOptions()}
               ref={(ref) => {
                 if (ref) chartRefs.current[2] = ref;
               }}

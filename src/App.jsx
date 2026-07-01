@@ -60,13 +60,7 @@ function App() {
   };
 
   // Toggle play/pause
-  const togglePlayPause = () => {
-    if (playing) {
-      setPlaying(false);
-    } else {
-      setPlaying(true);
-    }
-  };
+  const togglePlayPause = () => setPlaying(p => !p);
 
   // Switch between Record and Playback modes
   const switchMode = (mode) => {
