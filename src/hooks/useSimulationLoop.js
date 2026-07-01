@@ -8,6 +8,7 @@ export function useSimulationLoop({
   data,
   setSimulation,
   setData,
+  setPlaying,
 }) {
   const last = useRef(performance.now());
   const realTimeStart = useRef(null);
@@ -75,6 +76,7 @@ export function useSimulationLoop({
             const result = handlePlaybackStep(dat, FIXED_TIMESTEP);
             setSimulation(result.simulation);
             setData((prev) => ({ ...prev, ...result.data }));
+            if (result.isEndOfPlayback) setPlaying(false);
           } else {
             // RECORDING MODE: calculate physics and append to recorded data
             const result = handleRecordingStep(sim, FIXED_TIMESTEP, realElapsedTime);
@@ -92,5 +94,5 @@ export function useSimulationLoop({
     }
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
-  }, [playing, setSimulation, setData]); // setters are stable React refs; listed to satisfy exhaustive-deps
+  }, [playing, setSimulation, setData, setPlaying]); // setters are stable React refs; listed to satisfy exhaustive-deps
 }

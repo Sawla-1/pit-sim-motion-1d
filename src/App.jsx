@@ -17,8 +17,9 @@ function App() {
     velocity: 0, // Current velocity (m/s)
     acceleration: 0, // Current acceleration (m/s²)
     time: 0, // Current simulation time (seconds)
-    playing: false, // Is simulation running?
   });
+
+  const [playing, setPlaying] = useState(false);
 
   // Data and mode state
   const [data, setData] = useState({
@@ -28,12 +29,13 @@ function App() {
   });
 
   useSimulationLoop({
-    playing: simulation.playing,
+    playing,
     time: simulation.time,
     simulation,
     data,
     setSimulation,
     setData,
+    setPlaying,
   });
 
   // ============================================================================
@@ -47,8 +49,8 @@ function App() {
       velocity: 0,
       acceleration: 0,
       time: 0,
-      playing: false,
     });
+    setPlaying(false);
     setData((prev) => ({
       ...prev,
       recordedData: [{ time: 0, position: 0, velocity: 0, acceleration: 0 }],
@@ -59,12 +61,10 @@ function App() {
 
   // Toggle play/pause
   const togglePlayPause = () => {
-    if (simulation.playing) {
-      // Stop current operation
-      setSimulation((prev) => ({ ...prev, playing: false }));
+    if (playing) {
+      setPlaying(false);
     } else {
-      // Start based on selected mode
-      setSimulation((prev) => ({ ...prev, playing: true }));
+      setPlaying(true);
     }
   };
 
@@ -77,11 +77,11 @@ function App() {
       setSimulation((prev) => ({
         ...prev,
         time: 0,
-        playing: false,
         position: data.recordedData[0].position,
         velocity: data.recordedData[0].velocity,
         acceleration: data.recordedData[0].acceleration,
       }));
+      setPlaying(false);
       setData((prev) => ({
         ...prev,
         playbackTime: 0,
@@ -95,8 +95,8 @@ function App() {
           velocity: lastState.velocity,
           acceleration: lastState.acceleration,
           time: lastState.time,
-          playing: false,
         });
+        setPlaying(false);
       } else {
         // No recorded data: start from beginning
         setSimulation({
@@ -104,8 +104,8 @@ function App() {
           velocity: 0,
           acceleration: 0,
           time: 0,
-          playing: false,
         });
+        setPlaying(false);
       }
     }
   };
@@ -131,7 +131,6 @@ function App() {
         velocity: closestState.velocity,
         acceleration: closestState.acceleration,
         time: closestState.time,
-        playing: simulation.playing,
       });
     }
   };
@@ -171,6 +170,7 @@ function App() {
         {/* Right Panel: Controls */}
         <Controls
           simulation={simulation}
+          playing={playing}
           data={data}
           onSimulationChange={handleSimulationChange}
           onModeChange={switchMode}

@@ -24,7 +24,6 @@ export function calculatePhysicsStep(simulation, deltaTime, realElapsedTime) {
     position: newPosition,
     velocity: newVelocity,
     time: newTime,
-    playing: simulation.playing,
     acceleration: simulation.acceleration,
   };
 }

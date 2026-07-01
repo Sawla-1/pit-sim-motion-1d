@@ -62,6 +62,7 @@ function PhysicsInput({ label, unit, value, min, max, labelClass, accentClass, f
  */
 function Controls({
   simulation,
+  playing,
   data,
   onSimulationChange,
   onModeChange,
@@ -149,12 +150,12 @@ function Controls({
               data.selectedMode === "playback" && data.recordedData.length === 0
             }
             className={`w-10 h-10 border-none rounded-full text-xs font-semibold cursor-pointer ${
-              simulation.playing
+              playing
                 ? "bg-red-500 text-white transition-all hover:scale-105"
                 : "bg-blue-600 text-white transition-all hover:scale-105"
             }`}
           >
-            {simulation.playing ? "❚❚" : "▶"}
+            {playing ? "❚❚" : "▶"}
           </button>
         </div>
         <div className="flex gap-5 justify-center">

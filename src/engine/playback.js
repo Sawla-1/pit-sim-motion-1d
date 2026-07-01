@@ -42,7 +42,6 @@ export function handlePlaybackStep(data, deltaTime) {
         velocity: lastState.velocity,
         acceleration: lastState.acceleration,
         time: lastState.time,
-        playing: false,
       },
       data: {
         playbackTime: lastState.time,
@@ -58,7 +57,6 @@ export function handlePlaybackStep(data, deltaTime) {
         velocity: closest.velocity,
         acceleration: closest.acceleration,
         time: newTime,
-        playing: true,
       },
       data: {
         playbackTime: newTime,
