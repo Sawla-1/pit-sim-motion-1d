@@ -27,6 +27,61 @@ function evaluateExpression(expression) {
 }
 
 /**
+ * A single physics parameter input: label, text box, and range slider.
+ * Owns the local string state, last-valid ref, and external-sync effect.
+ */
+function PhysicsInput({ label, unit, value, min, max, labelClass, accentClass, focusClass, onChange }) {
+  const [text, setText] = useState(String(value));
+  const lastValid = useRef(value);
+
+  useEffect(() => {
+    setText(String(value));
+    lastValid.current = value;
+  }, [value]);
+
+  const commit = (raw) => {
+    const evaluated = evaluateExpression(raw.trim());
+    if (evaluated !== null) {
+      setText(String(evaluated));
+      lastValid.current = evaluated;
+      onChange(evaluated);
+    } else {
+      setText(String(lastValid.current));
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-1 mb-1.5 last:mb-0">
+      <span className={`${labelClass} font-semibold text-sm`}>
+        {label} ({unit})
+      </span>
+      <div className="flex gap-1">
+        <input
+          type="text"
+          value={text}
+          onFocus={(e) => e.target.select()}
+          onChange={(e) => setText(e.target.value)}
+          onBlur={(e) => commit(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") e.target.blur(); }}
+          className={`w-1/2 px-2 py-1.5 border border-gray-300 rounded text-xs bg-white text-black transition-colors focus:outline-none ${focusClass} focus:shadow-[0_0_0_3px_rgba(42,82,152,0.1)]`}
+        />
+        <span className="text-sm">{min}</span>
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={0.1}
+          value={value}
+          onChange={(e) => onChange(Number(e.target.value) || 0)}
+          className={`w-1/2 ${accentClass}`}
+        />
+        <span className="text-sm">{max}</span>
+      </div>
+    </div>
+  );
+}
+
+/**
  * Controls Component - Parameter inputs, mode selection, and control buttons
  * Contains all the UI controls for the simulation
  */
@@ -39,115 +94,6 @@ function Controls({
   onReset,
   onClearRecordedData,
 }) {
-  // Local state for input values (allows intermediate invalid states while typing)
-  const [positionInput, setPositionInput] = useState(
-    String(simulation.position)
-  );
-  const [velocityInput, setVelocityInput] = useState(
-    String(simulation.velocity)
-  );
-  const [accelerationInput, setAccelerationInput] = useState(
-    String(simulation.acceleration)
-  );
-
-  // Refs to store last valid values
-  const lastValidPosition = useRef(simulation.position);
-  const lastValidVelocity = useRef(simulation.velocity);
-  const lastValidAcceleration = useRef(simulation.acceleration);
-
-  // Sync local state when simulation values change externally
-  useEffect(() => {
-    setPositionInput(String(simulation.position));
-    lastValidPosition.current = simulation.position;
-  }, [simulation.position]);
-
-  useEffect(() => {
-    setVelocityInput(String(simulation.velocity));
-    lastValidVelocity.current = simulation.velocity;
-  }, [simulation.velocity]);
-
-  useEffect(() => {
-    setAccelerationInput(String(simulation.acceleration));
-    lastValidAcceleration.current = simulation.acceleration;
-  }, [simulation.acceleration]);
-
-  // Position handlers
-  const handlePositionChange = (e) => {
-    setPositionInput(e.target.value);
-  };
-
-  const handlePositionBlur = (e) => {
-    const value = e.target.value.trim();
-    const evaluated = evaluateExpression(value);
-
-    if (evaluated !== null) {
-      const newValue = evaluated;
-      setPositionInput(String(newValue));
-      lastValidPosition.current = newValue;
-      onSimulationChange({ position: newValue });
-    } else {
-      // Invalid input - revert to last valid value
-      setPositionInput(String(lastValidPosition.current));
-    }
-  };
-
-  const handlePositionKeyDown = (e) => {
-    if (e.key === "Enter") {
-      e.target.blur(); // Trigger blur handler
-    }
-  };
-
-  // Velocity handlers
-  const handleVelocityChange = (e) => {
-    setVelocityInput(e.target.value);
-  };
-
-  const handleVelocityBlur = (e) => {
-    const value = e.target.value.trim();
-    const evaluated = evaluateExpression(value);
-
-    if (evaluated !== null) {
-      const newValue = evaluated;
-      setVelocityInput(String(newValue));
-      lastValidVelocity.current = newValue;
-      onSimulationChange({ velocity: newValue });
-    } else {
-      // Invalid input - revert to last valid value
-      setVelocityInput(String(lastValidVelocity.current));
-    }
-  };
-
-  const handleVelocityKeyDown = (e) => {
-    if (e.key === "Enter") {
-      e.target.blur(); // Trigger blur handler
-    }
-  };
-
-  // Acceleration handlers
-  const handleAccelerationChange = (e) => {
-    setAccelerationInput(e.target.value);
-  };
-
-  const handleAccelerationBlur = (e) => {
-    const value = e.target.value.trim();
-    const evaluated = evaluateExpression(value);
-
-    if (evaluated !== null) {
-      const newValue = evaluated;
-      setAccelerationInput(String(newValue));
-      lastValidAcceleration.current = newValue;
-      onSimulationChange({ acceleration: newValue });
-    } else {
-      // Invalid input - revert to last valid value
-      setAccelerationInput(String(lastValidAcceleration.current));
-    }
-  };
-
-  const handleAccelerationKeyDown = (e) => {
-    if (e.key === "Enter") {
-      e.target.blur(); // Trigger blur handler
-    }
-  };
   return (
     <div className="bg-white/95 rounded-lg p-3 shadow-lg backdrop-blur-sm flex flex-col gap-3 flex-1">
       {/* Parameter Input Section */}
@@ -156,106 +102,30 @@ function Controls({
           Initial Conditions
         </h4>
 
-        {/* Position Input */}
-        <div className="flex flex-col gap-1 mb-1.5 last:mb-0">
-          <span className="text-blue-600 font-semibold text-sm">
-            Position (m)
-          </span>
-          <div className="flex gap-1">
-            <input
-              type="text"
-              value={positionInput}
-              onFocus={(e) => e.target.select()}
-              onChange={handlePositionChange}
-              onBlur={handlePositionBlur}
-              onKeyDown={handlePositionKeyDown}
-              className="w-1/2 px-2 py-1.5 border border-gray-300 rounded text-xs bg-white text-black transition-colors focus:outline-none focus:border-blue-600 focus:shadow-[0_0_0_3px_rgba(42,82,152,0.1)]"
-            />
-            <span className="text-sm">-10</span>
-            <input
-              type="range"
-              name="position"
-              id="x"
-              min={-10}
-              max={10}
-              step={0.1}
-              value={simulation.position}
-              onChange={(e) =>
-                onSimulationChange({ position: Number(e.target.value) || 0 })
-              }
-              className="w-1/2 accent-blue-600"
-            />
-            <span className="text-sm">10</span>
-          </div>
-        </div>
-
-        {/* Velocity Input */}
-        <div className="flex flex-col gap-1 mb-1.5 last:mb-0">
-          <span className="text-red-600 font-semibold text-sm">
-            Velocity (m/s)
-          </span>
-          <div className="flex gap-1">
-            <input
-              type="text"
-              value={velocityInput}
-              onFocus={(e) => e.target.select()}
-              onChange={handleVelocityChange}
-              onBlur={handleVelocityBlur}
-              onKeyDown={handleVelocityKeyDown}
-              className="w-1/2 px-2 py-1.5 border border-gray-300 rounded text-xs bg-white text-black transition-colors focus:outline-none focus:border-red-600 focus:shadow-[0_0_0_3px_rgba(42,82,152,0.1)]"
-            />
-            <span className="text-sm">-10</span>
-            <input
-              type="range"
-              name="velocity"
-              id="v"
-              min={-10}
-              max={10}
-              step={0.1}
-              value={simulation.velocity}
-              onChange={(e) =>
-                onSimulationChange({ velocity: Number(e.target.value) || 0 })
-              }
-              className="w-1/2 accent-red-600"
-            />
-            <span className="text-sm">10</span>
-          </div>
-        </div>
-
-        {/* Acceleration Input */}
-        <div className="flex flex-col gap-1 mb-1.5 last:mb-0">
-          <span className="text-green-600 font-semibold text-sm">
-            Acceleration (m/s²)
-          </span>
-          <div className="flex gap-1">
-            <input
-              type="text"
-              value={accelerationInput}
-              onFocus={(e) => e.target.select()}
-              onChange={handleAccelerationChange}
-              onBlur={handleAccelerationBlur}
-              onKeyDown={handleAccelerationKeyDown}
-              className="w-1/2 px-2 py-1.5 border border-gray-300 rounded text-xs bg-white text-black transition-colors focus:outline-none focus:border-green-600 focus:shadow-[0_0_0_3px_rgba(42,82,152,0.1)]"
-            />
-            <span className="text-sm">-10</span>
-            <input
-              type="range"
-              name="acceleration"
-              id="a"
-              min={-10}
-              max={10}
-              step={0.1}
-              value={simulation.acceleration}
-              onChange={(e) =>
-                onSimulationChange({
-                  acceleration: Number(e.target.value) || 0,
-                })
-              }
-              className="w-1/2 accent-green-700"
-            />
-            <span className="text-sm">10</span>
-          </div>
-        </div>
+        <PhysicsInput
+          label="Position" unit="m"
+          value={simulation.position} min={-10} max={10}
+          labelClass="text-blue-600"
+          accentClass="accent-blue-600"
+          focusClass="focus:border-blue-600"
+          onChange={(v) => onSimulationChange({ position: v })}
+        />
+        <PhysicsInput
+          label="Velocity" unit="m/s"
+          value={simulation.velocity} min={-10} max={10}
+          labelClass="text-red-600"
+          accentClass="accent-red-600"
+          focusClass="focus:border-red-600"
+          onChange={(v) => onSimulationChange({ velocity: v })}
+        />
+        <PhysicsInput
+          label="Acceleration" unit="m/s²"
+          value={simulation.acceleration} min={-10} max={10}
+          labelClass="text-green-600"
+          accentClass="accent-green-700"
+          focusClass="focus:border-green-600"
+          onChange={(v) => onSimulationChange({ acceleration: v })}
+        />
       </div>
 
       {/* Mode Selection Section */}

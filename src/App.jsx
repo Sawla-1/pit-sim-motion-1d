@@ -3,6 +3,7 @@ import Simulation3D from "./components/Simulation3D";
 import Charts from "./components/Charts";
 import Controls from "./components/Controls";
 import { useSimulationLoop } from "./hooks/useSimulationLoop";
+import { findClosestState } from "./engine/playback";
 
 /**
  * SIMPLIFIED MOVING MAN REACT SIMULATION
@@ -103,7 +104,6 @@ function App() {
   // Switch between Record and Playback modes
   const switchMode = (mode) => {
     setData((prev) => ({ ...prev, selectedMode: mode }));
-    console.log("data", data);
 
     if (mode === "playback" && data.recordedData.length > 0) {
       // Switch to playback: reset playback time
@@ -166,9 +166,7 @@ function App() {
   // Handle timeline scrubbing from charts
   const handleSetPlaybackTime = (newTime) => {
     setData((prev) => ({ ...prev, playbackTime: newTime }));
-    const closestState = data.recordedData.find(
-      (s) => Math.abs(s.time - newTime) < 0.016
-    );
+    const closestState = findClosestState(data.recordedData, newTime);
     if (closestState) {
       setSimulation({
         position: closestState.position,
