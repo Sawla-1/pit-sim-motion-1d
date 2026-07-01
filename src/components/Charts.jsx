@@ -28,10 +28,10 @@ ChartJS.register(
 function Charts({ data, simulation, onSetPlaybackTime }) {
   // State for drag functionality
   const [isDragging, setIsDragging] = useState(false);
-  const [isShow, setIsShow] = useState({
-    position: true,
-    velocity: true,
-    acceleration: true,
+  const [visibility, setVisibility] = useState({
+    showPosition: true,
+    showVelocity: true,
+    showAcceleration: true,
   });
   const chartRefs = useRef([]);
 
@@ -192,19 +192,19 @@ function Charts({ data, simulation, onSetPlaybackTime }) {
         className="flex flex-col gap-1 flex-3 w-full text-white text-right"
       >
         {/* Position Button */}
-        {!isShow.position && (
+        {!visibility.showPosition && (
           <div>
             Position Graph{" "}
             <button
               className="cursor-pointer"
-              onClick={() => setIsShow({ ...isShow, position: true })}
+              onClick={() => setVisibility({ ...visibility, showPosition: true })}
             >
               ❇️
             </button>{" "}
           </div>
         )}
         {/* Position Graph */}
-        {isShow.position && (
+        {visibility.showPosition && (
           <div className="relative flex-auto bg-gray-100 h-[150px] pt-8 px-8 rounded-md">
             <span className="absolute top-2 left-8 text-sm text-blue-600 font-semibold">
               Position
@@ -214,7 +214,7 @@ function Charts({ data, simulation, onSetPlaybackTime }) {
             </span>
             <button
               className="absolute top-2 right-2 text-xs text-white font-semibold cursor-pointer bg-red-600 px-1 py-0.5 rounded-sm"
-              onClick={() => setIsShow({ ...isShow, position: false })}
+              onClick={() => setVisibility({ ...visibility, showPosition: false })}
             >
               ✖
             </button>
@@ -228,12 +228,12 @@ function Charts({ data, simulation, onSetPlaybackTime }) {
           </div>
         )}
         {/* Velocity Button */}
-        {!isShow.velocity && (
+        {!visibility.showVelocity && (
           <div>
             Velocity Graph{" "}
             <button
               className="cursor-pointer"
-              onClick={() => setIsShow({ ...isShow, velocity: true })}
+              onClick={() => setVisibility({ ...visibility, showVelocity: true })}
             >
               ❇️
             </button>{" "}
@@ -241,7 +241,7 @@ function Charts({ data, simulation, onSetPlaybackTime }) {
         )}
 
         {/* Velocity Graph */}
-        {isShow.velocity && (
+        {visibility.showVelocity && (
           <div className="relative flex-auto bg-gray-100 h-[150px] pt-8 px-8 rounded-md">
             <span className="absolute top-2 left-8 text-sm text-red-600 font-semibold">
               Velocity
@@ -251,7 +251,7 @@ function Charts({ data, simulation, onSetPlaybackTime }) {
             </span>
             <button
               className="absolute top-2 right-2 text-xs text-white font-semibold cursor-pointer bg-red-600 px-1 py-0.5 rounded-sm"
-              onClick={() => setIsShow({ ...isShow, velocity: false })}
+              onClick={() => setVisibility({ ...visibility, showVelocity: false })}
             >
               ✖
             </button>
@@ -265,12 +265,12 @@ function Charts({ data, simulation, onSetPlaybackTime }) {
           </div>
         )}
         {/* Acceleration Button */}
-        {!isShow.acceleration && (
+        {!visibility.showAcceleration && (
           <div>
             Acceleration Graph{" "}
             <button
               className="cursor-pointer"
-              onClick={() => setIsShow({ ...isShow, acceleration: true })}
+              onClick={() => setVisibility({ ...visibility, showAcceleration: true })}
             >
               ❇️
             </button>{" "}
@@ -278,7 +278,7 @@ function Charts({ data, simulation, onSetPlaybackTime }) {
         )}
 
         {/* Acceleration Graph */}
-        {isShow.acceleration && (
+        {visibility.showAcceleration && (
           <div className="relative flex-auto bg-gray-100 h-[150px] pt-8 px-8 rounded-md">
             <span className="absolute top-2 left-8 text-sm text-green-600 font-semibold">
               Acceleration
@@ -288,7 +288,7 @@ function Charts({ data, simulation, onSetPlaybackTime }) {
             </span>
             <button
               className="absolute top-2 right-2 text-xs text-white font-semibold cursor-pointer bg-red-600 px-1 py-0.5 rounded-sm"
-              onClick={() => setIsShow({ ...isShow, acceleration: false })}
+              onClick={() => setVisibility({ ...visibility, showAcceleration: false })}
             >
               ✖
             </button>
