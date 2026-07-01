@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { formatNumber } from "../utils/formatNumber";
 import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -33,10 +34,6 @@ function Charts({ data, simulation, onSetPlaybackTime }) {
     acceleration: true,
   });
   const chartRefs = useRef([]);
-
-  // Simple number formatting
-  const formatNumber = (n) =>
-    Number.isFinite(Number(n)) ? Number(n).toFixed(2) : "0";
 
   // Build chart data - simplified
   const buildChartData = (valueKey, color) => {
@@ -157,7 +154,7 @@ function Charts({ data, simulation, onSetPlaybackTime }) {
           callbacks: {
             title: () => "",
             label: (ctx) =>
-              `(${formatNumber(ctx.parsed.x)}, ${formatNumber(ctx.parsed.y)})`,
+              `(${formatNumber(ctx.parsed.x, 2)}, ${formatNumber(ctx.parsed.y, 2)})`,
           },
         },
         zoom: {
@@ -213,7 +210,7 @@ function Charts({ data, simulation, onSetPlaybackTime }) {
               Position
             </span>
             <span className="absolute top-2 right-10 text-sm text-blue-600 font-semibold">
-              {formatNumber(simulation.position)} m
+              {formatNumber(simulation.position, 2)} m
             </span>
             <button
               className="absolute top-2 right-2 text-xs text-white font-semibold cursor-pointer bg-red-600 px-1 py-0.5 rounded-sm"
@@ -250,7 +247,7 @@ function Charts({ data, simulation, onSetPlaybackTime }) {
               Velocity
             </span>
             <span className="absolute top-2 right-10 text-sm text-red-600 font-semibold">
-              {formatNumber(simulation.velocity)} m/s
+              {formatNumber(simulation.velocity, 2)} m/s
             </span>
             <button
               className="absolute top-2 right-2 text-xs text-white font-semibold cursor-pointer bg-red-600 px-1 py-0.5 rounded-sm"
@@ -287,7 +284,7 @@ function Charts({ data, simulation, onSetPlaybackTime }) {
               Acceleration
             </span>
             <span className="absolute top-2 right-10 text-sm text-green-600 font-semibold">
-              {formatNumber(simulation.acceleration)} m/s²
+              {formatNumber(simulation.acceleration, 2)} m/s²
             </span>
             <button
               className="absolute top-2 right-2 text-xs text-white font-semibold cursor-pointer bg-red-600 px-1 py-0.5 rounded-sm"

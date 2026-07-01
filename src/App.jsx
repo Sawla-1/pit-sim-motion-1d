@@ -4,34 +4,7 @@ import Charts from "./components/Charts";
 import Controls from "./components/Controls";
 import { useSimulationLoop } from "./hooks/useSimulationLoop";
 import { findClosestState } from "./engine/playback";
-
-/**
- * SIMPLIFIED MOVING MAN REACT SIMULATION
- *
- * A physics simulation that demonstrates 1D kinematics with constant acceleration.
- * Features record/playback functionality with real-time graphing.
- *
- * REFACTORED VERSION:
- * - Separated into components: Simulation3D, Charts, Controls
- * - All logic consolidated in App component
- * - Maintained all original functionality
- */
-
-// ============================================================================
-// HELPER UTILITIES
-// ============================================================================
-
-/**
- * Simple number formatting utility
- * Formats numbers to 2 decimal places, handles non-finite numbers
- */
-function formatNumber(n) {
-  return Number.isFinite(Number(n)) ? Number(n).toFixed(1) : "0";
-}
-
-// ============================================================================
-// MAIN APP COMPONENT
-// ============================================================================
+import { formatNumber } from "./utils/formatNumber";
 
 function App() {
   // ============================================================================
@@ -198,7 +171,7 @@ function App() {
           className="absolute top-2 right-4 font-mono text-3xl font-bold z-10 text-gray-800"
           style={{ textShadow: "1px 1px 2px rgba(255, 255, 255, 0.8)" }}
         >
-          {formatNumber(simulation.time)} s
+          {formatNumber(simulation.time, 1)} s
         </div>
       </div>
 
