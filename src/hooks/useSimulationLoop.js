@@ -70,7 +70,7 @@ export function useSimulationLoop({
           const sim = simulationRef.current;
           const dat = dataRef.current;
 
-          if (dat.isPlayback && dat.selectedMode === "playback") {
+          if (dat.selectedMode === "playback" && dat.recordedData.length > 1) {
             // PLAYBACK MODE: advance through recorded data
             const result = handlePlaybackStep(dat, FIXED_TIMESTEP);
             setSimulation(result.simulation);

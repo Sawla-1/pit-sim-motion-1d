@@ -25,7 +25,6 @@ function App() {
     recordedData: [{ time: 0, position: 0, velocity: 0, acceleration: 0 }], // All simulation states
     selectedMode: "record", // 'record' or 'playback'
     playbackTime: 0, // Current playback time
-    isPlayback: false, // Currently playing back?
   });
 
   useSimulationLoop({
@@ -54,7 +53,6 @@ function App() {
       ...prev,
       recordedData: [{ time: 0, position: 0, velocity: 0, acceleration: 0 }],
       playbackTime: 0,
-      isPlayback: false,
       selectedMode: "record",
     }));
   };
@@ -64,13 +62,9 @@ function App() {
     if (simulation.playing) {
       // Stop current operation
       setSimulation((prev) => ({ ...prev, playing: false }));
-      setData((prev) => ({ ...prev, isPlayback: false }));
     } else {
       // Start based on selected mode
       setSimulation((prev) => ({ ...prev, playing: true }));
-      if (data.selectedMode === "playback" && data.recordedData.length > 0) {
-        setData((prev) => ({ ...prev, isPlayback: true }));
-      }
     }
   };
 
@@ -91,7 +85,6 @@ function App() {
       setData((prev) => ({
         ...prev,
         playbackTime: 0,
-        isPlayback: false,
       }));
     } else if (mode === "record") {
       // Switch to record: continue from latest recorded data
@@ -104,10 +97,6 @@ function App() {
           time: lastState.time,
           playing: false,
         });
-        setData((prev) => ({
-          ...prev,
-          isPlayback: false,
-        }));
       } else {
         // No recorded data: start from beginning
         setSimulation({
@@ -117,10 +106,6 @@ function App() {
           time: 0,
           playing: false,
         });
-        setData((prev) => ({
-          ...prev,
-          isPlayback: false,
-        }));
       }
     }
   };

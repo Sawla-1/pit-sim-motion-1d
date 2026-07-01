@@ -46,7 +46,6 @@ export function handlePlaybackStep(data, deltaTime) {
       },
       data: {
         playbackTime: lastState.time,
-        isPlayback: false,
       },
       isEndOfPlayback: true,
     };
