@@ -85,28 +85,10 @@ function Charts({ data, simulation, onSetPlaybackTime }) {
       // ]
 
       if (chart) {
-        //>>> complex version
-        // const rect = canvas.getBoundingClientRect()
-        // const x = event.clientX - rect.left
-        // const timeValue = (x / rect.width) * getMaxTime()
-        // const clampedTime = Math.max(0, Math.min(maxTime, timeValue))
-
-        //>>> simplified version
-        const x = event.clientX - canvas.offsetLeft; // mouse position on canvas
-        // console.log("event.clientX", event.clientX); // mouse position on screen
-        // console.log("canvas.offsetLeft", canvas.offsetLeft); // chartcanvas start from left side of screen
-        // console.log("x = event.clientX - canvas.offsetLeft", x);
-
-        const timeValue = (x / canvas.offsetWidth) * maxTime; // time value
-        // console.log("canvas.offsetWidth", canvas.offsetWidth); // chartcanvas width
-        // console.log("getMaxTime()", getMaxTime());// max time
-        // console.log("timeValue = (x / canvas.offsetWidth) * getMaxTime()", timeValue);
-
-        const clampedTime = Math.max(0, Math.min(maxTime, timeValue)); // clamped time
-        // console.log("Math.min(getMaxTime(), timeValue)", Math.min(getMaxTime(), timeValue));
-        // console.log("clampedTime = Math.max(0, Math.min(getMaxTime(), timeValue))", clampedTime);
-        // console.log("--------------------------------");
-        onSetPlaybackTime(clampedTime); // set playback time
+        const x = event.clientX - canvas.getBoundingClientRect().left;
+        const timeValue = chart.scales.x.getValueForPixel(x);
+        const clampedTime = Math.max(0, Math.min(maxTime, timeValue));
+        onSetPlaybackTime(clampedTime);
       }
     }
   };
