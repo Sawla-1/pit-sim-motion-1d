@@ -1,30 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-
-/**
- * Safely evaluates mathematical expressions
- * Returns null if expression is invalid
- */
-function evaluateExpression(expression) {
-  try {
-    const trimmed = expression.trim();
-    if (!trimmed) return null;
-
-    // Remove any non-math characters except numbers, operators, parentheses, decimal points, and spaces
-    const cleaned = trimmed.replace(/[^0-9+\-*/().\s]/g, "");
-    if (!cleaned) return null;
-
-    // Use Function constructor for safer evaluation
-    const result = new Function('"use strict"; return (' + cleaned + ")")();
-
-    // Validate result is a finite number
-    if (typeof result === "number" && !isNaN(result) && isFinite(result)) {
-      return result;
-    }
-    return null;
-  } catch {
-    return null;
-  }
-}
+import { evaluateExpression } from "../engine/evaluateExpression";
 
 /**
  * A single physics parameter input: label, text box, and range slider.
