@@ -114,7 +114,7 @@ function App() {
   const clearRecordedData = () => {
     setData((prev) => ({
       ...prev,
-      recordedData: [{ time: 0, position: 0, velocity: 0, acceleration: 0 }],
+      recordedData: [{ time: 0, position: simulation.position, velocity: simulation.velocity, acceleration: simulation.acceleration }],
       playbackTime: 0,
       selectedMode: "record",
     }));
@@ -138,6 +138,12 @@ function App() {
   // Handler for simulation parameter changes
   const handleSimulationChange = (changes) => {
     setSimulation((prev) => ({ ...prev, ...changes }));
+    if (simulation.time === 0) {
+      setData((prev) => ({
+        ...prev,
+        recordedData: [{ time: 0, ...prev.recordedData[0], ...changes }],
+      }));
+    }
   };
 
   // ============================================================================
