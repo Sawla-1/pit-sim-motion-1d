@@ -73,7 +73,7 @@ export function useSimulationLoop({
             // RECORDING MODE: anchor start time to current sim.time so that
             // resuming after a mode round-trip begins the clock from the right offset
             if (recordRealTimeStart.current === null) {
-              recordRealTimeStart.current = now - sim.time * 1000;
+              recordRealTimeStart.current = now - (sim.time + FIXED_TIMESTEP) * 1000;
             }
             const realElapsedTime = (now - recordRealTimeStart.current) / 1000;
             const result = handleRecordingStep(sim, FIXED_TIMESTEP, realElapsedTime);
