@@ -160,7 +160,7 @@ function App() {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex gap-1 w-full">
+      <div className="flex flex-col gap-1 w-full md:flex-row">
         {/* Left Panel: Charts */}
         <Charts
           data={data}

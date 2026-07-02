@@ -158,7 +158,7 @@ function Charts({ data, simulation, onSetPlaybackTime }) {
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
-        className="flex flex-col gap-1 flex-3 w-full text-white text-right"
+        className="flex flex-col gap-1 flex-3 min-w-0 text-white text-right"
       >
         {/* Position Button */}
         {!visibility.showPosition && (

@@ -71,7 +71,7 @@ function Controls({
   onClearRecordedData,
 }) {
   return (
-    <div className="bg-white/95 rounded-lg p-3 shadow-lg backdrop-blur-sm flex flex-col gap-3 flex-1">
+    <div className="bg-white/95 rounded-lg p-3 shadow-lg backdrop-blur-sm flex flex-col gap-3 flex-1 min-w-0">
       {/* Parameter Input Section */}
       <div className="rounded-md p-2 border-2 border-blue-400 bg-blue-100">
         <h4 className="m-0 mb-1.5 font-semibold text-blue-800 border-b border-blue-100 pb-1">
