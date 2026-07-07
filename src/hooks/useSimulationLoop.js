@@ -1,5 +1,4 @@
 import { useRef, useEffect } from "react";
-import { handlePlaybackStep, handleRecordingStep } from "../engine/playback";
 
 export function useSimulationLoop({
   playing,
@@ -9,6 +8,8 @@ export function useSimulationLoop({
   setSimulation,
   setData,
   setPlaying,
+  onRecordStep,
+  onPlaybackStep,
 }) {
   const last = useRef(performance.now());
   const recordRealTimeStart = useRef(null);
@@ -65,7 +66,7 @@ export function useSimulationLoop({
 
           if (dat.selectedMode === "playback" && dat.recordedData.length > 1) {
             // PLAYBACK MODE: advance through recorded data — no wall-clock refs needed
-            const result = handlePlaybackStep(dat, FIXED_TIMESTEP);
+            const result = onPlaybackStep(dat, FIXED_TIMESTEP);
             setSimulation(result.simulation);
             setData((prev) => ({ ...prev, ...result.data }));
             if (result.isEndOfPlayback) setPlaying(false);
@@ -76,7 +77,7 @@ export function useSimulationLoop({
               recordRealTimeStart.current = now - (sim.time + FIXED_TIMESTEP) * 1000;
             }
             const realElapsedTime = (now - recordRealTimeStart.current) / 1000;
-            const result = handleRecordingStep(sim, FIXED_TIMESTEP, realElapsedTime);
+            const result = onRecordStep(sim, FIXED_TIMESTEP, realElapsedTime);
             setSimulation(result.simulation);
             setData((prev) => ({
               ...prev,
@@ -91,5 +92,5 @@ export function useSimulationLoop({
     }
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
-  }, [playing, setSimulation, setData, setPlaying]); // setters are stable React refs; listed to satisfy exhaustive-deps
+  }, [playing, setSimulation, setData, setPlaying, onRecordStep, onPlaybackStep]); // setters are stable React refs; listed to satisfy exhaustive-deps
 }

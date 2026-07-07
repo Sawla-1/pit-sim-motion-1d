@@ -3,7 +3,11 @@ import Simulation3D from "./components/Simulation3D";
 import Charts from "./components/Charts";
 import Controls from "./components/Controls";
 import { useSimulationLoop } from "./hooks/useSimulationLoop";
-import { findClosestState } from "./engine/playback";
+import {
+  findClosestState,
+  handleRecordingStep,
+  handlePlaybackStep,
+} from "./engine/playback";
 import { formatNumber } from "./utils/formatNumber";
 
 function App() {
@@ -36,6 +40,8 @@ function App() {
     setSimulation,
     setData,
     setPlaying,
+    onRecordStep: handleRecordingStep,
+    onPlaybackStep: handlePlaybackStep,
   });
 
   // ============================================================================

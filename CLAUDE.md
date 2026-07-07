@@ -48,9 +48,7 @@ The animation loop runs via `requestAnimationFrame` inside `useSimulationLoop`. 
 
 `recordRealTimeStart` and `recordPauseStartTime` refs track wall-clock time so the displayed timer matches real elapsed time through pauses.
 
-The hook dispatches to `handleRecordingStep` or `handlePlaybackStep` from `engine/playback.js` on each tick.
-
-> **Known framework boundary violation:** `useSimulationLoop` imports `handlePlaybackStep` / `handleRecordingStep` directly from `engine/playback`. The loop is framework infrastructure but calls simulation-specific functions. Fix: loop should call engine-agnostic callbacks injected by the simulation.
+The hook takes `onRecordStep` and `onPlaybackStep` callback props and dispatches to whichever one applies each tick, based on `data.selectedMode`. `App.jsx` injects `handleRecordingStep` / `handlePlaybackStep` from `engine/playback.js` as those callbacks — the hook itself has no import from the engine layer, so it stays engine-agnostic and reusable by future simulations.
 
 ### Engine layer
 
