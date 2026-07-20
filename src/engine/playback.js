@@ -56,7 +56,7 @@ export function handlePlaybackStep(data, deltaTime) {
         position: closest.position,
         velocity: closest.velocity,
         acceleration: closest.acceleration,
-        time: newTime,
+        time: closest.time,
       },
       data: {
         playbackTime: newTime,
