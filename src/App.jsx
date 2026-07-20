@@ -141,7 +141,7 @@ function App() {
     if (simulation.time === 0) {
       setData((prev) => ({
         ...prev,
-        recordedData: [{ time: 0, ...prev.recordedData[0], ...changes }],
+        recordedData: [{ ...prev.recordedData[0], ...changes }],
       }));
     }
   };
