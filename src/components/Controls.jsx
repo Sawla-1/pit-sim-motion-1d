@@ -15,7 +15,7 @@ function PhysicsInput({ label, unit, value, min, max, labelClass, accentClass, f
   }, [value]);
 
   const commit = (raw) => {
-    const evaluated = evaluateExpression(raw.trim());
+    const evaluated = evaluateExpression(raw);
     if (evaluated !== null) {
       setText(String(evaluated));
       lastValid.current = evaluated;
