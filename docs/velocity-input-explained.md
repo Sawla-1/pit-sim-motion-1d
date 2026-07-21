@@ -42,16 +42,18 @@ text = "1+1"   // after typing the second '1'
 const evaluated = evaluateExpression("1+1");
 ```
 
-### 1.3 Inside `evaluateExpression("1+1")` ([evaluateExpression.js:1-25](../src/engine/evaluateExpression.js#L1))
+### 1.3 Inside `evaluateExpression("1+1")` ([evaluateExpression.js:1-24](../src/engine/evaluateExpression.js#L1))
 
 ```js
-trimmed = "1+1"                                  // line 3, already clean
-cleaned = "1+1"                                  // line 11 — regex strips nothing, all chars are allowed
-result  = new Function('"use strict"; return (1+1)')()   // line 15
+trimmed = "1+1"                                  // line 7, already clean
+/[^0-9+\-*/().\s]/.test("1+1") → false           // line 11 — no disallowed chars present, check passes
+result  = new Function('"use strict"; return (1+1)')()   // line 14
         = 2
-typeof result === "number" && !isNaN(2) && isFinite(2)   // line 16 — all true
-return 2                                          // line 17
+typeof result === "number" && !isNaN(2) && isFinite(2)   // line 17 — all true
+return 2                                          // line 18
 ```
+
+(Note: this used to *strip* disallowed characters with `.replace()` and evaluate whatever survived — since fixed to *reject* the whole input if any disallowed character is present, e.g. `"2=2"` now correctly returns `null` instead of silently becoming `22`.)
 
 `evaluated = 2`, not `null`.
 
@@ -127,16 +129,15 @@ text = "abc"
 
 You click elsewhere; `onBlur` fires `commit("abc")` ([Controls.jsx:39](../src/components/Controls.jsx#L39)).
 
-### 2.3 Inside `evaluateExpression("abc")` ([evaluateExpression.js:1-25](../src/engine/evaluateExpression.js#L1))
+### 2.3 Inside `evaluateExpression("abc")` ([evaluateExpression.js:1-24](../src/engine/evaluateExpression.js#L1))
 
 ```js
-trimmed = "abc"                                  // line 3
-cleaned = "abc".replace(/[^0-9+\-*/().\s]/g, "")  // line 11
-        = ""                                       // every char is a letter — none are in the allowed set, all stripped
-if (!cleaned) return null;                        // line 12 — fires immediately
+trimmed = "abc"                                  // line 7
+/[^0-9+\-*/().\s]/.test("abc") → true            // line 11 — every char is a letter, none allowed → reject
+return null                                       // line 11 fires immediately
 ```
 
-The `Function` constructor on line 15 is **never reached**. `evaluated = null`.
+The `Function` constructor on line 14 is **never reached**. `evaluated = null`.
 
 ### 2.4 Back in `commit` — the `else` branch fires ([Controls.jsx:23-24](../src/components/Controls.jsx#L23))
 

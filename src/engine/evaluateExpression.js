@@ -7,12 +7,11 @@ export function evaluateExpression(expression) {
     const trimmed = expression.trim();
     if (!trimmed) return null;
 
-    // Remove any non-math characters except numbers, operators, parentheses, decimal points, and spaces
-    const cleaned = trimmed.replace(/[^0-9+\-*/().\s]/g, "");
-    if (!cleaned) return null;
+    // Reject if any character isn't a number, operator, parenthesis, decimal point, or space
+    if (/[^0-9+\-*/().\s]/.test(trimmed)) return null;
 
     // Use Function constructor for safer evaluation
-    const result = new Function('"use strict"; return (' + cleaned + ")")();
+    const result = new Function('"use strict"; return (' + trimmed + ")")();
 
     // Validate result is a finite number
     if (typeof result === "number" && !isNaN(result) && isFinite(result)) {
