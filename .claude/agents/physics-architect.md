@@ -123,7 +123,7 @@ Prioritize:
 
 - stable animation
 - predictable rendering
-- fixed timestep simulation
+- variable per-frame delta clamped against stalled/slow frames (PhET-style — no fixed timestep accumulator)
 - minimal unnecessary React renders
 
 Do not micro-optimize code that has no measurable impact.
