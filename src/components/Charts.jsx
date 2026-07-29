@@ -7,6 +7,7 @@ import {
   PointElement,
   LineElement,
   Tooltip,
+  Decimation,
 } from "chart.js";
 import annotationPlugin from "chartjs-plugin-annotation";
 import zoomPlugin from "chartjs-plugin-zoom";
@@ -17,6 +18,7 @@ ChartJS.register(
   PointElement,
   LineElement,
   Tooltip,
+  Decimation,
   annotationPlugin,
   zoomPlugin
 );
@@ -97,12 +99,15 @@ function Charts({ data, simulation, onSetPlaybackTime }) {
     setIsDragging(false);
   };
 
+  const isPlayback = data.selectedMode === "playback";
+
   // Simplified chart options
   const getChartOptions = () => {
     return {
       responsive: true,
       animation: false,
       maintainAspectRatio: false,
+      parsing: false, // required by the decimation plugin, and our data is already {x, y}
       scales: {
         x: {
           type: "linear",
@@ -126,11 +131,15 @@ function Charts({ data, simulation, onSetPlaybackTime }) {
               `(${formatNumber(ctx.parsed.x, 2)}, ${formatNumber(ctx.parsed.y, 2)})`,
           },
         },
+        decimation: {
+          enabled: true,
+          algorithm: "min-max", // preserves spikes/dips in the data instead of smoothing over them
+        },
         zoom: {
           limits: { x: { min: 0, max: maxTime } },
-          zoom: { wheel: { enabled: true }, mode: "x" },
+          zoom: { wheel: { enabled: isPlayback }, mode: "x" },
           pan: {
-            enabled: true,
+            enabled: isPlayback,
             mode: "x",
             limits: { x: { min: 0, max: maxTime } },
           },
