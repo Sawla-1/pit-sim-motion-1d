@@ -89,12 +89,8 @@ export function handlePlaybackStep(data, deltaTime) {
 /**
  * Handle recording mode simulation step
  */
-export function handleRecordingStep(simulation, deltaTime, realElapsedTime) {
-  const newSimulation = calculatePhysicsStep(
-    simulation,
-    deltaTime,
-    realElapsedTime
-  );
+export function handleRecordingStep(simulation, deltaTime) {
+  const newSimulation = calculatePhysicsStep(simulation, deltaTime);
 
   // Create new recorded state
   const newRecordedState = {

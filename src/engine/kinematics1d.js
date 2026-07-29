@@ -9,16 +9,11 @@
  * Calculate physics step for recording mode
  * Simple 1D kinematics with constant acceleration
  */
-export function calculatePhysicsStep(simulation, deltaTime, realElapsedTime) {
+export function calculatePhysicsStep(simulation, deltaTime) {
   const newVelocity = simulation.velocity + simulation.acceleration * deltaTime;
   const avgVelocity = (simulation.velocity + newVelocity) / 2;
   const newPosition = simulation.position + avgVelocity * deltaTime;
-
-  // Use real elapsed time for display, but keep physics consistent
-  const newTime =
-    realElapsedTime !== undefined
-      ? realElapsedTime
-      : simulation.time + deltaTime;
+  const newTime = simulation.time + deltaTime;
 
   return {
     position: newPosition,

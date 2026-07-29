@@ -34,7 +34,6 @@ function App() {
 
   useSimulationLoop({
     playing,
-    time: simulation.time,
     simulation,
     data,
     setSimulation,
