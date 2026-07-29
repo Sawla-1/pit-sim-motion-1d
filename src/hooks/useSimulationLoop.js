@@ -48,44 +48,55 @@ export function useSimulationLoop({
     // Pausing in playback mode: no-op — playback has no timing refs to maintain
   }, [playing]);
 
-  // Fixed timestep animation loop with frame accumulation for consistent physics
+  // Auto-pause and reset the clock when the tab is hidden, so a backgrounded
+  // tab can't accumulate a huge stalled frameTime that would otherwise get
+  // clamped into a single large physics jump on return.
+  useEffect(() => {
+    function handleVisibilityChange() {
+      if (document.hidden) {
+        setPlaying(false);
+        last.current = performance.now();
+      }
+    }
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () =>
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [setPlaying]);
+
+  // Real per-frame delta animation loop (PhET-style): each RAF tick advances
+  // physics by however much wall-clock time actually elapsed, clamped so a
+  // stalled/slow frame can't inject a huge jump.
   useEffect(() => {
     let raf;
-    let accumulator = 0;
-    const FIXED_TIMESTEP = 1 / 24; // 24 FPS physics for consistent behavior
+    const MAX_FRAME_TIME = 0.1; // seconds; caps the delta from a stalled frame
 
     function loop(now) {
-      const frameTime = (now - last.current) / 1000;
+      const frameTime = Math.min((now - last.current) / 1000, MAX_FRAME_TIME);
       last.current = now;
 
       if (playing) {
-        accumulator += frameTime;
-        while (accumulator >= FIXED_TIMESTEP) {
-          const sim = simulationRef.current;
-          const dat = dataRef.current;
+        const sim = simulationRef.current;
+        const dat = dataRef.current;
 
-          if (dat.selectedMode === "playback" && dat.recordedData.length > 1) {
-            // PLAYBACK MODE: advance through recorded data — no wall-clock refs needed
-            const result = onPlaybackStep(dat, FIXED_TIMESTEP);
-            setSimulation(result.simulation);
-            setData((prev) => ({ ...prev, ...result.data }));
-            if (result.isEndOfPlayback) setPlaying(false);
-          } else {
-            // RECORDING MODE: anchor start time to current sim.time so that
-            // resuming after a mode round-trip begins the clock from the right offset
-            if (recordRealTimeStart.current === null) {
-              recordRealTimeStart.current = now - (sim.time + FIXED_TIMESTEP) * 1000;
-            }
-            const realElapsedTime = (now - recordRealTimeStart.current) / 1000;
-            const result = onRecordStep(sim, FIXED_TIMESTEP, realElapsedTime);
-            setSimulation(result.simulation);
-            setData((prev) => ({
-              ...prev,
-              recordedData: [...prev.recordedData, result.recordedState],
-            }));
+        if (dat.selectedMode === "playback" && dat.recordedData.length > 1) {
+          // PLAYBACK MODE: advance through recorded data — no wall-clock refs needed
+          const result = onPlaybackStep(dat, frameTime);
+          setSimulation(result.simulation);
+          setData((prev) => ({ ...prev, ...result.data }));
+          if (result.isEndOfPlayback) setPlaying(false);
+        } else {
+          // RECORDING MODE: anchor start time to current sim.time so that
+          // resuming after a mode round-trip begins the clock from the right offset
+          if (recordRealTimeStart.current === null) {
+            recordRealTimeStart.current = now - (sim.time + frameTime) * 1000;
           }
-
-          accumulator -= FIXED_TIMESTEP;
+          const realElapsedTime = (now - recordRealTimeStart.current) / 1000;
+          const result = onRecordStep(sim, frameTime, realElapsedTime);
+          setSimulation(result.simulation);
+          setData((prev) => ({
+            ...prev,
+            recordedData: [...prev.recordedData, result.recordedState],
+          }));
         }
       }
       raf = requestAnimationFrame(loop);
