@@ -4,7 +4,7 @@ import Charts from "./components/Charts";
 import Controls from "./components/Controls";
 import { useSimulationLoop } from "./hooks/useSimulationLoop";
 import {
-  findClosestState,
+  interpolateStateAtTime,
   handleRecordingStep,
   handlePlaybackStep,
 } from "./engine/playback";
@@ -124,13 +124,13 @@ function App() {
   // Handle timeline scrubbing from charts
   const handleSetPlaybackTime = (newTime) => {
     setData((prev) => ({ ...prev, playbackTime: newTime }));
-    const closestState = findClosestState(data.recordedData, newTime);
-    if (closestState) {
+    const interpolated = interpolateStateAtTime(data.recordedData, newTime);
+    if (interpolated) {
       setSimulation({
-        position: closestState.position,
-        velocity: closestState.velocity,
-        acceleration: closestState.acceleration,
-        time: closestState.time,
+        position: interpolated.position,
+        velocity: interpolated.velocity,
+        acceleration: interpolated.acceleration,
+        time: interpolated.time,
       });
     }
   };

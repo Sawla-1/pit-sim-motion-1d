@@ -8,19 +8,39 @@
 import { calculatePhysicsStep } from "./kinematics1d";
 
 /**
- * Find the closest recorded state to a given time
+ * Find the recorded state at a given time, interpolating between the two
+ * bracketing samples (binary search, since recordedData is time-sorted).
+ * Position/velocity are continuous, so they're linearly interpolated.
+ * Acceleration is a step function (only changes when the user edits the
+ * control), so it's held at the earlier sample's value instead of being
+ * blended into a fake ramp.
  */
-export function findClosestState(recordedData, targetTime) {
-  let closest = recordedData[0];
-  for (let i = 0; i < recordedData.length; i++) {
-    const state = recordedData[i];
-    if (
-      Math.abs(state.time - targetTime) < Math.abs(closest.time - targetTime)
-    ) {
-      closest = state;
+export function interpolateStateAtTime(recordedData, targetTime) {
+  if (recordedData.length === 1) return recordedData[0];
+
+  let lo = 0;
+  let hi = recordedData.length - 1;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (recordedData[mid].time < targetTime) {
+      lo = mid + 1;
+    } else {
+      hi = mid;
     }
   }
-  return closest;
+
+  const next = recordedData[lo];
+  if (next.time <= targetTime) return next;
+
+  const prev = recordedData[lo - 1];
+  const t = (targetTime - prev.time) / (next.time - prev.time);
+
+  return {
+    time: targetTime,
+    position: prev.position + (next.position - prev.position) * t,
+    velocity: prev.velocity + (next.velocity - prev.velocity) * t,
+    acceleration: prev.acceleration,
+  };
 }
 
 /**
@@ -49,14 +69,14 @@ export function handlePlaybackStep(data, deltaTime) {
       isEndOfPlayback: true,
     };
   } else {
-    // Find closest recorded state to current time
-    const closest = findClosestState(data.recordedData, newTime);
+    // Interpolate the recorded state at current time
+    const interpolated = interpolateStateAtTime(data.recordedData, newTime);
     return {
       simulation: {
-        position: closest.position,
-        velocity: closest.velocity,
-        acceleration: closest.acceleration,
-        time: closest.time,
+        position: interpolated.position,
+        velocity: interpolated.velocity,
+        acceleration: interpolated.acceleration,
+        time: interpolated.time,
       },
       data: {
         playbackTime: newTime,
