@@ -39,6 +39,7 @@ export function useSimulationLoop({
   useEffect(() => {
     let raf;
     const MAX_FRAME_TIME = 0.1; // seconds; caps the delta from a stalled frame
+    const MAX_RECORD_TIME = 600; // seconds (10 min); auto-pause so recordedData can't grow unbounded
 
     function loop(now) {
       const frameTime = Math.min((now - last.current) / 1000, MAX_FRAME_TIME);
@@ -63,6 +64,9 @@ export function useSimulationLoop({
             ...prev,
             recordedData: [...prev.recordedData, result.recordedState],
           }));
+          if (result.simulation.time >= MAX_RECORD_TIME) {
+            setPlaying(false);
+          }
         }
       }
       raf = requestAnimationFrame(loop);
