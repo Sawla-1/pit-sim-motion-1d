@@ -44,46 +44,50 @@ export function interpolateStateAtTime(recordedData, targetTime) {
 }
 
 /**
- * Handle playback mode simulation step
+ * Resolve the simulation state at a target playback time, clamped to the
+ * last recorded sample. Shared by both the delta-driven step (RAF loop)
+ * and the absolute-time seek (chart drag-to-scrub).
+ */
+function resolvePlaybackState(recordedData, targetTime) {
+  const maxTime =
+    recordedData.length > 0 ? recordedData[recordedData.length - 1].time : 0;
+
+  if (targetTime >= maxTime) {
+    const lastState = recordedData[recordedData.length - 1];
+    return { simulation: lastState, isEndOfPlayback: true };
+  }
+
+  const interpolated = interpolateStateAtTime(recordedData, targetTime);
+  return { simulation: interpolated, isEndOfPlayback: false };
+}
+
+/**
+ * Handle playback mode simulation step (delta-driven, called each RAF tick).
  */
 export function handlePlaybackStep(data, deltaTime) {
   const newTime = data.playbackTime + deltaTime;
-  const maxTime =
-    data.recordedData.length > 0
-      ? data.recordedData[data.recordedData.length - 1].time
-      : 0;
+  const { simulation, isEndOfPlayback } = resolvePlaybackState(
+    data.recordedData,
+    newTime
+  );
 
-  if (newTime >= maxTime) {
-    // End of playback: stop at last recorded state
-    const lastState = data.recordedData[data.recordedData.length - 1];
-    return {
-      simulation: {
-        position: lastState.position,
-        velocity: lastState.velocity,
-        acceleration: lastState.acceleration,
-        time: lastState.time,
-      },
-      data: {
-        playbackTime: lastState.time,
-      },
-      isEndOfPlayback: true,
-    };
-  } else {
-    // Interpolate the recorded state at current time
-    const interpolated = interpolateStateAtTime(data.recordedData, newTime);
-    return {
-      simulation: {
-        position: interpolated.position,
-        velocity: interpolated.velocity,
-        acceleration: interpolated.acceleration,
-        time: interpolated.time,
-      },
-      data: {
-        playbackTime: newTime,
-      },
-      isEndOfPlayback: false,
-    };
-  }
+  return {
+    simulation,
+    data: { playbackTime: simulation.time },
+    isEndOfPlayback,
+  };
+}
+
+/**
+ * Handle a seek to an absolute playback time (called from chart drag-scrub).
+ */
+export function handlePlaybackSeek(recordedData, targetTime) {
+  const { simulation } = resolvePlaybackState(recordedData, targetTime);
+
+  return {
+    simulation,
+    data: { playbackTime: simulation.time },
+  };
 }
 
 /**

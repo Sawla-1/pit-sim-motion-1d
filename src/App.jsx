@@ -4,9 +4,9 @@ import Charts from "./components/Charts";
 import Controls from "./components/Controls";
 import { useSimulationLoop } from "./hooks/useSimulationLoop";
 import {
-  interpolateStateAtTime,
   handleRecordingStep,
   handlePlaybackStep,
+  handlePlaybackSeek,
 } from "./engine/playback";
 import { formatNumber } from "./utils/formatNumber";
 
@@ -121,17 +121,10 @@ function App() {
   };
 
   // Handle timeline scrubbing from charts
-  const handleSetPlaybackTime = (newTime) => {
-    setData((prev) => ({ ...prev, playbackTime: newTime }));
-    const interpolated = interpolateStateAtTime(data.recordedData, newTime);
-    if (interpolated) {
-      setSimulation({
-        position: interpolated.position,
-        velocity: interpolated.velocity,
-        acceleration: interpolated.acceleration,
-        time: interpolated.time,
-      });
-    }
+  const handleSeek = (newTime) => {
+    const result = handlePlaybackSeek(data.recordedData, newTime);
+    setSimulation(result.simulation);
+    setData((prev) => ({ ...prev, ...result.data }));
   };
 
   // Handler for simulation parameter changes
@@ -170,7 +163,7 @@ function App() {
         <Charts
           data={data}
           simulation={simulation}
-          onSetPlaybackTime={handleSetPlaybackTime}
+          onSeek={handleSeek}
         />
         {/* Right Panel: Controls */}
         <Controls

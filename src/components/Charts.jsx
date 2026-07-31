@@ -27,7 +27,7 @@ ChartJS.register(
  * Charts Component - Simplified graphs with all functionality
  * Combines all chart logic into one simple component
  */
-function Charts({ data, simulation, onSetPlaybackTime }) {
+function Charts({ data, simulation, onSeek }) {
   // State for drag functionality
   const [isDragging, setIsDragging] = useState(false);
   const [visibility, setVisibility] = useState({
@@ -90,7 +90,7 @@ function Charts({ data, simulation, onSetPlaybackTime }) {
         const x = event.clientX - canvas.getBoundingClientRect().left;
         const timeValue = chart.scales.x.getValueForPixel(x);
         const clampedTime = Math.max(0, Math.min(maxTime, timeValue));
-        onSetPlaybackTime(clampedTime);
+        onSeek(clampedTime);
       }
     }
   };
