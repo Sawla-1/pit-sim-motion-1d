@@ -21,7 +21,7 @@ This is a 1D kinematics physics simulation built with React + Vite. The simulati
 
 | Layer | Files | Rule |
 |---|---|---|
-| Engine | `src/engine/kinematics1d.js`, `src/engine/playback.js`, `src/engine/evaluateExpression.js` | Pure functions only — no React, no state, no imports from other layers |
+| Engine | `src/engine/kinematics1d.js`, `src/engine/recordPlayback.js`, `src/engine/evaluateExpression.js` | Pure functions only — no React, no state, no imports from other layers |
 | Utils | `src/utils/formatNumber.js` | Shared pure utilities |
 | Hook | `src/hooks/useSimulationLoop.js` | Animation loop — framework infrastructure, not simulation-specific |
 | Components | `src/components/Simulation3D.jsx`, `src/components/Charts.jsx`, `src/components/Controls.jsx` | Purely presentational — receive props, call callbacks, hold no physics state |
@@ -48,12 +48,12 @@ The animation loop runs via `requestAnimationFrame` inside `useSimulationLoop`. 
 
 `recordRealTimeStart` and `recordPauseStartTime` refs track wall-clock time so the displayed timer matches real elapsed time through pauses.
 
-The hook takes `onRecordStep` and `onPlaybackStep` callback props and dispatches to whichever one applies each tick, based on `data.selectedMode`. `App.jsx` injects `handleRecordingStep` / `handlePlaybackStep` from `engine/playback.js` as those callbacks — the hook itself has no import from the engine layer, so it stays engine-agnostic and reusable by future simulations.
+The hook takes `onRecordStep` and `onPlaybackStep` callback props and dispatches to whichever one applies each tick, based on `data.selectedMode`. `App.jsx` injects `handleRecordingStep` / `handlePlaybackStep` from `engine/recordPlayback.js` as those callbacks — the hook itself has no import from the engine layer, so it stays engine-agnostic and reusable by future simulations. Chart drag-to-scrub calls `handlePlaybackSeek` directly (an absolute-time jump, not a per-tick step), sharing the same `resolvePlaybackState` lookup internally.
 
 ### Engine layer
 
 - **`engine/kinematics1d.js`** — `calculatePhysicsStep(simulation, deltaTime, realElapsedTime)`: pure average-velocity integration. No side effects.
-- **`engine/playback.js`** — `handleRecordingStep`, `handlePlaybackStep`, `findClosestState`: recording/playback state machine. Imports from `kinematics1d`.
+- **`engine/recordPlayback.js`** — `handleRecordingStep`, `handlePlaybackStep`, `handlePlaybackSeek`, `interpolateStateAtTime`: recording/playback state machine. Only `handleRecordingStep` imports from `kinematics1d`; the rest are physics-agnostic and operate purely on the timestamped `recordedData` array.
 - **`engine/evaluateExpression.js`** — `evaluateExpression(expression)`: safely evaluates math expressions typed by users (uses `Function` constructor, strips non-math chars).
 
 ### Data flow
@@ -61,7 +61,7 @@ The hook takes `onRecordStep` and `onPlaybackStep` callback props and dispatches
 1. `useSimulationLoop` fires `requestAnimationFrame` at a fixed 24 FPS timestep.
 2. Each tick dispatches to:
    - **Record mode**: `handleRecordingStep` → `calculatePhysicsStep` → appends to `recordedData` via `setData`.
-   - **Playback mode**: `handlePlaybackStep` → `findClosestState` over `recordedData` → updates `simulation` via `setSimulation`.
+   - **Playback mode**: `handlePlaybackStep` → `interpolateStateAtTime` over `recordedData` → updates `simulation` via `setSimulation`.
 3. `Charts` reads `data.recordedData` to render position/velocity/acceleration vs. time graphs.
 4. In playback mode, dragging on a chart canvas calls `onSetPlaybackTime`, which scrubs `playbackTime` and seeks the 3D sprite.
 

@@ -7,7 +7,7 @@ import {
   handleRecordingStep,
   handlePlaybackStep,
   handlePlaybackSeek,
-} from "./engine/playback";
+} from "./engine/recordPlayback";
 import { formatNumber } from "./utils/formatNumber";
 
 function App() {
