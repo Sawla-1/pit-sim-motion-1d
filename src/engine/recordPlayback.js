@@ -1,11 +1,39 @@
 /**
- * playback.js
+ * recordPlayback.js
  *
  * Record and playback utilities for the 1D kinematics simulation.
  * These functions manage the recorded data array and the playback state machine.
  */
 
 import { calculatePhysicsStep } from "./kinematics1d";
+
+// ---------------------------------------------------------------------------
+// Recording
+// ---------------------------------------------------------------------------
+
+/**
+ * Handle recording mode simulation step
+ */
+export function handleRecordingStep(simulation, deltaTime) {
+  const newSimulation = calculatePhysicsStep(simulation, deltaTime);
+
+  // Create new recorded state
+  const newRecordedState = {
+    time: newSimulation.time,
+    position: newSimulation.position,
+    velocity: newSimulation.velocity,
+    acceleration: simulation.acceleration,
+  };
+
+  return {
+    simulation: newSimulation,
+    recordedState: newRecordedState,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Playback
+// ---------------------------------------------------------------------------
 
 /**
  * Find the recorded state at a given time, interpolating between the two
@@ -15,7 +43,7 @@ import { calculatePhysicsStep } from "./kinematics1d";
  * control), so it's held at the earlier sample's value instead of being
  * blended into a fake ramp.
  */
-export function interpolateStateAtTime(recordedData, targetTime) {
+function interpolateStateAtTime(recordedData, targetTime) {
   if (recordedData.length === 1) return recordedData[0];
 
   let lo = 0;
@@ -87,25 +115,5 @@ export function handlePlaybackSeek(recordedData, targetTime) {
   return {
     simulation,
     data: { playbackTime: simulation.time },
-  };
-}
-
-/**
- * Handle recording mode simulation step
- */
-export function handleRecordingStep(simulation, deltaTime) {
-  const newSimulation = calculatePhysicsStep(simulation, deltaTime);
-
-  // Create new recorded state
-  const newRecordedState = {
-    time: newSimulation.time,
-    position: newSimulation.position,
-    velocity: newSimulation.velocity,
-    acceleration: simulation.acceleration,
-  };
-
-  return {
-    simulation: newSimulation,
-    recordedState: newRecordedState,
   };
 }
