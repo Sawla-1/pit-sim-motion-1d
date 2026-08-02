@@ -44,9 +44,9 @@ This is a 1D kinematics physics simulation built with React + Vite. The simulati
 
 ### Physics loop — `useSimulationLoop.js`
 
-The animation loop runs via `requestAnimationFrame` inside `useSimulationLoop`. It uses a **fixed 24 FPS physics timestep** with frame accumulation to handle displays faster than 24 FPS. This produces straight, consistent graph lines.
+The animation loop runs via `requestAnimationFrame` inside `useSimulationLoop`. It is a **real per-frame delta loop** (PhET-style), not a fixed timestep: each tick advances physics by the actual wall-clock gap since the last frame (`(now - last.current) / 1000`), clamped to `MAX_FRAME_TIME = 0.1s` so a stalled/backgrounded frame can't inject one huge jump.
 
-`recordRealTimeStart` and `recordPauseStartTime` refs track wall-clock time so the displayed timer matches real elapsed time through pauses.
+There are no `recordRealTimeStart` / `recordPauseStartTime` refs. Recording time is simply `simulation.time + frameTime` each tick — when `playing` is `false` the loop's `if (playing)` guard skips the physics call entirely, so time just stops advancing without needing any wall-clock anchor to resume from.
 
 The hook takes `onRecordStep` and `onPlaybackStep` callback props and dispatches to whichever one applies each tick, based on `data.selectedMode`. `App.jsx` injects `handleRecordingStep` / `handlePlaybackStep` from `engine/recordPlayback.js` as those callbacks — the hook itself has no import from the engine layer, so it stays engine-agnostic and reusable by future simulations. Chart drag-to-scrub calls `handlePlaybackSeek` directly (an absolute-time jump, not a per-tick step), sharing the same `resolvePlaybackState` lookup internally.
 
@@ -58,7 +58,7 @@ The hook takes `onRecordStep` and `onPlaybackStep` callback props and dispatches
 
 ### Data flow
 
-1. `useSimulationLoop` fires `requestAnimationFrame` at a fixed 24 FPS timestep.
+1. `useSimulationLoop` fires `requestAnimationFrame` each frame, advancing physics by the real elapsed wall-clock delta (clamped at 0.1s).
 2. Each tick dispatches to:
    - **Record mode**: `handleRecordingStep` → `calculatePhysicsStep` → appends to `recordedData` via `setData`.
    - **Playback mode**: `handlePlaybackStep` → `interpolateStateAtTime` over `recordedData` → updates `simulation` via `setSimulation`.
@@ -70,7 +70,7 @@ The hook takes `onRecordStep` and `onPlaybackStep` callback props and dispatches
 | File | Role |
 |---|---|
 | `src/App.jsx` | State, control logic, wires all components and the loop hook |
-| `src/hooks/useSimulationLoop.js` | RAF animation loop, fixed timestep, pause/resume timing |
+| `src/hooks/useSimulationLoop.js` | RAF animation loop, real per-frame delta (clamped), pause/resume timing |
 | `src/components/Simulation3D.jsx` | R3F canvas, ruler, sprite rendering — receives only `position` prop |
 | `src/components/Charts.jsx` | Chart.js line graphs, timeline drag-scrub, show/hide toggles |
 | `src/components/Controls.jsx` | Parameter inputs, mode radio, play/pause/reset/clear buttons |
