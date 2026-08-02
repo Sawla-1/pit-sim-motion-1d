@@ -52,7 +52,7 @@ The hook takes `onRecordStep` and `onPlaybackStep` callback props and dispatches
 
 ### Engine layer
 
-- **`engine/kinematics1d.js`** — `calculatePhysicsStep(simulation, deltaTime, realElapsedTime)`: pure average-velocity integration. No side effects.
+- **`engine/kinematics1d.js`** — `calculatePhysicsStep(simulation, deltaTime)`: pure average-velocity integration. No side effects.
 - **`engine/recordPlayback.js`** — `handleRecordingStep`, `handlePlaybackStep`, `handlePlaybackSeek`, `interpolateStateAtTime`: recording/playback state machine. Only `handleRecordingStep` imports from `kinematics1d`; the rest are physics-agnostic and operate purely on the timestamped `recordedData` array.
 - **`engine/evaluateExpression.js`** — `evaluateExpression(expression)`: safely evaluates math expressions typed by users (uses `Function` constructor, strips non-math chars).
 
