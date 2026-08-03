@@ -69,8 +69,6 @@ function resolvePlaybackState(recordedData, targetTime) {
 }
 
 function interpolateStateAtTime(recordedData, targetTime) {
-  if (recordedData.length === 1) return recordedData[0];
-
   let lo = 0;
   let hi = recordedData.length - 1;
   while (lo < hi) {
@@ -118,8 +116,6 @@ All four are **pure functions** — same style as #1 (`calculatePhysicsStep`), #
 
 ```js
 function interpolateStateAtTime(recordedData, targetTime) {
-  if (recordedData.length === 1) return recordedData[0];
-
   let lo = 0;
   let hi = recordedData.length - 1;
   while (lo < hi) {
@@ -145,6 +141,8 @@ function interpolateStateAtTime(recordedData, targetTime) {
   };
 }
 ```
+
+There used to be a `recordedData.length === 1` guard at the top returning `recordedData[0]` directly, but it was dead code: `resolvePlaybackState` (below) always short-circuits before calling this function when there's only one recorded point, since that point's `time` is always `0`, making `maxTime = 0` and `targetTime >= maxTime` always true.
 
 Two parts:
 

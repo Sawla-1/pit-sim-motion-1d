@@ -105,8 +105,6 @@ function resolvePlaybackState(recordedData, targetTime) {
  * the earlier point's value instead of faking a smooth ramp.
  */
 function interpolateStateAtTime(recordedData, targetTime) {
-  if (recordedData.length === 1) return recordedData[0];
-
   let lo = 0;
   let hi = recordedData.length - 1;
   while (lo < hi) {
