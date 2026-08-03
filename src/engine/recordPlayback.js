@@ -19,17 +19,9 @@ import { calculatePhysicsStep } from "./kinematics1d";
 export function handleRecordingStep(simulation, deltaTime) {
   const newSimulation = calculatePhysicsStep(simulation, deltaTime);
 
-  // Create new recorded state
-  const newRecordedState = {
-    time: newSimulation.time,
-    position: newSimulation.position,
-    velocity: newSimulation.velocity,
-    acceleration: newSimulation.acceleration,
-  };
-
   return {
     simulation: newSimulation,
-    recordedState: newRecordedState,
+    recordedState: newSimulation,
   };
 }
 

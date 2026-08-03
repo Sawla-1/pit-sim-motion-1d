@@ -27,7 +27,7 @@ function App() {
 
   // Data and mode state
   const [data, setData] = useState({
-    recordedData: [{ time: 0, position: 0, velocity: 0, acceleration: 0 }], // All simulation states
+    recordedData: [simulation], // All simulation states
     selectedMode: "record", // 'record' or 'playback'
     playbackTime: 0, // Current playback time
   });
