@@ -24,7 +24,7 @@ export function handleRecordingStep(simulation, deltaTime) {
     time: newSimulation.time,
     position: newSimulation.position,
     velocity: newSimulation.velocity,
-    acceleration: simulation.acceleration,
+    acceleration: newSimulation.acceleration,
   };
 
   return {
