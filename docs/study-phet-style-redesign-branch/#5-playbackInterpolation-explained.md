@@ -112,7 +112,7 @@ All four are **pure functions** — same style as #1 (`calculatePhysicsStep`), #
 
 ### Quick Note
 
-`recordedData` only has points at fixed 24 FPS ticks. If playback asks for a time that lands *between* two ticks, this function finds the nearest recorded point before and after that time, then blends position and velocity proportionally between them.
+`recordedData` only has points at whatever irregular real-time intervals recording actually ticked at — `useSimulationLoop.js` advances by real wall-clock delta each `requestAnimationFrame` call (roughly the monitor's refresh rate, e.g. ~16.7ms at 60Hz, but never perfectly even), not a fixed rate. If playback asks for a time that lands *between* two recorded points, this function finds the nearest recorded point before and after that time, then blends position and velocity proportionally between them.
 
 ### Answer
 
@@ -240,7 +240,7 @@ Both `handlePlaybackStep` and `handlePlaybackSeek` funnel through the exact same
 
 ## 6. Full numeric example
 
-Setup: acceleration `2` m/s², a 24 FPS recording tick (`deltaTime = 1/24`). Take one recorded pair:
+Setup: acceleration `2` m/s², one recording tick with a frame delta of `1/24` s (an example value — real frame deltas vary tick to tick with monitor refresh rate, they aren't a fixed 24 FPS). Take one recorded pair:
 
 ```js
 const prev = { time: 1.0, position: 2.0, velocity: 3.0, acceleration: 2 };
