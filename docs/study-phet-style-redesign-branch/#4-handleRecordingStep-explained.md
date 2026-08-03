@@ -1,6 +1,6 @@
 # Logic #4 Explained: `handleRecordingStep`
 
-File: `src/engine/recordPlayback.js:19-34`
+File: `src/engine/recordPlayback.js:19-26`
 
 ## 1. What does `handleRecordingStep` do?
 
@@ -14,17 +14,9 @@ It moves the simulation forward one tick (using #1), then packages that moment i
 export function handleRecordingStep(simulation, deltaTime) {
   const newSimulation = calculatePhysicsStep(simulation, deltaTime);
 
-  // Create new recorded state
-  const newRecordedState = {
-    time: newSimulation.time,
-    position: newSimulation.position,
-    velocity: newSimulation.velocity,
-    acceleration: simulation.acceleration,
-  };
-
   return {
     simulation: newSimulation,
-    recordedState: newRecordedState,
+    recordedState: newSimulation,
   };
 }
 ```
@@ -32,7 +24,7 @@ export function handleRecordingStep(simulation, deltaTime) {
 - **Inputs:** `simulation = { position, velocity, acceleration, time }` (the state *before* this tick), plus `deltaTime` (seconds elapsed).
 - **Output:** an object with two things:
   - `simulation` — the advanced state, straight from `calculatePhysicsStep` (#1).
-  - `recordedState` — a snapshot of that same moment, shaped for the recording history.
+  - `recordedState` — the exact same object as `simulation` (not a copy, not reshaped). It's returned twice under two names because the two callers care about it for different reasons: one updates the live "now" state, the other appends a point to history.
 
 It's a **pure function**, same style as `calculatePhysicsStep` (#1) and `evaluateExpression` (#3) — same inputs always give the same outputs, no side effects.
 
@@ -55,55 +47,44 @@ calculatePhysicsStep({ position: 0, velocity: 0, acceleration: 2, time: 0 }, 0.5
 // → { position: 0.25, velocity: 1, time: 0.5, acceleration: 2 }
 ```
 
-## 3. Step 2 — build the recorded snapshot
+## 3. Why there's no separate "build the snapshot" step anymore
 
 ### Quick Note
 
-This is where `recordedData` — the array that #5 (playback) and #10 (Charts) both depend on — gets its individual points.
+An older version of this function built a second, hand-written object (`newRecordedState`) just for the recording. That's gone now — `recordedState` is just `newSimulation` itself.
 
 ### Answer
+
+Previously the function looked like this:
 
 ```js
 const newRecordedState = {
   time: newSimulation.time,
   position: newSimulation.position,
   velocity: newSimulation.velocity,
-  acceleration: simulation.acceleration,
+  acceleration: newSimulation.acceleration,
 };
-```
 
-Three of the four fields (`time`, `position`, `velocity`) come from `newSimulation` — the state *after* stepping. The fourth, `acceleration`, comes from `simulation` — the state *before* stepping.
-
-```js
-newSimulation.time         // 0.5   ← after
-newSimulation.position     // 0.25  ← after
-newSimulation.velocity     // 1     ← after
-simulation.acceleration    // 2     ← before (not newSimulation.acceleration)
-```
-
-### Subtlety: old `acceleration`, not new
-
-`recordedState.acceleration` reads from `simulation.acceleration` (the pre-step value), not `newSimulation.acceleration` (the post-step value). Looking at `calculatePhysicsStep` (#1):
-
-```js
 return {
-  position: newPosition,
-  velocity: newVelocity,
-  time: newTime,
-  acceleration: simulation.acceleration, // passed through unchanged
+  simulation: newSimulation,
+  recordedState: newRecordedState,
 };
 ```
 
-`calculatePhysicsStep` never changes `acceleration` on its own — it just copies the input through. So today, `simulation.acceleration === newSimulation.acceleration` always, and this choice is harmless. But it's worth flagging: if a future simulation ever let `calculatePhysicsStep` *change* acceleration mid-step (e.g. drag, collisions), this line would start silently recording the acceleration from *before* that change instead of after it — a subtle bug baked in by which object it happens to read from.
+The idea was to keep the recorded-history shape independent from the live `simulation` shape, in case `simulation` ever grew extra fields that shouldn't leak into the recording. But `simulation`'s shape is a fixed contract documented in `CLAUDE.md` — always exactly `{ position, velocity, acceleration, time }` — so the two objects were always identical in value. Building a second object was copying data that was already right there.
 
-## 4. Step 3 — return both pieces
+That's why it was simplified to what you see today: `recordedState: newSimulation` — no separate object, no field-by-field copy. This matches the project's broader philosophy of removing abstractions that aren't earning their keep (see the CLAUDE.md guidance on evaluating changes through "would simulation #2 need this?" — here, the answer was no).
+
+One side effect: the old version's `acceleration` field read from `simulation.acceleration` (pre-step) rather than `newSimulation.acceleration` (post-step) — a subtle before/after distinction that no longer exists, since there's only one object now (`newSimulation`) and both `simulation` and `recordedState` inside it read the same post-step value.
+
+## 4. Step 2 — return both pieces
 
 ### Answer
 
 ```js
 return {
   simulation: newSimulation,
-  recordedState: newRecordedState,
+  recordedState: newSimulation,
 };
 ```
 
@@ -112,7 +93,7 @@ return {
 | Key | Shape | Used for |
 |---|---|---|
 | `simulation` | `{ position, velocity, acceleration, time }` | becomes the new "live" simulation state |
-| `recordedState` | `{ time, position, velocity, acceleration }` | gets appended to the `recordedData` array |
+| `recordedState` | same object as `simulation` (`{ position, velocity, acceleration, time }`) | gets appended to the `recordedData` array |
 
 It does **not** append anything itself, and it does **not** call `setState` of any kind — it just computes both values and returns them. Appending to the array and updating React state happens one layer up.
 
@@ -126,7 +107,7 @@ const simulation = { position: 0, velocity: 0, acceleration: 2, time: 0 };
 handleRecordingStep(simulation, 0.5)
 // → {
 //     simulation:    { position: 0.25, velocity: 1, acceleration: 2, time: 0.5 },
-//     recordedState: { time: 0.5, position: 0.25, velocity: 1, acceleration: 2 },
+//     recordedState: { position: 0.25, velocity: 1, acceleration: 2, time: 0.5 }, // same object as `simulation` above
 //   }
 ```
 
@@ -136,7 +117,7 @@ Call it again with the returned `simulation` as the next input (`deltaTime = 0.5
 handleRecordingStep({ position: 0.25, velocity: 1, acceleration: 2, time: 0.5 }, 0.5)
 // → {
 //     simulation:    { position: 1, velocity: 2, acceleration: 2, time: 1 },
-//     recordedState: { time: 1, position: 1, velocity: 2, acceleration: 2 },
+//     recordedState: { position: 1, velocity: 2, acceleration: 2, time: 1 }, // same object as `simulation` above
 //   }
 ```
 
