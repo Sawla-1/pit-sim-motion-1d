@@ -144,9 +144,8 @@ const dat = dataRef.current;
 
 if (dat.selectedMode === "playback" && dat.recordedData.length > 1) {
   // PLAYBACK MODE
-  const result = onPlaybackStep(dat, frameTime);
+  const result = onPlaybackStep(sim, dat, frameTime);
   setSimulation(result.simulation);
-  setData((prev) => ({ ...prev, ...result.data }));
   if (result.isEndOfPlayback) setPlaying(false);
 } else {
   // RECORDING MODE
@@ -164,12 +163,12 @@ if (dat.selectedMode === "playback" && dat.recordedData.length > 1) {
 
 | Condition | Branch | Calls | Applies result via |
 |---|---|---|---|
-| `selectedMode === "playback"` **and** `recordedData.length > 1` | Playback | `onPlaybackStep(dat, frameTime)` (→ #5's `handlePlaybackStep`) | `setSimulation`, merge `result.data` into `data`, stop if `isEndOfPlayback` |
+| `selectedMode === "playback"` **and** `recordedData.length > 1` | Playback | `onPlaybackStep(sim, dat, frameTime)` (→ #5's `handlePlaybackStep`) | `setSimulation`, stop if `isEndOfPlayback` |
 | anything else | Recording | `onRecordStep(sim, frameTime)` (→ #4's `handleRecordingStep`) | `setSimulation`, append `result.recordedState` to `recordedData`, stop if `MAX_RECORD_TIME` reached |
 
 - The `recordedData.length > 1` guard matters: #5's `interpolateStateAtTime` needs at least two points to interpolate between. With 0 or 1 recorded points, playback would have nothing to play — so it falls through to the recording branch instead (harmless, since with no meaningful recording there's nothing destructive about that path running).
 - `MAX_RECORD_TIME = 600` (10 minutes) auto-pauses recording so `recordedData` can't grow unbounded if a user just leaves it running.
-- Both branches call `setSimulation` and update `data`, but the *shape* of the `data` update differs: playback merges `{ playbackTime }`, recording appends to `recordedData`.
+- Both branches call `setSimulation`, but only recording also updates `data` (appending to `recordedData`) — playback position lives on `simulation.time`, so the playback branch has no `data` update to make.
 
 ## 7. Full numeric example — RECORDING mode
 
@@ -244,10 +243,10 @@ const recordedData = [
 ];
 ```
 
-`selectedMode = "playback"`, `recordedData.length (5) > 1` → playback branch runs. Current `playbackTime = 0.9`, this tick's `frameTime = 0.2`.
+`selectedMode = "playback"`, `recordedData.length (5) > 1` → playback branch runs. Current `simulation.time = 0.9`, this tick's `frameTime = 0.2`.
 
 ```
-onPlaybackStep({ playbackTime: 0.9, recordedData }, 0.2)
+onPlaybackStep({ time: 0.9 }, { recordedData }, 0.2)
   newTime = 0.9 + 0.2 = 1.1
 
   resolvePlaybackState(recordedData, 1.1):
@@ -279,12 +278,11 @@ onPlaybackStep({ playbackTime: 0.9, recordedData }, 0.2)
 ```js
 {
   simulation: { time: 1.1, position: 1.25, velocity: 2.2, acceleration: 2 },
-  data: { playbackTime: 1.1 },
   isEndOfPlayback: false,
 }
 ```
 
-`useSimulationLoop` applies it: `setSimulation(result.simulation)`, merges `{ playbackTime: 1.1 }` into `data`, and since `isEndOfPlayback` is `false`, `playing` stays `true`.
+`useSimulationLoop` applies it: `setSimulation(result.simulation)`, and since `isEndOfPlayback` is `false`, `playing` stays `true`.
 
 ### Subtlety: interpolation overshoots slightly
 

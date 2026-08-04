@@ -38,9 +38,9 @@ This is a 1D kinematics physics simulation built with React + Vite. The simulati
 
 **`data` state** — recording/playback metadata:
 ```js
-{ recordedData, selectedMode, playbackTime }
+{ recordedData, selectedMode }
 ```
-`selectedMode` is `'record'` or `'playback'` (replaces the old `isPlayback` boolean).
+`selectedMode` is `'record'` or `'playback'` (replaces the old `isPlayback` boolean). Playback position lives in `simulation.time` — there is no separate `playbackTime` field.
 
 ### Physics loop — `useSimulationLoop.js`
 
@@ -63,7 +63,7 @@ The hook takes `onRecordStep` and `onPlaybackStep` callback props and dispatches
    - **Record mode**: `handleRecordingStep` → `calculatePhysicsStep` → appends to `recordedData` via `setData`.
    - **Playback mode**: `handlePlaybackStep` → `interpolateStateAtTime` over `recordedData` → updates `simulation` via `setSimulation`.
 3. `Charts` reads `data.recordedData` to render position/velocity/acceleration vs. time graphs.
-4. In playback mode, dragging on a chart canvas calls `onSetPlaybackTime`, which scrubs `playbackTime` and seeks the 3D sprite.
+4. In playback mode, dragging on a chart canvas calls `onSeek`, which scrubs `simulation.time` and seeks the 3D sprite.
 
 ### Component responsibilities
 

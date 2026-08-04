@@ -29,7 +29,6 @@ function App() {
   const [data, setData] = useState({
     recordedData: [simulation], // All simulation states
     selectedMode: "record", // 'record' or 'playback'
-    playbackTime: 0, // Current playback time
   });
 
   useSimulationLoop({
@@ -59,7 +58,6 @@ function App() {
     setData((prev) => ({
       ...prev,
       recordedData: [{ time: 0, position: 0, velocity: 0, acceleration: 0 }],
-      playbackTime: 0,
       selectedMode: "record",
     }));
   };
@@ -81,10 +79,6 @@ function App() {
         acceleration: data.recordedData[0].acceleration,
       }));
       setPlaying(false);
-      setData((prev) => ({
-        ...prev,
-        playbackTime: 0,
-      }));
     } else if (mode === "record") {
       // Switch to record: continue from latest recorded data
       if (data.recordedData.length > 0) {
@@ -114,7 +108,6 @@ function App() {
     setData((prev) => ({
       ...prev,
       recordedData: [{ time: 0, position: simulation.position, velocity: simulation.velocity, acceleration: simulation.acceleration }],
-      playbackTime: 0,
       selectedMode: "record",
     }));
     setSimulation((prev) => ({ ...prev, time: 0 }));
@@ -124,7 +117,6 @@ function App() {
   const handleSeek = (newTime) => {
     const result = handlePlaybackSeek(data.recordedData, newTime);
     setSimulation(result.simulation);
-    setData((prev) => ({ ...prev, ...result.data }));
   };
 
   // Handler for simulation parameter changes

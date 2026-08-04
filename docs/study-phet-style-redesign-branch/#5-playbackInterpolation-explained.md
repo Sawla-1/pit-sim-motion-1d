@@ -32,16 +32,15 @@ Together they're the "playback engine": given the `recordedData` array that #4 (
 //   step and seek would each need their own copy of the same lookup code.
 // ---------------------------------------------------------------------------
 
-export function handlePlaybackStep(data, deltaTime) {
-  const newTime = data.playbackTime + deltaTime;
-  const { simulation, isEndOfPlayback } = resolvePlaybackState(
+export function handlePlaybackStep(simulation, data, deltaTime) {
+  const newTime = simulation.time + deltaTime;
+  const { simulation: newSimulation, isEndOfPlayback } = resolvePlaybackState(
     data.recordedData,
     newTime
   );
 
   return {
-    simulation,
-    data: { playbackTime: simulation.time },
+    simulation: newSimulation,
     isEndOfPlayback,
   };
 }
@@ -51,7 +50,6 @@ export function handlePlaybackSeek(recordedData, targetTime) {
 
   return {
     simulation,
-    data: { playbackTime: simulation.time },
   };
 }
 
@@ -191,25 +189,24 @@ This is the "advance a little bit" door — called once per animation frame whil
 ### Answer
 
 ```js
-export function handlePlaybackStep(data, deltaTime) {
-  const newTime = data.playbackTime + deltaTime;
-  const { simulation, isEndOfPlayback } = resolvePlaybackState(
+export function handlePlaybackStep(simulation, data, deltaTime) {
+  const newTime = simulation.time + deltaTime;
+  const { simulation: newSimulation, isEndOfPlayback } = resolvePlaybackState(
     data.recordedData,
     newTime
   );
 
   return {
-    simulation,
-    data: { playbackTime: simulation.time },
+    simulation: newSimulation,
     isEndOfPlayback,
   };
 }
 ```
 
-- **Inputs:** `data = { recordedData, playbackTime, ... }` and `deltaTime` (seconds elapsed since last frame).
-- `newTime = data.playbackTime + deltaTime` — where playback *would* be after this tick.
+- **Inputs:** `simulation` (current playback state, for its `time`), `data = { recordedData, ... }`, and `deltaTime` (seconds elapsed since last frame).
+- `newTime = simulation.time + deltaTime` — where playback *would* be after this tick.
 - Hands `newTime` to `resolvePlaybackState` to get the actual state at (or clamped to) that time.
-- **Output:** `{ simulation, data: { playbackTime }, isEndOfPlayback }` — note `data.playbackTime` is set from `simulation.time`, not from `newTime` directly. Near the end of the recording those two can differ (the guard clamps `simulation.time` to the last recorded time even if `newTime` overshot it), so reading it back off `simulation` keeps playback time from drifting past what was actually recorded.
+- **Output:** `{ simulation, isEndOfPlayback }` — playback position lives on `simulation.time`, so there's no separate playback-time field to keep in sync.
 
 ## 5. `handlePlaybackSeek` — absolute-jump entry
 
@@ -225,14 +222,13 @@ export function handlePlaybackSeek(recordedData, targetTime) {
 
   return {
     simulation,
-    data: { playbackTime: simulation.time },
   };
 }
 ```
 
-- **Inputs:** `recordedData` directly (no wrapping `data` object needed — a seek doesn't care what `playbackTime` currently is) and `targetTime` — the absolute time to jump to.
+- **Inputs:** `recordedData` directly (no wrapping `data` object needed) and `targetTime` — the absolute time to jump to.
 - Calls `resolvePlaybackState` with `targetTime` as-is — no `+ deltaTime` step, because a seek isn't "advance from where we are," it's "go here."
-- **Output:** `{ simulation, data: { playbackTime } }` — no `isEndOfPlayback` in the return. A drag-scrub doesn't need to know "did this end playback?" the way the per-frame loop does (which uses it to stop the animation), so it's simply omitted.
+- **Output:** `{ simulation }` — no `isEndOfPlayback` in the return. A drag-scrub doesn't need to know "did this end playback?" the way the per-frame loop does (which uses it to stop the animation), so it's simply omitted.
 
 Both `handlePlaybackStep` and `handlePlaybackSeek` funnel through the exact same `resolvePlaybackState` → `interpolateStateAtTime` lookup, which is the whole point of pulling that logic into a shared function: stepping frame-by-frame and dragging the chart always agree on what state a given time maps to.
 
@@ -257,7 +253,7 @@ const recordedData = [prev, next];
 ### Trace: `handlePlaybackStep`
 
 ```js
-handlePlaybackStep({ playbackTime: 1.0, recordedData }, 0.02)
+handlePlaybackStep({ time: 1.0 }, { recordedData }, 0.02)
 ```
 
 1. `newTime = 1.0 + 0.02 = 1.02`
@@ -281,7 +277,6 @@ handlePlaybackStep({ playbackTime: 1.0, recordedData }, 0.02)
 ```js
 {
   simulation: { time: 1.02, position: 2.0608333, velocity: 3.04, acceleration: 2 },
-  data: { playbackTime: 1.02 },
   isEndOfPlayback: false,
 }
 ```
@@ -293,7 +288,6 @@ handlePlaybackSeek(recordedData, 1.02)
 // resolvePlaybackState(recordedData, 1.02) walks the identical path as above
 // → {
 //     simulation: { time: 1.02, position: 2.0608333, velocity: 3.04, acceleration: 2 },
-//     data: { playbackTime: 1.02 },
 //   }
 ```
 
@@ -319,10 +313,10 @@ Same pattern as #4: these four functions only compute. Something else has to cal
 ### Answer
 
 - `useSimulationLoop.js` runs the `requestAnimationFrame` loop and calls `onPlaybackStep` once per frame while in playback mode — `App.jsx` wires this to `handlePlaybackStep`.
-- `App.jsx` takes the returned `{ simulation, data, isEndOfPlayback }` and does the actual mutation: `setSimulation(simulation)`, merges `data.playbackTime` into `setData`, and uses `isEndOfPlayback` to stop the loop when playback reaches the end.
-- `handlePlaybackSeek` isn't called from the animation loop at all — `Charts.jsx`'s drag-scrub handler calls `onSetPlaybackTime` (wired in `App.jsx`), which calls `handlePlaybackSeek` directly and applies the result the same way (`setSimulation` / `setData`).
+- `App.jsx` takes the returned `{ simulation, isEndOfPlayback }` and does the actual mutation: `setSimulation(simulation)`, and uses `isEndOfPlayback` to stop the loop when playback reaches the end.
+- `handlePlaybackSeek` isn't called from the animation loop at all — `Charts.jsx`'s drag-scrub handler calls `onSeek` (wired in `App.jsx`), which calls `handlePlaybackSeek` directly and applies the result the same way (`setSimulation`).
 
-Neither function touches React state or the DOM itself — they just compute `{ simulation, data, ... }` and hand it back. The caller one layer up decides what to do with it.
+Neither function touches React state or the DOM itself — they just compute `{ simulation, ... }` and hand it back. The caller one layer up decides what to do with it.
 
 ### Extra Tips
 

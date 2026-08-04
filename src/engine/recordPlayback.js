@@ -50,16 +50,15 @@ export function handleRecordingStep(simulation, deltaTime) {
  * One step of normal playback: move playback time forward a bit,
  * then find the matching state. Called every frame while playing.
  */
-export function handlePlaybackStep(data, deltaTime) {
-  const newTime = data.playbackTime + deltaTime;
-  const { simulation, isEndOfPlayback } = resolvePlaybackState(
+export function handlePlaybackStep(simulation, data, deltaTime) {
+  const newTime = simulation.time + deltaTime;
+  const { simulation: newSimulation, isEndOfPlayback } = resolvePlaybackState(
     data.recordedData,
     newTime
   );
 
   return {
-    simulation,
-    data: { playbackTime: simulation.time },
+    simulation: newSimulation,
     isEndOfPlayback,
   };
 }
@@ -73,7 +72,6 @@ export function handlePlaybackSeek(recordedData, targetTime) {
 
   return {
     simulation,
-    data: { playbackTime: simulation.time },
   };
 }
 
