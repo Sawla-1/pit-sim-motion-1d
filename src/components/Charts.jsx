@@ -23,6 +23,46 @@ ChartJS.register(
   zoomPlugin
 );
 
+// Vertical zoom toolbar: zoom in / decorative move icon / zoom out
+function ChartZoomControls({ onZoomIn, onZoomOut }) {
+  return (
+    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1 text-gray-400">
+      <button
+        type="button"
+        aria-label="Zoom in"
+        onClick={onZoomIn}
+        className="cursor-pointer hover:text-gray-600"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="11" cy="11" r="7" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          <line x1="11" y1="8" x2="11" y2="14" />
+          <line x1="8" y1="11" x2="14" y2="11" />
+        </svg>
+      </button>
+      <span aria-hidden="true">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="7 8 12 3 17 8" />
+          <line x1="12" y1="3" x2="12" y2="21" />
+          <polyline points="7 16 12 21 17 16" />
+        </svg>
+      </span>
+      <button
+        type="button"
+        aria-label="Zoom out"
+        onClick={onZoomOut}
+        className="cursor-pointer hover:text-gray-600"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="11" cy="11" r="7" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          <line x1="8" y1="11" x2="14" y2="11" />
+        </svg>
+      </button>
+    </div>
+  );
+}
+
 /**
  * Charts Component - Simplified graphs with all functionality
  * Combines all chart logic into one simple component
@@ -99,7 +139,15 @@ function Charts({ data, simulation, onSeek }) {
     setIsDragging(false);
   };
 
-  const isPlayback = data.selectedMode === "playback";
+  const handleZoomIn = (index) => {
+    const chart = chartRefs.current[index];
+    if (chart) chart.zoom({ y: 1.2 });
+  };
+
+  const handleZoomOut = (index) => {
+    const chart = chartRefs.current[index];
+    if (chart) chart.zoom({ y: 0.8 });
+  };
 
   // Simplified chart options
   const getChartOptions = () => {
@@ -137,12 +185,7 @@ function Charts({ data, simulation, onSeek }) {
         },
         zoom: {
           limits: { x: { min: 0, max: maxTime } },
-          zoom: { wheel: { enabled: isPlayback }, mode: "x" },
-          pan: {
-            enabled: isPlayback,
-            mode: "x",
-            limits: { x: { min: 0, max: maxTime } },
-          },
+          zoom: { mode: "y" },
         },
         annotation: {
           annotations: {
@@ -196,6 +239,10 @@ function Charts({ data, simulation, onSeek }) {
             >
               ✖
             </button>
+            <ChartZoomControls
+              onZoomIn={() => handleZoomIn(0)}
+              onZoomOut={() => handleZoomOut(0)}
+            />
             <Line
               data={buildChartData("position", "#1976d2")}
               options={getChartOptions()}
@@ -233,6 +280,10 @@ function Charts({ data, simulation, onSeek }) {
             >
               ✖
             </button>
+            <ChartZoomControls
+              onZoomIn={() => handleZoomIn(1)}
+              onZoomOut={() => handleZoomOut(1)}
+            />
             <Line
               data={buildChartData("velocity", "#d32f2f")}
               options={getChartOptions()}
@@ -270,6 +321,10 @@ function Charts({ data, simulation, onSeek }) {
             >
               ✖
             </button>
+            <ChartZoomControls
+              onZoomIn={() => handleZoomIn(2)}
+              onZoomOut={() => handleZoomOut(2)}
+            />
             <Line
               data={buildChartData("acceleration", "#2e7d32")}
               options={getChartOptions()}
