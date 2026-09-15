@@ -29,6 +29,7 @@ function App() {
   const [data, setData] = useState({
     recordedData: [simulation], // All simulation states
     selectedMode: "record", // 'record' or 'playback'
+    playbackTime: 0, // Current playback time
   });
 
   useSimulationLoop({
@@ -58,6 +59,7 @@ function App() {
     setData((prev) => ({
       ...prev,
       recordedData: [{ time: 0, position: 0, velocity: 0, acceleration: 0 }],
+      playbackTime: 0,
       selectedMode: "record",
     }));
   };
@@ -79,6 +81,10 @@ function App() {
         acceleration: data.recordedData[0].acceleration,
       }));
       setPlaying(false);
+      setData((prev) => ({
+        ...prev,
+        playbackTime: 0,
+      }));
     } else if (mode === "record") {
       // Switch to record: continue from latest recorded data
       if (data.recordedData.length > 0) {
@@ -108,6 +114,7 @@ function App() {
     setData((prev) => ({
       ...prev,
       recordedData: [{ time: 0, position: simulation.position, velocity: simulation.velocity, acceleration: simulation.acceleration }],
+      playbackTime: 0,
       selectedMode: "record",
     }));
     setSimulation((prev) => ({ ...prev, time: 0 }));
@@ -117,6 +124,7 @@ function App() {
   const handleSeek = (newTime) => {
     const result = handlePlaybackSeek(data.recordedData, newTime);
     setSimulation(result.simulation);
+    setData((prev) => ({ ...prev, ...result.data }));
   };
 
   // Handler for simulation parameter changes
@@ -138,7 +146,7 @@ function App() {
     <div className="min-h-screen w-full p-2 flex flex-col gap-1 box-border bg-gradient-to-br bg-blue-700 text-gray-800 overflow-x-hidden">
       {/* Simulation Display Area */}
       <div className="relative w-full mb-1">
-        <Simulation3D position={simulation.position} />
+        <Simulation3D position={simulation.position} velocity={simulation.velocity} />
 
         {/* Time Display */}
         <div

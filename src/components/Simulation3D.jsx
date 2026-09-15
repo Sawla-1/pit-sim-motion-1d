@@ -1,97 +1,83 @@
-import { Canvas } from "@react-three/fiber";
+import { Suspense, useRef } from "react";
+import * as THREE from "three";
+import { Canvas} from "@react-three/fiber";
+import { useTexture, Text } from "@react-three/drei";
 
-/**
- * 3D Simulation Component - Combines Sprite, Ground, and Simulation logic
- * Much simpler than the original separate components
- */
-function Simulation3D({ position }) {
+
+function Simulation3D({ position, velocity }) {
 
   return (
-    <div className="relative">
-      <Canvas
-        orthographic
-        camera={{ position: [0, 0, 10], zoom: 60 }}
-        className="w-full h-[125px] bg-blue-50 rounded-lg"
-      >
-        <ambientLight intensity={1} />
+    <Canvas
+      orthographic
+      camera={{ position: [0, 0, 10], zoom: 60 }}
+      className="w-full h-[125px] bg-blue-50 rounded-lg"
+    >
+      {/* <CameraRig halfWidth={rulerHalfWidth} /> */}
+      <ambientLight intensity={1} />
 
-        {/* Ground with ruler markings */}
-        <group>
-          {/* Main ground */}
-          <mesh position={[0, -0.6, 0]}>
-            <planeGeometry args={[50, 0.1]} />
-            <meshBasicMaterial color="skyblue" />
-          </mesh>
+      {/* Ground with ruler markings */}
+      <group>
+        {/* Main ground */}
+        <mesh position={[0, -0.6, 0]}>
+          <planeGeometry args={[50, 0.1]} />
+          <meshBasicMaterial color="skyblue" />
+        </mesh>
 
-          {/* Ruler markings - simplified */}
-          {Array.from({ length: 21 }, (_, i) => i - 10).map((i) =>
-            i % 2 === 0 ? (
-              <sprite
-                key={`marker-${i}`}
-                position={[i, -0.7, 0]}
-                scale={[0.02, 0.3, 1]}
-              >
-                <spriteMaterial color="#2d5016" />
-              </sprite>
-            ) : (
-              <sprite
-                key={`marker-${i}`}
-                position={[i, -0.7, 0]}
-                scale={[0.02, 0.15, 1]}
-              >
-                <spriteMaterial color="#2d5016" />
-              </sprite>
+        {/* Ruler ticks + number labels - one loop, so they can never drift apart */}
+        <Suspense fallback={null}>
+          {Array.from({ length: 21}, (_, i) => i - 10).map(
+            (i) => (
+              <group key={`marker-${i}`}>
+                <sprite position={[i, -0.7, 0]} scale={[0.02, i % 2 === 0 ? 0.3 : 0.15, 1]}>
+                  <spriteMaterial color={i === 0 ? "#ff4444" : "#2d5016"} />
+                </sprite>
+                {i % 2 === 0 && (
+                  <Text
+                    position={[i, -0.95, 0]}
+                    fontSize={0.25}
+                    color={i === 0 ? "#ff4444" : "#2d5016"}
+                    anchorX="center"
+                    anchorY="top"
+                  >
+                    {i === 0 ? "0 meters" : i}
+                  </Text>
+                )}
+              </group>
             )
           )}
+        </Suspense>
+      </group>
 
-          {/* Center line (0 meter marker) */}
-          <sprite position={[0, -0.7, 0]} scale={[0.03, 0.3, 1]}>
-            <spriteMaterial color="#ff4444" />
-          </sprite>
-        </group>
-
-        {/* Orange moving sprite */}
-        <sprite position={[position, 0, 0]} scale={[0.8, 1.2, 1]}>
-          <spriteMaterial color="orange" />
-        </sprite>
-      </Canvas>
-
-      {/* Simple HTML text overlays for ruler labels */}
-      <div className="absolute bottom-0.5 left-[2.5%] text-green-800 text-sm font-bold pointer-events-none">
-        -10
-      </div>
-      <div className="absolute bottom-0.5 left-[12.5%] text-green-800 text-sm font-bold pointer-events-none">
-        -8
-      </div>
-      <div className="absolute bottom-0.5 left-[21.5%] text-green-800 text-sm font-bold pointer-events-none">
-        -6
-      </div>
-      <div className="absolute bottom-0.5 left-[30.5%] text-green-800 text-sm font-bold pointer-events-none">
-        -4
-      </div>
-      <div className="absolute bottom-0.5 left-[39.5%] text-green-800 text-sm font-bold pointer-events-none">
-        -2
-      </div>
-      <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 text-red-500 text-sm pointer-events-none">
-        0 meters
-      </div>
-      <div className="absolute bottom-0.5 right-[41.5%] text-green-800 text-sm font-bold pointer-events-none">
-        2
-      </div>
-      <div className="absolute bottom-0.5 right-[32.5%] text-green-800 text-sm font-bold pointer-events-none">
-        4
-      </div>
-      <div className="absolute bottom-0.5 right-[23.5%] text-green-800 text-sm font-bold pointer-events-none">
-        6
-      </div>
-      <div className="absolute bottom-0.5 right-[14.5%] text-green-800 text-sm font-bold pointer-events-none">
-        8
-      </div>
-      <div className="absolute bottom-0.5 right-[5.5%] text-green-800 text-sm font-bold pointer-events-none">
-        10
-      </div>
-    </div>
+      <Suspense fallback={null}>
+        <HumanSprite position={position} velocity={velocity} />
+      </Suspense>
+    </Canvas>
   );
 }
 
+const MOVING_THRESHOLD = 0.1;
+
+function HumanSprite({ position, velocity }) {
+  const walkingTexture = useTexture("/walking-man.svg");
+  const standingTexture = useTexture("/star.png");
+  const facingRef = useRef(-1);
+
+  if (velocity > MOVING_THRESHOLD) facingRef.current = -1;
+  else if (velocity < -MOVING_THRESHOLD) facingRef.current = 1;
+
+  const isStanding = Math.abs(velocity) <= MOVING_THRESHOLD;
+  const texture = isStanding ? standingTexture : walkingTexture;
+
+  // Sprite ignores scale's sign, so mirror by flipping the texture's UVs instead.
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.repeat.x = facingRef.current;          // 1 = normal, -1 = mirrored
+  texture.offset.x = facingRef.current === -1 ? 1 : 0;
+
+  return (
+    <sprite position={[position, 0, 0]} scale={[1.2, 1.2, 1]}>
+      <spriteMaterial map={texture} transparent />
+    </sprite>
+  );
+}
 export default Simulation3D;
+
