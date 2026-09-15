@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { formatNumber } from "../utils/formatNumber";
 import { Line } from "react-chartjs-2";
 import {
@@ -96,6 +96,8 @@ function ChartZoomControls({ axis, onZoomIn, onZoomOut }) {
  * Charts Component - Simplified graphs with all functionality
  * Combines all chart logic into one simple component
  */
+const MIN_ZOOM_WINDOW = 1; // seconds - smallest visible x-axis window when zoomed in
+
 function Charts({ data, simulation, onSeek }) {
   // State for drag functionality
   const [isDragging, setIsDragging] = useState(false);
@@ -104,6 +106,8 @@ function Charts({ data, simulation, onSeek }) {
     showVelocity: true,
     showAcceleration: true,
   });
+  // Shared x-axis (time) zoom window across all three charts. null = full/auto range.
+  const [xRange, setXRange] = useState(null);
   const chartRefs = useRef([]);
 
   // Build chart data - simplified
@@ -123,6 +127,12 @@ function Charts({ data, simulation, onSeek }) {
   const maxTime = data.recordedData.length > 0
     ? data.recordedData[data.recordedData.length - 1].time
     : 0;
+
+  // Clearing/resetting the recording drops maxTime back to 0 - drop any
+  // stale zoom window from before the clear along with it.
+  useEffect(() => {
+    if (maxTime === 0 && xRange !== null) setXRange(null);
+  }, [maxTime, xRange]);
 
   // Drag handlers for timeline scrubbing
   const handleMouseDown = (event) => {
@@ -168,14 +178,24 @@ function Charts({ data, simulation, onSeek }) {
     setIsDragging(false);
   };
 
-  const handleZoom = (index, axis, factor) => {
+  const handleZoom = (index, factor) => {
     const chart = chartRefs.current[index];
     if (!chart || maxTime === 0) return;
+    chart.zoom({ y: factor });
+  };
 
-    chart.zoom({ [axis]: factor });
-    if (axis === "x") {
-      chart.zoomScale("x", { min: 0, max: chart.scales.x.max - chart.scales.x.min });
-    }
+  // Shared across all charts, since they all share the same time axis.
+  const handleXZoom = (factor) => {
+    if (maxTime === 0) return;
+    if (factor > 1 && maxTime < MIN_ZOOM_WINDOW) return; // not enough data to zoom in
+
+    const currentMax = xRange?.max ?? maxTime;
+    const requestedMax = currentMax / factor;
+    const newMax = factor > 1
+      ? Math.max(MIN_ZOOM_WINDOW, requestedMax) // zoom in: never shrink below MIN_ZOOM_WINDOW
+      : Math.min(maxTime, requestedMax);         // zoom out: never exceed full data
+
+    setXRange({ min: 0, max: newMax });
   };
 
 
@@ -193,8 +213,8 @@ function Charts({ data, simulation, onSeek }) {
       scales: {
         x: {
           type: "linear",
-          min: 0,
-          max: maxTime,
+          min: xRange?.min ?? 0,
+          max: xRange?.max ?? maxTime,
         },
         y: {
           type: "linear",
@@ -219,10 +239,9 @@ function Charts({ data, simulation, onSeek }) {
         },
         zoom: {
           limits: {
-            x: { min: 0, max: maxTime },
             y: { min: yMin, max: yMax },
           },
-          zoom: { mode: "xy" },
+          zoom: { mode: "y" },
         },
         annotation: {
           annotations: {
@@ -278,13 +297,13 @@ function Charts({ data, simulation, onSeek }) {
             </button>
             <ChartZoomControls
               axis="y"
-              onZoomIn={() => handleZoom(0, "y", 1.2)}
-              onZoomOut={() => handleZoom(0, "y", 0.8)}
+              onZoomIn={() => handleZoom(0, 1.2)}
+              onZoomOut={() => handleZoom(0, 0.8)}
             />
             <ChartZoomControls
               axis="x"
-              onZoomIn={() => handleZoom(0, "x", 1.2)}
-              onZoomOut={() => handleZoom(0, "x", 0.8)}
+              onZoomIn={() => handleXZoom(1.2)}
+              onZoomOut={() => handleXZoom(0.8)}
             />
             <Line
               data={buildChartData("position", "#1976d2")}
@@ -325,13 +344,13 @@ function Charts({ data, simulation, onSeek }) {
             </button>
             <ChartZoomControls
               axis="y"
-              onZoomIn={() => handleZoom(1, "y", 1.2)}
-              onZoomOut={() => handleZoom(1, "y", 0.8)}
+              onZoomIn={() => handleZoom(1, 1.2)}
+              onZoomOut={() => handleZoom(1, 0.8)}
             />
             <ChartZoomControls
               axis="x"
-              onZoomIn={() => handleZoom(1, "x", 1.2)}
-              onZoomOut={() => handleZoom(1, "x", 0.8)}
+              onZoomIn={() => handleXZoom(1.2)}
+              onZoomOut={() => handleXZoom(0.8)}
             />
             <Line
               data={buildChartData("velocity", "#d32f2f")}
@@ -372,13 +391,13 @@ function Charts({ data, simulation, onSeek }) {
             </button>
             <ChartZoomControls
               axis="y"
-              onZoomIn={() => handleZoom(2, "y", 1.2)}
-              onZoomOut={() => handleZoom(2, "y", 0.8)}
+              onZoomIn={() => handleZoom(2, 1.2)}
+              onZoomOut={() => handleZoom(2, 0.8)}
             />
             <ChartZoomControls
               axis="x"
-              onZoomIn={() => handleZoom(2, "x", 1.2)}
-              onZoomOut={() => handleZoom(2, "x", 0.8)}
+              onZoomIn={() => handleXZoom(1.2)}
+              onZoomOut={() => handleXZoom(0.8)}
             />
             <Line
               data={buildChartData("acceleration", "#2e7d32")}
