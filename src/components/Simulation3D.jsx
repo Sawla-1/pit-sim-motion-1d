@@ -1,10 +1,43 @@
-import { Suspense, useRef } from "react";
+import { Suspense, useLayoutEffect, useRef } from "react";
 import * as THREE from "three";
-import { Canvas} from "@react-three/fiber";
+import { Canvas, useThree } from "@react-three/fiber";
 import { useTexture, Text } from "@react-three/drei";
+import { formatNumber } from "../utils/formatNumber";
 
+const EDGE = 10; // ruler half-width in meters; the ruler itself never changes size
+const FIT_HALF_WIDTH = 11; // ruler ±10 plus room for the man sprite and the edge label
+const CONTENT_TOP = 0.7; // just above the man's head
+const CONTENT_BOTTOM = -1.25; // just below the ruler labels
+
+function CameraRig() {
+  const { camera, size } = useThree();
+
+  useLayoutEffect(() => {
+    if (size.width === 0 || size.height === 0) return;
+    // Center on the content (it sits below y=0) so the fit doesn't waste height.
+    camera.position.y = (CONTENT_TOP + CONTENT_BOTTOM) / 2;
+    camera.zoom = Math.min(
+      size.width / (2 * FIT_HALF_WIDTH),
+      size.height / (CONTENT_TOP - CONTENT_BOTTOM)
+    );
+    camera.updateProjectionMatrix();
+  }, [size.width, size.height, camera]);
+
+  return null;
+}
 
 function Simulation3D({ position, velocity }) {
+  // Past ±EDGE the man stays at the edge and that side's labels stretch,
+  // so the edge label always equals the current position.
+  const rightScale = Math.max(1, position / EDGE);
+  const leftScale = Math.max(1, -position / EDGE);
+  const displayX = position / (position >= 0 ? rightScale : leftScale);
+
+  const labelFor = (i) => {
+    if (i === 0) return "0 meters";
+    const sideScale = i > 0 ? rightScale : leftScale;
+    return sideScale === 1 ? i : formatNumber(i * sideScale, 0);
+  };
 
   return (
     <Canvas
@@ -12,7 +45,7 @@ function Simulation3D({ position, velocity }) {
       camera={{ position: [0, 0, 10], zoom: 60 }}
       className="w-full h-[125px] bg-blue-50 rounded-lg"
     >
-      {/* <CameraRig halfWidth={rulerHalfWidth} /> */}
+      <CameraRig />
       <ambientLight intensity={1} />
 
       {/* Ground with ruler markings */}
@@ -39,7 +72,7 @@ function Simulation3D({ position, velocity }) {
                     anchorX="center"
                     anchorY="top"
                   >
-                    {i === 0 ? "0 meters" : i}
+                    {labelFor(i)}
                   </Text>
                 )}
               </group>
@@ -49,7 +82,7 @@ function Simulation3D({ position, velocity }) {
       </group>
 
       <Suspense fallback={null}>
-        <HumanSprite position={position} velocity={velocity} />
+        <HumanSprite position={displayX} velocity={velocity} />
       </Suspense>
     </Canvas>
   );
