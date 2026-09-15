@@ -50,6 +50,24 @@ function PanButton({ direction, onClick, label }) {
   );
 }
 
+// Reset-zoom button - small counterclockwise-arrow icon, same visual
+// language as the other chart controls.
+function ResetButton({ onClick }) {
+  return (
+    <button
+      type="button"
+      aria-label="Reset zoom"
+      onClick={onClick}
+      className="absolute bottom-2 right-2 cursor-pointer text-gray-400 hover:text-gray-600"
+    >
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+        <polyline points="3 3 3 8 8 8" />
+      </svg>
+    </button>
+  );
+}
+
 // Zoom + pan toolbar: zoom in / pan buttons / zoom out.
 // axis="y" lays out vertically along the right edge (pan up/down between the
 // zoom buttons); axis="x" lays out horizontally along the bottom edge (pan
@@ -260,6 +278,13 @@ function Charts({ data, simulation, onSeek }) {
     setXRange({ min: newMin, max: newMax });
   };
 
+  // Resets this chart's y-axis zoom/pan, and the shared x-axis window
+  // (which resets it for all three charts, same as x-zoom/pan already do).
+  const handleReset = (index) => {
+    const chart = chartRefs.current[index];
+    if (chart) chart.resetZoom();
+    setXRange(null);
+  };
 
   // Simplified chart options
   const getChartOptions = (valueKey) => {
@@ -371,6 +396,7 @@ function Charts({ data, simulation, onSeek }) {
               onPanPositive={() => handleXPan(-1)}
               onPanNegative={() => handleXPan(1)}
             />
+            <ResetButton onClick={() => handleReset(0)} />
             <Line
               data={buildChartData("position", "#1976d2")}
               options={getChartOptions("position")}
@@ -422,6 +448,7 @@ function Charts({ data, simulation, onSeek }) {
               onPanPositive={() => handleXPan(-1)}
               onPanNegative={() => handleXPan(1)}
             />
+            <ResetButton onClick={() => handleReset(1)} />
             <Line
               data={buildChartData("velocity", "#d32f2f")}
               options={getChartOptions("velocity")}
@@ -473,6 +500,7 @@ function Charts({ data, simulation, onSeek }) {
               onPanPositive={() => handleXPan(-1)}
               onPanNegative={() => handleXPan(1)}
             />
+            <ResetButton onClick={() => handleReset(2)} />
             <Line
               data={buildChartData("acceleration", "#2e7d32")}
               options={getChartOptions("acceleration")}
