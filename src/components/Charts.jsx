@@ -23,10 +23,38 @@ ChartJS.register(
   zoomPlugin
 );
 
-// Zoom toolbar: zoom in / decorative move icon / zoom out.
-// axis="y" lays out vertically along the right edge; axis="x" lays out
-// horizontally along the bottom edge, with the decorative arrow rotated to match.
-function ChartZoomControls({ axis, onZoomIn, onZoomOut }) {
+// Single chevron button, rotated per direction, used for the pan controls.
+function PanButton({ direction, onClick, label }) {
+  const rotation = { up: 0, right: 90, down: 180, left: 270 }[direction];
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      onClick={onClick}
+      className="cursor-pointer hover:text-gray-600"
+    >
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        style={{ transform: `rotate(${rotation}deg)` }}
+      >
+        <polyline points="6 15 12 9 18 15" />
+      </svg>
+    </button>
+  );
+}
+
+// Zoom + pan toolbar: zoom in / pan buttons / zoom out.
+// axis="y" lays out vertically along the right edge (pan up/down between the
+// zoom buttons); axis="x" lays out horizontally along the bottom edge (pan
+// left/right between the zoom buttons).
+function ChartZoomControls({ axis, onZoomIn, onZoomOut, onPanPositive, onPanNegative }) {
   const containerClass =
     axis === "x"
       ? "absolute bottom-2 right-20 flex flex-row items-center gap-1 text-gray-400"
@@ -65,29 +93,29 @@ function ChartZoomControls({ axis, onZoomIn, onZoomOut }) {
     </button>
   );
 
-  const decorativeIcon = (
-    <span key="move" aria-hidden="true">
-      {axis === "x" ? (
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="8 7 3 12 8 17" />
-          <line x1="3" y1="12" x2="21" y2="12" />
-          <polyline points="16 7 21 12 16 17" />
-        </svg>
-      ) : (
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="7 8 12 3 17 8" />
-          <line x1="12" y1="3" x2="12" y2="21" />
-          <polyline points="7 16 12 21 17 16" />
-        </svg>
-      )}
-    </span>
+  const panPositiveButton = (
+    <PanButton
+      key="pan-pos"
+      direction={axis === "x" ? "left" : "up"}
+      onClick={onPanPositive}
+      label={axis === "x" ? "Pan left" : "Pan up"}
+    />
+  );
+
+  const panNegativeButton = (
+    <PanButton
+      key="pan-neg"
+      direction={axis === "x" ? "right" : "down"}
+      onClick={onPanNegative}
+      label={axis === "x" ? "Pan right" : "Pan down"}
+    />
   );
 
   return (
     <div className={containerClass}>
       {axis === "x"
-        ? [zoomOutButton, decorativeIcon, zoomInButton]
-        : [zoomInButton, decorativeIcon, zoomOutButton]}
+        ? [zoomOutButton, panPositiveButton, panNegativeButton, zoomInButton]
+        : [zoomInButton, panPositiveButton, panNegativeButton, zoomOutButton]}
     </div>
   );
 }
@@ -198,6 +226,40 @@ function Charts({ data, simulation, onSeek }) {
     setXRange({ min: 0, max: newMax });
   };
 
+  // Y-axis pan uses the native Chart.js pan (each chart keeps its own y
+  // scale/limits), so it can just nudge that chart's own scale directly.
+  const Y_PAN_PIXELS = 30;
+  const handleYPan = (index, direction) => {
+    const chart = chartRefs.current[index];
+    if (!chart || maxTime === 0) return;
+    chart.pan({ y: direction * Y_PAN_PIXELS });
+  };
+
+  // X-axis (time) is shared React state across all three charts - not a
+  // native Chart.js scale - so panning moves the xRange window instead,
+  // the same way handleXZoom resizes it. Clamped to [0, maxTime].
+  const handleXPan = (direction) => {
+    if (maxTime === 0) return;
+    const currentMin = xRange?.min ?? 0;
+    const currentMax = xRange?.max ?? maxTime;
+    const windowWidth = currentMax - currentMin;
+    if (windowWidth >= maxTime) return; // fully zoomed out - nothing to pan
+
+    const step = windowWidth * 0.2 * direction;
+    let newMin = currentMin + step;
+    let newMax = currentMax + step;
+
+    if (newMin < 0) {
+      newMax -= newMin;
+      newMin = 0;
+    } else if (newMax > maxTime) {
+      newMin -= newMax - maxTime;
+      newMax = maxTime;
+    }
+
+    setXRange({ min: newMin, max: newMax });
+  };
+
 
   // Simplified chart options
   const getChartOptions = (valueKey) => {
@@ -299,11 +361,15 @@ function Charts({ data, simulation, onSeek }) {
               axis="y"
               onZoomIn={() => handleZoom(0, 1.2)}
               onZoomOut={() => handleZoom(0, 0.8)}
+              onPanPositive={() => handleYPan(0, 1)}
+              onPanNegative={() => handleYPan(0, -1)}
             />
             <ChartZoomControls
               axis="x"
               onZoomIn={() => handleXZoom(1.2)}
               onZoomOut={() => handleXZoom(0.8)}
+              onPanPositive={() => handleXPan(-1)}
+              onPanNegative={() => handleXPan(1)}
             />
             <Line
               data={buildChartData("position", "#1976d2")}
@@ -346,11 +412,15 @@ function Charts({ data, simulation, onSeek }) {
               axis="y"
               onZoomIn={() => handleZoom(1, 1.2)}
               onZoomOut={() => handleZoom(1, 0.8)}
+              onPanPositive={() => handleYPan(1, 1)}
+              onPanNegative={() => handleYPan(1, -1)}
             />
             <ChartZoomControls
               axis="x"
               onZoomIn={() => handleXZoom(1.2)}
               onZoomOut={() => handleXZoom(0.8)}
+              onPanPositive={() => handleXPan(-1)}
+              onPanNegative={() => handleXPan(1)}
             />
             <Line
               data={buildChartData("velocity", "#d32f2f")}
@@ -393,11 +463,15 @@ function Charts({ data, simulation, onSeek }) {
               axis="y"
               onZoomIn={() => handleZoom(2, 1.2)}
               onZoomOut={() => handleZoom(2, 0.8)}
+              onPanPositive={() => handleYPan(2, 1)}
+              onPanNegative={() => handleYPan(2, -1)}
             />
             <ChartZoomControls
               axis="x"
               onZoomIn={() => handleXZoom(1.2)}
               onZoomOut={() => handleXZoom(0.8)}
+              onPanPositive={() => handleXPan(-1)}
+              onPanNegative={() => handleXPan(1)}
             />
             <Line
               data={buildChartData("acceleration", "#2e7d32")}
