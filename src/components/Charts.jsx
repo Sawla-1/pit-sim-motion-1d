@@ -30,8 +30,9 @@ function PanButton({ direction, onClick, label }) {
     <button
       type="button"
       aria-label={label}
+      title={label}
       onClick={onClick}
-      className="cursor-pointer hover:text-gray-600"
+      className="cursor-pointer rounded-full bg-gray-200 p-0.5 transition-transform hover:scale-125 hover:bg-gray-300 hover:text-gray-900"
     >
       <svg
         width="14"
@@ -57,8 +58,9 @@ function ResetButton({ onClick }) {
     <button
       type="button"
       aria-label="Reset zoom"
+      title="Reset zoom"
       onClick={onClick}
-      className="absolute bottom-2 right-2 cursor-pointer text-gray-400 hover:text-gray-600"
+      className="absolute bottom-2 right-2 cursor-pointer transition-transform hover:scale-125 text-gray-600 hover:text-gray-900"
     >
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
@@ -75,16 +77,17 @@ function ResetButton({ onClick }) {
 function ChartZoomControls({ axis, onZoomIn, onZoomOut, onPanPositive, onPanNegative }) {
   const containerClass =
     axis === "x"
-      ? "absolute bottom-2 right-20 flex flex-row items-center gap-1 text-gray-400"
-      : "absolute right-2 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1 text-gray-400";
+      ? "absolute bottom-2 right-16 flex flex-row items-center gap-3 text-gray-600"
+      : "absolute right-2 top-1/2 -translate-y-1/2 flex flex-col items-center gap-3 text-gray-600";
 
   const zoomInButton = (
     <button
       key="in"
       type="button"
       aria-label="Zoom in"
+      title="Zoom in"
       onClick={onZoomIn}
-      className="cursor-pointer hover:text-gray-600"
+      className="cursor-pointer transition-transform hover:scale-125 hover:text-gray-900"
     >
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="11" cy="11" r="7" />
@@ -100,8 +103,9 @@ function ChartZoomControls({ axis, onZoomIn, onZoomOut, onPanPositive, onPanNega
       key="out"
       type="button"
       aria-label="Zoom out"
+      title="Zoom out"
       onClick={onZoomOut}
-      className="cursor-pointer hover:text-gray-600"
+      className="cursor-pointer transition-transform hover:scale-125 hover:text-gray-900"
     >
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="11" cy="11" r="7" />
@@ -129,11 +133,23 @@ function ChartZoomControls({ axis, onZoomIn, onZoomOut, onPanPositive, onPanNega
     />
   );
 
+  // Pan buttons stay tight together as their own cluster, separated from the
+  // zoom buttons by the container's wider gap.
+  const panGroup = (
+    <div
+      key="pan-group"
+      className={axis === "x" ? "flex flex-row items-center gap-1" : "flex flex-col items-center gap-1"}
+    >
+      {panPositiveButton}
+      {panNegativeButton}
+    </div>
+  );
+
   return (
     <div className={containerClass}>
       {axis === "x"
-        ? [zoomOutButton, panPositiveButton, panNegativeButton, zoomInButton]
-        : [zoomInButton, panPositiveButton, panNegativeButton, zoomOutButton]}
+        ? [zoomOutButton, panGroup, zoomInButton]
+        : [zoomInButton, panGroup, zoomOutButton]}
     </div>
   );
 }
