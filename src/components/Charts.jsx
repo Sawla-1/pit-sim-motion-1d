@@ -369,7 +369,7 @@ function Charts({ data, simulation, onSeek }) {
         )}
         {/* Position Graph */}
         {visibility.showPosition && (
-          <div className="relative flex-auto bg-gray-100 h-[150px] pt-8 px-8 rounded-md">
+          <div className="relative flex-auto bg-gray-100 h-[170px] pt-8 pb-6 px-8 rounded-md">
             <span className="absolute top-2 left-8 text-sm text-blue-600 font-semibold">
               Position
             </span>
@@ -421,7 +421,7 @@ function Charts({ data, simulation, onSeek }) {
 
         {/* Velocity Graph */}
         {visibility.showVelocity && (
-          <div className="relative flex-auto bg-gray-100 h-[150px] pt-8 px-8 rounded-md">
+          <div className="relative flex-auto bg-gray-100 h-[170px] pt-8 pb-6 px-8 rounded-md">
             <span className="absolute top-2 left-8 text-sm text-red-600 font-semibold">
               Velocity
             </span>
@@ -473,7 +473,7 @@ function Charts({ data, simulation, onSeek }) {
 
         {/* Acceleration Graph */}
         {visibility.showAcceleration && (
-          <div className="relative flex-auto bg-gray-100 h-[150px] pt-8 px-8 rounded-md">
+          <div className="relative flex-auto bg-gray-100 h-[170px] pt-8 pb-6 px-8 rounded-md">
             <span className="absolute top-2 left-8 text-sm text-green-600 font-semibold">
               Acceleration
             </span>
