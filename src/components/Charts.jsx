@@ -175,7 +175,7 @@ function ChartZoomControls({
  */
 const MIN_ZOOM_WINDOW = 1; // seconds - smallest visible x-axis window when zoomed in
 
-function Charts({ data, simulation, onSeek }) {
+function Charts({ data, simulation, onSeek, playing }) {
   // State for drag functionality
   const [isDragging, setIsDragging] = useState(false);
   const [visibility, setVisibility] = useState({
@@ -216,6 +216,18 @@ function Charts({ data, simulation, onSeek }) {
       setYRanges((prev) => (Object.keys(prev).length > 0 ? {} : prev));
     }
   }, [maxTime, xRange]);
+
+  // Resuming a RECORDING should show the live growing timeline, not a
+  // window you zoomed into before pausing - reset both axes back to
+  // full/auto view. Playback mode's data is a fixed, already-recorded
+  // array (it never grows), so there's no staleness risk there - resetting
+  // zoom on every playback resume would just be an unwanted interruption.
+  useEffect(() => {
+    if (playing && data.selectedMode === "record") {
+      setXRange(null);
+      setYRanges({});
+    }
+  }, [playing, data.selectedMode]);
 
   // ---- Drag-to-scrub (playback mode) ----
 
