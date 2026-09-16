@@ -307,7 +307,7 @@ function Charts({ data, simulation, onSeek }) {
   // would be a no-op, since x-zoom/pan state is already tracked in React.
   const xZoomInDisabled = maxTime < MIN_ZOOM_WINDOW ||
     (xRange !== null && xRange.max - xRange.min <= MIN_ZOOM_WINDOW);
-  const xZoomOutDisabled = maxTime === 0 || xRange === null;
+  const xZoomOutDisabled = maxTime === 0 || xRange === null || xRange.max - xRange.min >= maxTime;
   const xPanLeftDisabled = maxTime === 0 || xRange === null || xRange.min <= 0;
   const xPanRightDisabled = maxTime === 0 || xRange === null || xRange.max >= maxTime;
 
@@ -337,11 +337,23 @@ function Charts({ data, simulation, onSeek }) {
     const width = current.max - current.min;
     if (factor > 1 && width <= yMinRange) return; // already at the smallest allowed window
 
-    const mid = (current.min + current.max) / 2;
     const newWidth = factor > 1
       ? Math.max(yMinRange, width / factor)    // zoom in: never shrink below yMinRange
       : Math.min(yMax - yMin, width / factor); // zoom out: never exceed full data view
+
+    // At the full-range floor, snap to the exact bounds directly instead of
+    // computing via mid/halfWidth - that math only equals [yMin, yMax]
+    // mathematically, not always bit-for-bit in floating point, which can
+    // leave one side a hair short and desync one pan button from zoom-out.
+    if (newWidth >= yMax - yMin) {
+      setYRanges((prev) => ({ ...prev, [index]: { min: yMin, max: yMax } }));
+      return;
+    }
+
     const halfWidth = newWidth / 2;
+    // Clamp the center so a wide window can't spill past [yMin, yMax] on one
+    // side even though its width is already capped correctly.
+    const mid = Math.min(Math.max((current.min + current.max) / 2, yMin + halfWidth), yMax - halfWidth);
 
     setYRanges((prev) => ({ ...prev, [index]: { min: mid - halfWidth, max: mid + halfWidth } }));
   };
@@ -374,8 +386,8 @@ function Charts({ data, simulation, onSeek }) {
     const { yMin, yMax, yMinRange } = getYRange(valueKey);
     const current = yRanges[index];
     return {
-      zoomInDisabled: current !== undefined && current.max - current.min <= yMinRange,
-      zoomOutDisabled: maxTime === 0 || current === undefined,
+      zoomInDisabled: maxTime === 0 || (current !== undefined && current.max - current.min <= yMinRange),
+      zoomOutDisabled: maxTime === 0 || current === undefined || current.max - current.min >= yMax - yMin,
       panUpDisabled: maxTime === 0 || current === undefined || current.max >= yMax,
       panDownDisabled: maxTime === 0 || current === undefined || current.min <= yMin,
     };
