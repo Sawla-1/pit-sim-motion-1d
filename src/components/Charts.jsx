@@ -183,11 +183,25 @@ function Charts({ data, simulation, onSeek, playing }) {
     showVelocity: true,
     showAcceleration: true,
   });
-  // Shared x-axis (time) zoom window across all three charts. null = full/auto range.
-  const [xRange, setXRange] = useState(null);
-  // Y-axis zoom window, independent per chart - same pattern as xRange, just
-  // keyed by chart index. undefined per-index = full/auto range for that chart.
-  const [yRanges, setYRanges] = useState({}); // { [index]: { min, max } }
+  // Zoom windows are kept separately per mode ("record"/"playback") so
+  // switching modes never shows you the other mode's zoom, and each mode's
+  // last zoom is remembered when you switch back to it.
+  const [xRangeByMode, setXRangeByMode] = useState({ record: null, playback: null });
+  const [yRangesByMode, setYRangesByMode] = useState({ record: {}, playback: {} });
+
+  // Current-mode view, plus setters shaped like useState's (value or updater
+  // function) so every existing setXRange/setYRanges call site below needs
+  // no changes - they transparently write into the active mode's slot.
+  const xRange = xRangeByMode[data.selectedMode];
+  const yRanges = yRangesByMode[data.selectedMode];
+  const setXRange = (value) => setXRangeByMode((prev) => ({
+    ...prev,
+    [data.selectedMode]: typeof value === "function" ? value(prev[data.selectedMode]) : value,
+  }));
+  const setYRanges = (value) => setYRangesByMode((prev) => ({
+    ...prev,
+    [data.selectedMode]: typeof value === "function" ? value(prev[data.selectedMode]) : value,
+  }));
   const chartRefs = useRef([]);
 
   // Build chart data - simplified
@@ -209,13 +223,14 @@ function Charts({ data, simulation, onSeek, playing }) {
     : 0;
 
   // Clearing/resetting the recording drops maxTime back to 0 - drop any
-  // stale zoom window from before the clear along with it.
+  // stale zoom window from before the clear, in BOTH modes (not just the
+  // active one), since the data both modes would show is gone either way.
   useEffect(() => {
     if (maxTime === 0) {
-      if (xRange !== null) setXRange(null);
-      setYRanges((prev) => (Object.keys(prev).length > 0 ? {} : prev));
+      setXRangeByMode({ record: null, playback: null });
+      setYRangesByMode({ record: {}, playback: {} });
     }
-  }, [maxTime, xRange]);
+  }, [maxTime]);
 
   // Resuming a RECORDING should show the live growing timeline, not a
   // window you zoomed into before pausing - reset both axes back to
@@ -224,8 +239,8 @@ function Charts({ data, simulation, onSeek, playing }) {
   // zoom on every playback resume would just be an unwanted interruption.
   useEffect(() => {
     if (playing && data.selectedMode === "record") {
-      setXRange(null);
-      setYRanges({});
+      setXRangeByMode((prev) => ({ ...prev, record: null }));
+      setYRangesByMode((prev) => ({ ...prev, record: {} }));
     }
   }, [playing, data.selectedMode]);
 
