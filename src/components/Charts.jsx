@@ -275,7 +275,10 @@ function Charts({ data, simulation, onSeek }) {
       ? Math.max(MIN_ZOOM_WINDOW, requestedMax) // zoom in: never shrink below MIN_ZOOM_WINDOW
       : Math.min(maxTime, requestedMax);         // zoom out: never exceed full data
 
-    setXRange({ min: 0, max: newMax });
+    // Reset to null (full/auto range) instead of an explicit {0, maxTime}
+    // snapshot once zoomed all the way out - null auto-tracks a still-growing
+    // recording, a frozen snapshot would go stale the moment more data comes in.
+    setXRange(newMax >= maxTime ? null : { min: 0, max: newMax });
   };
 
   // X-axis (time) is shared React state across all three charts - not a
@@ -341,12 +344,17 @@ function Charts({ data, simulation, onSeek }) {
       ? Math.max(yMinRange, width / factor)    // zoom in: never shrink below yMinRange
       : Math.min(yMax - yMin, width / factor); // zoom out: never exceed full data view
 
-    // At the full-range floor, snap to the exact bounds directly instead of
-    // computing via mid/halfWidth - that math only equals [yMin, yMax]
-    // mathematically, not always bit-for-bit in floating point, which can
-    // leave one side a hair short and desync one pan button from zoom-out.
+    // At the full-range floor, reset to undefined (full/auto range) instead
+    // of an explicit {yMin, yMax} snapshot - undefined auto-tracks a
+    // still-growing recording, while a frozen snapshot would go stale the
+    // moment more data comes in (and computing it via mid/halfWidth risks a
+    // floating-point hair-short edge that desyncs one pan button anyway).
     if (newWidth >= yMax - yMin) {
-      setYRanges((prev) => ({ ...prev, [index]: { min: yMin, max: yMax } }));
+      setYRanges((prev) => {
+        const next = { ...prev };
+        delete next[index];
+        return next;
+      });
       return;
     }
 
