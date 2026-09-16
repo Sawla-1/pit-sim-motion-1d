@@ -169,10 +169,74 @@ function ChartZoomControls({
   );
 }
 
-/**
- * Charts Component - Simplified graphs with all functionality
- * Combines all chart logic into one simple component
- */
+// One chart's full panel: visibility toggle, header, zoom/pan/reset controls,
+// and the Line chart. Takes values/callbacks already bound to a specific
+// chart from the call site (same pattern as PhysicsInput in Controls.jsx),
+// so it has no idea which chart it's rendering.
+function ChartPanel({
+  label, unit, textClass, value,
+  visible, onShow, onHide,
+  yControlsProps, xControls, onReset, resetDisabled,
+  chartData, chartOptions, chartRef,
+}) {
+  if (!visible) {
+    return (
+      <div>
+        {label} Graph{" "}
+        <button className="cursor-pointer" onClick={onShow}>
+          ❇️
+        </button>{" "}
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative flex-auto bg-gray-100 h-[170px] pt-8 pb-6 px-8 rounded-md">
+      <span className={`absolute top-2 left-8 text-sm font-semibold ${textClass}`}>
+        {label}
+      </span>
+      <span className={`absolute top-2 right-10 text-sm font-semibold ${textClass}`}>
+        {formatNumber(value, 2)} {unit}
+      </span>
+      <button
+        className="absolute top-2 right-2 text-xs text-white font-semibold cursor-pointer bg-red-600 px-1 py-0.5 rounded-sm"
+        onClick={onHide}
+      >
+        ✖
+      </button>
+      <ChartZoomControls axis="y" {...yControlsProps} />
+      {xControls}
+      <ResetButton onClick={onReset} disabled={resetDisabled} />
+      <Line data={chartData} options={chartOptions} ref={chartRef} />
+    </div>
+  );
+}
+
+// Shifts a [min,max] window by 20% of its own width, clamped to [lower,
+// upper]. Shared by the x-axis (time) and y-axis (value) pan handlers -
+// only the bounds differ between them. Returns null when already fully
+// zoomed out (nothing to pan).
+function panWindow(current, lower, upper, direction) {
+  const width = current.max - current.min;
+  if (width >= upper - lower) return null;
+
+  const step = width * 0.2 * direction;
+  let min = current.min + step;
+  let max = current.max + step;
+
+  if (min < lower) {
+    max -= min - lower;
+    min = lower;
+  } else if (max > upper) {
+    min -= max - upper;
+    max = upper;
+  }
+
+  return { min, max };
+}
+
+// Renders the Position/Velocity/Acceleration line charts, each with its own
+// Y-axis zoom/pan and a shared X-axis (time) zoom/pan across all three.
 const MIN_ZOOM_WINDOW = 1; // seconds - smallest visible x-axis window when zoomed in
 
 function Charts({ data, simulation, onSeek, playing }) {
@@ -313,24 +377,9 @@ function Charts({ data, simulation, onSeek, playing }) {
   // the same way handleXZoom resizes it. Clamped to [0, maxTime].
   const handleXPan = (direction) => {
     if (maxTime === 0) return;
-    const currentMin = xRange?.min ?? 0;
-    const currentMax = xRange?.max ?? maxTime;
-    const windowWidth = currentMax - currentMin;
-    if (windowWidth >= maxTime) return; // fully zoomed out - nothing to pan
-
-    const step = windowWidth * 0.2 * direction;
-    let newMin = currentMin + step;
-    let newMax = currentMax + step;
-
-    if (newMin < 0) {
-      newMax -= newMin;
-      newMin = 0;
-    } else if (newMax > maxTime) {
-      newMin -= newMax - maxTime;
-      newMax = maxTime;
-    }
-
-    setXRange({ min: newMin, max: newMax });
+    const current = { min: xRange?.min ?? 0, max: xRange?.max ?? maxTime };
+    const next = panWindow(current, 0, maxTime, direction);
+    if (next) setXRange(next);
   };
 
   // X-axis disabled states - button should visibly reflect when a click
@@ -398,22 +447,8 @@ function Charts({ data, simulation, onSeek, playing }) {
     if (maxTime === 0) return;
     const { yMin, yMax } = getYRange(valueKey);
     const current = yRanges[index] ?? { min: yMin, max: yMax };
-    const windowWidth = current.max - current.min;
-    if (windowWidth >= yMax - yMin) return; // fully zoomed out - nothing to pan
-
-    const step = windowWidth * 0.2 * direction;
-    let newMin = current.min + step;
-    let newMax = current.max + step;
-
-    if (newMin < yMin) {
-      newMax -= newMin - yMin;
-      newMin = yMin;
-    } else if (newMax > yMax) {
-      newMin -= newMax - yMax;
-      newMax = yMax;
-    }
-
-    setYRanges((prev) => ({ ...prev, [index]: { min: newMin, max: newMax } }));
+    const next = panWindow(current, yMin, yMax, direction);
+    if (next) setYRanges((prev) => ({ ...prev, [index]: next }));
   };
 
   // Y-axis disabled states, mirroring the x-axis ones above.
@@ -502,6 +537,22 @@ function Charts({ data, simulation, onSeek, playing }) {
     };
   };
 
+  // Identical across all three charts - the x-axis (time) is shared state,
+  // not per-chart - so it's built once here instead of repeated 3x below.
+  const xControls = (
+    <ChartZoomControls
+      axis="x"
+      onZoomIn={() => handleXZoom(1.2)}
+      onZoomOut={() => handleXZoom(0.8)}
+      onPanPositive={() => handleXPan(-1)}
+      onPanNegative={() => handleXPan(1)}
+      zoomInDisabled={xZoomInDisabled}
+      zoomOutDisabled={xZoomOutDisabled}
+      panPositiveDisabled={xPanLeftDisabled}
+      panNegativeDisabled={xPanRightDisabled}
+    />
+  );
+
   return (
     <>
       <div
@@ -511,185 +562,87 @@ function Charts({ data, simulation, onSeek, playing }) {
         onMouseLeave={handleMouseUp}
         className="flex flex-col gap-1 flex-3 min-w-0 text-white text-right"
       >
-        {/* Position Button */}
-        {!visibility.showPosition && (
-          <div>
-            Position Graph{" "}
-            <button
-              className="cursor-pointer"
-              onClick={() => setVisibility({ ...visibility, showPosition: true })}
-            >
-              ❇️
-            </button>{" "}
-          </div>
-        )}
-        {/* Position Graph */}
-        {visibility.showPosition && (
-          <div className="relative flex-auto bg-gray-100 h-[170px] pt-8 pb-6 px-8 rounded-md">
-            <span className="absolute top-2 left-8 text-sm text-blue-600 font-semibold">
-              Position
-            </span>
-            <span className="absolute top-2 right-10 text-sm text-blue-600 font-semibold">
-              {formatNumber(simulation.position, 2)} m
-            </span>
-            <button
-              className="absolute top-2 right-2 text-xs text-white font-semibold cursor-pointer bg-red-600 px-1 py-0.5 rounded-sm"
-              onClick={() => setVisibility({ ...visibility, showPosition: false })}
-            >
-              ✖
-            </button>
-            <ChartZoomControls
-              axis="y"
-              onZoomIn={() => handleYZoom("position", 0, 1.2)}
-              onZoomOut={() => handleYZoom("position", 0, 0.8)}
-              onPanPositive={() => handleYPan("position", 0, 1)}
-              onPanNegative={() => handleYPan("position", 0, -1)}
-              zoomInDisabled={positionYDisabled.zoomInDisabled}
-              zoomOutDisabled={positionYDisabled.zoomOutDisabled}
-              panPositiveDisabled={positionYDisabled.panUpDisabled}
-              panNegativeDisabled={positionYDisabled.panDownDisabled}
-            />
-            <ChartZoomControls
-              axis="x"
-              onZoomIn={() => handleXZoom(1.2)}
-              onZoomOut={() => handleXZoom(0.8)}
-              onPanPositive={() => handleXPan(-1)}
-              onPanNegative={() => handleXPan(1)}
-              zoomInDisabled={xZoomInDisabled}
-              zoomOutDisabled={xZoomOutDisabled}
-              panPositiveDisabled={xPanLeftDisabled}
-              panNegativeDisabled={xPanRightDisabled}
-            />
-            <ResetButton onClick={() => handleReset(0)} disabled={isResetDisabled(0)} />
-            <Line
-              data={buildChartData("position", "#1976d2")}
-              options={getChartOptions(0)}
-              ref={(ref) => {
-                if (ref) chartRefs.current[0] = ref;
-              }}
-            />
-          </div>
-        )}
-        {/* Velocity Button */}
-        {!visibility.showVelocity && (
-          <div>
-            Velocity Graph{" "}
-            <button
-              className="cursor-pointer"
-              onClick={() => setVisibility({ ...visibility, showVelocity: true })}
-            >
-              ❇️
-            </button>{" "}
-          </div>
-        )}
-
-        {/* Velocity Graph */}
-        {visibility.showVelocity && (
-          <div className="relative flex-auto bg-gray-100 h-[170px] pt-8 pb-6 px-8 rounded-md">
-            <span className="absolute top-2 left-8 text-sm text-red-600 font-semibold">
-              Velocity
-            </span>
-            <span className="absolute top-2 right-10 text-sm text-red-600 font-semibold">
-              {formatNumber(simulation.velocity, 2)} m/s
-            </span>
-            <button
-              className="absolute top-2 right-2 text-xs text-white font-semibold cursor-pointer bg-red-600 px-1 py-0.5 rounded-sm"
-              onClick={() => setVisibility({ ...visibility, showVelocity: false })}
-            >
-              ✖
-            </button>
-            <ChartZoomControls
-              axis="y"
-              onZoomIn={() => handleYZoom("velocity", 1, 1.2)}
-              onZoomOut={() => handleYZoom("velocity", 1, 0.8)}
-              onPanPositive={() => handleYPan("velocity", 1, 1)}
-              onPanNegative={() => handleYPan("velocity", 1, -1)}
-              zoomInDisabled={velocityYDisabled.zoomInDisabled}
-              zoomOutDisabled={velocityYDisabled.zoomOutDisabled}
-              panPositiveDisabled={velocityYDisabled.panUpDisabled}
-              panNegativeDisabled={velocityYDisabled.panDownDisabled}
-            />
-            <ChartZoomControls
-              axis="x"
-              onZoomIn={() => handleXZoom(1.2)}
-              onZoomOut={() => handleXZoom(0.8)}
-              onPanPositive={() => handleXPan(-1)}
-              onPanNegative={() => handleXPan(1)}
-              zoomInDisabled={xZoomInDisabled}
-              zoomOutDisabled={xZoomOutDisabled}
-              panPositiveDisabled={xPanLeftDisabled}
-              panNegativeDisabled={xPanRightDisabled}
-            />
-            <ResetButton onClick={() => handleReset(1)} disabled={isResetDisabled(1)} />
-            <Line
-              data={buildChartData("velocity", "#d32f2f")}
-              options={getChartOptions(1)}
-              ref={(ref) => {
-                if (ref) chartRefs.current[1] = ref;
-              }}
-            />
-          </div>
-        )}
-        {/* Acceleration Button */}
-        {!visibility.showAcceleration && (
-          <div>
-            Acceleration Graph{" "}
-            <button
-              className="cursor-pointer"
-              onClick={() => setVisibility({ ...visibility, showAcceleration: true })}
-            >
-              ❇️
-            </button>{" "}
-          </div>
-        )}
-
-        {/* Acceleration Graph */}
-        {visibility.showAcceleration && (
-          <div className="relative flex-auto bg-gray-100 h-[170px] pt-8 pb-6 px-8 rounded-md">
-            <span className="absolute top-2 left-8 text-sm text-green-600 font-semibold">
-              Acceleration
-            </span>
-            <span className="absolute top-2 right-10 text-sm text-green-600 font-semibold">
-              {formatNumber(simulation.acceleration, 2)} m/s²
-            </span>
-            <button
-              className="absolute top-2 right-2 text-xs text-white font-semibold cursor-pointer bg-red-600 px-1 py-0.5 rounded-sm"
-              onClick={() => setVisibility({ ...visibility, showAcceleration: false })}
-            >
-              ✖
-            </button>
-            <ChartZoomControls
-              axis="y"
-              onZoomIn={() => handleYZoom("acceleration", 2, 1.2)}
-              onZoomOut={() => handleYZoom("acceleration", 2, 0.8)}
-              onPanPositive={() => handleYPan("acceleration", 2, 1)}
-              onPanNegative={() => handleYPan("acceleration", 2, -1)}
-              zoomInDisabled={accelerationYDisabled.zoomInDisabled}
-              zoomOutDisabled={accelerationYDisabled.zoomOutDisabled}
-              panPositiveDisabled={accelerationYDisabled.panUpDisabled}
-              panNegativeDisabled={accelerationYDisabled.panDownDisabled}
-            />
-            <ChartZoomControls
-              axis="x"
-              onZoomIn={() => handleXZoom(1.2)}
-              onZoomOut={() => handleXZoom(0.8)}
-              onPanPositive={() => handleXPan(-1)}
-              onPanNegative={() => handleXPan(1)}
-              zoomInDisabled={xZoomInDisabled}
-              zoomOutDisabled={xZoomOutDisabled}
-              panPositiveDisabled={xPanLeftDisabled}
-              panNegativeDisabled={xPanRightDisabled}
-            />
-            <ResetButton onClick={() => handleReset(2)} disabled={isResetDisabled(2)} />
-            <Line
-              data={buildChartData("acceleration", "#2e7d32")}
-              options={getChartOptions(2)}
-              ref={(ref) => {
-                if (ref) chartRefs.current[2] = ref;
-              }}
-            />
-          </div>
-        )}
+        <ChartPanel
+          label="Position"
+          unit="m"
+          textClass="text-blue-600"
+          value={simulation.position}
+          visible={visibility.showPosition}
+          onShow={() => setVisibility({ ...visibility, showPosition: true })}
+          onHide={() => setVisibility({ ...visibility, showPosition: false })}
+          yControlsProps={{
+            onZoomIn: () => handleYZoom("position", 0, 1.2),
+            onZoomOut: () => handleYZoom("position", 0, 0.8),
+            onPanPositive: () => handleYPan("position", 0, 1),
+            onPanNegative: () => handleYPan("position", 0, -1),
+            zoomInDisabled: positionYDisabled.zoomInDisabled,
+            zoomOutDisabled: positionYDisabled.zoomOutDisabled,
+            panPositiveDisabled: positionYDisabled.panUpDisabled,
+            panNegativeDisabled: positionYDisabled.panDownDisabled,
+          }}
+          xControls={xControls}
+          onReset={() => handleReset(0)}
+          resetDisabled={isResetDisabled(0)}
+          chartData={buildChartData("position", "#1976d2")}
+          chartOptions={getChartOptions(0)}
+          chartRef={(ref) => {
+            if (ref) chartRefs.current[0] = ref;
+          }}
+        />
+        <ChartPanel
+          label="Velocity"
+          unit="m/s"
+          textClass="text-red-600"
+          value={simulation.velocity}
+          visible={visibility.showVelocity}
+          onShow={() => setVisibility({ ...visibility, showVelocity: true })}
+          onHide={() => setVisibility({ ...visibility, showVelocity: false })}
+          yControlsProps={{
+            onZoomIn: () => handleYZoom("velocity", 1, 1.2),
+            onZoomOut: () => handleYZoom("velocity", 1, 0.8),
+            onPanPositive: () => handleYPan("velocity", 1, 1),
+            onPanNegative: () => handleYPan("velocity", 1, -1),
+            zoomInDisabled: velocityYDisabled.zoomInDisabled,
+            zoomOutDisabled: velocityYDisabled.zoomOutDisabled,
+            panPositiveDisabled: velocityYDisabled.panUpDisabled,
+            panNegativeDisabled: velocityYDisabled.panDownDisabled,
+          }}
+          xControls={xControls}
+          onReset={() => handleReset(1)}
+          resetDisabled={isResetDisabled(1)}
+          chartData={buildChartData("velocity", "#d32f2f")}
+          chartOptions={getChartOptions(1)}
+          chartRef={(ref) => {
+            if (ref) chartRefs.current[1] = ref;
+          }}
+        />
+        <ChartPanel
+          label="Acceleration"
+          unit="m/s²"
+          textClass="text-green-600"
+          value={simulation.acceleration}
+          visible={visibility.showAcceleration}
+          onShow={() => setVisibility({ ...visibility, showAcceleration: true })}
+          onHide={() => setVisibility({ ...visibility, showAcceleration: false })}
+          yControlsProps={{
+            onZoomIn: () => handleYZoom("acceleration", 2, 1.2),
+            onZoomOut: () => handleYZoom("acceleration", 2, 0.8),
+            onPanPositive: () => handleYPan("acceleration", 2, 1),
+            onPanNegative: () => handleYPan("acceleration", 2, -1),
+            zoomInDisabled: accelerationYDisabled.zoomInDisabled,
+            zoomOutDisabled: accelerationYDisabled.zoomOutDisabled,
+            panPositiveDisabled: accelerationYDisabled.panUpDisabled,
+            panNegativeDisabled: accelerationYDisabled.panDownDisabled,
+          }}
+          xControls={xControls}
+          onReset={() => handleReset(2)}
+          resetDisabled={isResetDisabled(2)}
+          chartData={buildChartData("acceleration", "#2e7d32")}
+          chartOptions={getChartOptions(2)}
+          chartRef={(ref) => {
+            if (ref) chartRefs.current[2] = ref;
+          }}
+        />
       </div>
     </>
   );
