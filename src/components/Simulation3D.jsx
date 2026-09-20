@@ -2,13 +2,18 @@ import { Suspense, useLayoutEffect, useRef } from "react";
 import * as THREE from "three";
 import { Canvas, useThree } from "@react-three/fiber";
 import { useTexture, Text } from "@react-three/drei";
-import { formatNumber } from "../utils/formatNumber";
+import { niceStep } from "../utils/niceStep";
 
-const EDGE = 10; // ruler half-width in meters; the ruler itself never changes size
+const EDGE = 10; // half-width of the ruler picture in world units; the picture never changes size
+const MIN_RANGE = 10; // meters shown on each side of 0 while the man is near the middle
+const MAX_LABELS_PER_SIDE = 6;
+const MIN_EDGE_GAP = 0.2; // world units; any closer and the edge stick doubles up with the last stick
+
 const FIT_HALF_WIDTH = 11; // ruler ±10 plus room for the man sprite and the edge label
-const CONTENT_TOP = 0.7; // just above the man's head
+const CONTENT_TOP = 1; // just above the man's head
 const CONTENT_BOTTOM = -1.25; // just below the ruler labels
 
+// CameraRig makes the ruler fit inside the canvas on any screen size
 function CameraRig() {
   const { camera, size } = useThree();
 
@@ -27,17 +32,18 @@ function CameraRig() {
 }
 
 function Simulation3D({ position, velocity }) {
-  // Past ±EDGE the man stays at the edge and that side's labels stretch,
-  // so the edge label always equals the current position.
-  const rightScale = Math.max(1, position / EDGE);
-  const leftScale = Math.max(1, -position / EDGE);
-  const displayX = position / (position >= 0 ? rightScale : leftScale);
+  // The ruler spans -range..range with 0 in the center, and follows the man both ways.
+  const range = Math.max(MIN_RANGE, Math.abs(position));
+  const step = niceStep(range, MAX_LABELS_PER_SIDE);
+  const halfStep = step / 2;
+  const toX = (meters) => (meters / range) * EDGE; // sticks, labels and the man all use this
 
-  const labelFor = (i) => {
-    if (i === 0) return "0 meters";
-    const sideScale = i > 0 ? rightScale : leftScale;
-    return sideScale === 1 ? i : formatNumber(i * sideScale, 0);
-  };
+  const halfSteps = Math.floor(range / halfStep);
+  const ticks = Array.from({ length: halfSteps * 2 + 1 }, (_, i) => {
+    const n = i - halfSteps;
+    return { value: n * halfStep, labeled: n % 2 === 0 };
+  });
+  const showEdge = toX(range - halfSteps * halfStep) > MIN_EDGE_GAP;
 
   return (
     <Canvas
@@ -56,33 +62,38 @@ function Simulation3D({ position, velocity }) {
           <meshBasicMaterial color="skyblue" />
         </mesh>
 
-        {/* Ruler ticks + number labels - one loop, so they can never drift apart */}
+        {/* Ruler sticks + number labels - one loop, so they can never drift apart */}
         <Suspense fallback={null}>
-          {Array.from({ length: 21}, (_, i) => i - 10).map(
-            (i) => (
-              <group key={`marker-${i}`}>
-                <sprite position={[i, -0.7, 0]} scale={[0.02, i % 2 === 0 ? 0.3 : 0.15, 1]}>
-                  <spriteMaterial color={i === 0 ? "#ff4444" : "#2d5016"} />
-                </sprite>
-                {i % 2 === 0 && (
-                  <Text
-                    position={[i, -0.95, 0]}
-                    fontSize={0.25}
-                    color={i === 0 ? "#ff4444" : "#2d5016"}
-                    anchorX="center"
-                    anchorY="top"
-                  >
-                    {labelFor(i)}
-                  </Text>
-                )}
-              </group>
-            )
-          )}
+          {ticks.map(({ value, labeled }) => (
+            <group key={`tick-${value}`}>
+              <sprite position={[toX(value), -0.7, 0]} scale={[0.02, labeled ? 0.3 : 0.15, 1]}>
+                <spriteMaterial color={value === 0 ? "#ff4444" : "#2d5016"} />
+              </sprite>
+              {labeled && (
+                <Text
+                  position={[toX(value), -0.95, 0]}
+                  fontSize={0.25}
+                  color={value === 0 ? "#ff4444" : "#2d5016"}
+                  anchorX="center"
+                  anchorY="top"
+                >
+                  {value === 0 ? "0 meters" : value}
+                </Text>
+              )}
+            </group>
+          ))}
+
+          {showEdge &&
+            [-EDGE, EDGE].map((x) => (
+              <sprite key={`edge-${x}`} position={[x, -0.7, 0]} scale={[0.02, 0.3, 1]}>
+                <spriteMaterial color="#2d5016" />
+              </sprite>
+            ))}
         </Suspense>
       </group>
 
       <Suspense fallback={null}>
-        <HumanSprite position={displayX} velocity={velocity} />
+        <HumanSprite position={toX(position)} velocity={velocity} />
       </Suspense>
     </Canvas>
   );
@@ -113,4 +124,3 @@ function HumanSprite({ position, velocity }) {
   );
 }
 export default Simulation3D;
-
