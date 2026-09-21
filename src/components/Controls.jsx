@@ -5,7 +5,7 @@ import { evaluateExpression } from "../engine/evaluateExpression";
  * A single physics parameter input: label, text box, and range slider.
  * Owns the local string state, last-valid ref, and external-sync effect.
  */
-function PhysicsInput({ label, unit, value, min, max, labelClass, accentClass, focusClass, onChange }) {
+function PhysicsInput({ label, unit, value, min, max, labelClass, accentClass, focusClass, disabled,onChange }) {
   const [text, setText] = useState(String(value));
   const lastValid = useRef(value);
 
@@ -34,11 +34,12 @@ function PhysicsInput({ label, unit, value, min, max, labelClass, accentClass, f
         <input
           type="text"
           value={text}
+          disabled={disabled}
           onFocus={(e) => e.target.select()}
           onChange={(e) => setText(e.target.value)}
           onBlur={(e) => commit(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") e.target.blur(); }}
-          className={`w-1/2 px-2 py-1.5 border border-gray-300 rounded text-xs bg-white text-black transition-colors focus:outline-none ${focusClass} focus:shadow-[0_0_0_3px_rgba(42,82,152,0.1)]`}
+          className={`w-1/2 px-2 py-1.5 border border-gray-300 rounded text-xs bg-white text-black transition-colors focus:outline-none ${focusClass} focus:shadow-[0_0_0_3px_rgba(42,82,152,0.1)] disabled:opacity-50 disabled:cursor-not-allowed`}
         />
         <span className="text-sm">{min}</span>
         <input
@@ -47,8 +48,9 @@ function PhysicsInput({ label, unit, value, min, max, labelClass, accentClass, f
           max={max}
           step={0.1}
           value={value}
+          disabled={disabled}
           onChange={(e) => onChange(Number(e.target.value) || 0)}
-          className={`w-1/2 ${accentClass}`}
+          className={`w-1/2 ${accentClass} disabled:opacity-50 disabled:cursor-not-allowed`}
         />
         <span className="text-sm">{max}</span>
       </div>
@@ -81,6 +83,7 @@ function Controls({
         <PhysicsInput
           label="Position" unit="m"
           value={simulation.position} min={-10} max={10}
+          disabled={playing}
           labelClass="text-blue-600"
           accentClass="accent-blue-600"
           focusClass="focus:border-blue-600"
@@ -89,6 +92,7 @@ function Controls({
         <PhysicsInput
           label="Velocity" unit="m/s"
           value={simulation.velocity} min={-10} max={10}
+          disabled={playing}
           labelClass="text-red-600"
           accentClass="accent-red-600"
           focusClass="focus:border-red-600"
@@ -97,6 +101,7 @@ function Controls({
         <PhysicsInput
           label="Acceleration" unit="m/s²"
           value={simulation.acceleration} min={-10} max={10}
+          disabled={playing}
           labelClass="text-green-600"
           accentClass="accent-green-700"
           focusClass="focus:border-green-600"
