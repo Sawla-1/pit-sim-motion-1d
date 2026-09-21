@@ -175,7 +175,7 @@ export function ChartZoomControls({
 export function ChartPanel({
   label, unit, textClass, value,
   visible, onShow, onHide,
-  yControlsProps, xControls, onReset, resetDisabled,
+  showZoomControls, yControlsProps, xControls, onReset, resetDisabled,
   chartData, chartOptions, chartRef,
 }) {
   if (!visible) {
@@ -203,9 +203,13 @@ export function ChartPanel({
       >
         ✖
       </button>
-      <ChartZoomControls axis="y" {...yControlsProps} />
-      {xControls}
-      <ResetButton onClick={onReset} disabled={resetDisabled} />
+      {showZoomControls && (
+        <>
+          <ChartZoomControls axis="y" {...yControlsProps} />
+          {xControls}
+          <ResetButton onClick={onReset} disabled={resetDisabled} />
+        </>
+      )}
       <Line data={chartData} options={chartOptions} ref={chartRef} />
     </div>
   );

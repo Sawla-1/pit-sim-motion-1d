@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 const MIN_ZOOM_WINDOW = 1; // seconds - smallest visible x-axis window when zoomed in
 
@@ -29,51 +29,15 @@ function panWindow(current, lower, upper, direction) {
 // - X-axis (time) is a single React-state window shared across all charts,
 //   since they all share the same time axis.
 // - Y-axis (value) zoom/pan is independent per chart, keyed by chart index.
-// Both are kept separately per mode ("record"/"playback") so switching
-// modes never shows you the other mode's zoom, and each mode's last zoom is
-// remembered when you switch back to it.
-export function useChartZoom(data, playing) {
-  const [xRangeByMode, setXRangeByMode] = useState({ record: null, playback: null });
-  const [yRangesByMode, setYRangesByMode] = useState({ record: {}, playback: {} });
-
-  // Current-mode view, plus setters shaped like useState's (value or updater
-  // function) so every call site below can use them like plain useState setters.
-  const xRange = xRangeByMode[data.selectedMode];
-  const yRanges = yRangesByMode[data.selectedMode];
-  const setXRange = (value) => setXRangeByMode((prev) => ({
-    ...prev,
-    [data.selectedMode]: typeof value === "function" ? value(prev[data.selectedMode]) : value,
-  }));
-  const setYRanges = (value) => setYRangesByMode((prev) => ({
-    ...prev,
-    [data.selectedMode]: typeof value === "function" ? value(prev[data.selectedMode]) : value,
-  }));
+// Zoom is only shown in playback mode (see Charts.jsx), where the recorded
+// data is fixed and never grows.
+export function useChartZoom(data) {
+  const [xRange, setXRange] = useState(null);
+  const [yRanges, setYRanges] = useState({});
 
   const maxTime = data.recordedData.length > 0
     ? data.recordedData[data.recordedData.length - 1].time
     : 0;
-
-  // Clearing/resetting the recording drops maxTime back to 0 - drop any
-  // stale zoom window from before the clear, in BOTH modes (not just the
-  // active one), since the data both modes would show is gone either way.
-  useEffect(() => {
-    if (maxTime === 0) {
-      setXRangeByMode({ record: null, playback: null });
-      setYRangesByMode({ record: {}, playback: {} });
-    }
-  }, [maxTime]);
-
-  // Resuming a RECORDING should show the live growing timeline, not a
-  // window you zoomed into before pausing - reset both axes back to
-  // full/auto view. Playback mode's data is a fixed, already-recorded
-  // array (it never grows), so there's no staleness risk there - resetting
-  // zoom on every playback resume would just be an unwanted interruption.
-  useEffect(() => {
-    if (playing && data.selectedMode === "record") {
-      setXRangeByMode((prev) => ({ ...prev, record: null }));
-      setYRangesByMode((prev) => ({ ...prev, record: {} }));
-    }
-  }, [playing, data.selectedMode]);
 
   // ---- X-axis: shared time window across all 3 charts ----
 

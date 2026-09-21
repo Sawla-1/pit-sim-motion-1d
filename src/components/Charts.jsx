@@ -5,7 +5,7 @@ import { ChartZoomControls, ChartPanel } from "./ChartControls";
 
 // Renders the Position/Velocity/Acceleration line charts, each with its own
 // Y-axis zoom/pan and a shared X-axis (time) zoom/pan across all three.
-function Charts({ data, simulation, onSeek, playing }) {
+function Charts({ data, simulation, onSeek }) {
   // State for drag functionality
   const [isDragging, setIsDragging] = useState(false);
   const [visibility, setVisibility] = useState({
@@ -30,7 +30,8 @@ function Charts({ data, simulation, onSeek, playing }) {
     getYDisabled,
     handleReset,
     isResetDisabled,
-  } = useChartZoom(data, playing);
+  } = useChartZoom(data);
+  const isPlayback = data.selectedMode === "playback";
 
   // Build chart data - simplified
   const buildChartData = (valueKey, color) => ({
@@ -105,16 +106,16 @@ function Charts({ data, simulation, onSeek, playing }) {
       scales: {
         x: {
           type: "linear",
-          min: xRange?.min ?? 0,
-          max: xRange?.max ?? maxTime,
+          min: isPlayback ? xRange?.min ?? 0 : 0,
+          max: isPlayback ? xRange?.max ?? maxTime : maxTime,
         },
         y: {
           type: "linear",
           // undefined when never zoomed - Chart.js autoscales normally in
           // that case. Once zoomed, this pins the range so it survives
           // re-renders instead of being recalculated from the full dataset.
-          min: yRanges[index]?.min,
-          max: yRanges[index]?.max,
+          min: isPlayback ? yRanges[index]?.min : undefined,
+          max: isPlayback ? yRanges[index]?.max : undefined,
         },
       },
       plugins: {
@@ -193,6 +194,7 @@ function Charts({ data, simulation, onSeek, playing }) {
             panPositiveDisabled: positionYDisabled.panUpDisabled,
             panNegativeDisabled: positionYDisabled.panDownDisabled,
           }}
+          showZoomControls={isPlayback}
           xControls={xControls}
           onReset={() => handleReset(0)}
           resetDisabled={isResetDisabled(0)}
@@ -220,6 +222,7 @@ function Charts({ data, simulation, onSeek, playing }) {
             panPositiveDisabled: velocityYDisabled.panUpDisabled,
             panNegativeDisabled: velocityYDisabled.panDownDisabled,
           }}
+          showZoomControls={isPlayback}
           xControls={xControls}
           onReset={() => handleReset(1)}
           resetDisabled={isResetDisabled(1)}
@@ -247,6 +250,7 @@ function Charts({ data, simulation, onSeek, playing }) {
             panPositiveDisabled: accelerationYDisabled.panUpDisabled,
             panNegativeDisabled: accelerationYDisabled.panDownDisabled,
           }}
+          showZoomControls={isPlayback}
           xControls={xControls}
           onReset={() => handleReset(2)}
           resetDisabled={isResetDisabled(2)}

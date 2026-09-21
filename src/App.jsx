@@ -156,7 +156,6 @@ function App() {
           data={data}
           simulation={simulation}
           onSeek={handleSeek}
-          playing={playing}
         />
         {/* Right Panel: Controls */}
         <Controls
