@@ -10,7 +10,7 @@ function PhysicsInput({ label, unit, value, min, max, labelClass, accentClass, f
   const lastValid = useRef(value);
 
   useEffect(() => {
-    setText(String(value));
+    setText(String(Math.round(value*100)/100));
     lastValid.current = value;
   }, [value]);
 
