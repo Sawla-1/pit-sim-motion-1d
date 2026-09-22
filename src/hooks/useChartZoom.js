@@ -35,9 +35,7 @@ export function useChartZoom(data) {
   const [xRange, setXRange] = useState(null);
   const [yRanges, setYRanges] = useState({});
 
-  const maxTime = data.recordedData.length > 0
-    ? data.recordedData[data.recordedData.length - 1].time
-    : 0;
+  const maxTime = data.recordedData[data.recordedData.length - 1].time;
 
   // ---- X-axis: shared time window across all 3 charts ----
 
@@ -85,8 +83,8 @@ export function useChartZoom(data) {
   // cleanly instead of collapsing the axis.
   const getYRange = (valueKey) => {
     const values = data.recordedData.map((state) => state[valueKey]);
-    const rawMin = values.length > 0 ? values.reduce((a, b) => Math.min(a, b)) : -1;
-    const rawMax = values.length > 0 ? values.reduce((a, b) => Math.max(a, b)) : 1;
+    const rawMin = values.reduce((a, b) => Math.min(a, b));
+    const rawMax = values.reduce((a, b) => Math.max(a, b));
     const span = rawMax - rawMin;
     const pad = span > 0 ? span * 0.1 : Math.max(Math.abs(rawMax), Math.abs(rawMin), 1) * 0.1;
     return { yMin: rawMin - pad, yMax: rawMax + pad, yMinRange: pad };

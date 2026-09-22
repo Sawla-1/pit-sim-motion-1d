@@ -53,8 +53,7 @@ function Charts({ data, simulation, onSeek }) {
     // Only start dragging if clicking on a canvas and in playback mode
     if (
       event.target.tagName === "CANVAS" &&
-      data.selectedMode === "playback" &&
-      data.recordedData.length > 0
+      data.selectedMode === "playback"
     ) {
       setIsDragging(true);
       event.preventDefault();
@@ -64,8 +63,7 @@ function Charts({ data, simulation, onSeek }) {
   const handleMouseMove = (event) => {
     if (
       isDragging &&
-      data.selectedMode === "playback" &&
-      data.recordedData.length > 0
+      data.selectedMode === "playback"
     ) {
       // Find the chart that was clicked
       const canvas = event.target;

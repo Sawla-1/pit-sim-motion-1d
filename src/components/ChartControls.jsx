@@ -53,7 +53,7 @@ function PanButton({ direction, onClick, label, disabled }) {
 
 // Reset-zoom button - small counterclockwise-arrow icon, same visual
 // language as the other chart controls.
-export function ResetButton({ onClick, disabled }) {
+function ResetButton({ onClick, disabled }) {
   return (
     <button
       type="button"
