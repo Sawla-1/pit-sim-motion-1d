@@ -151,9 +151,6 @@ function Controls({
         <div className="flex justify-center pb-3.5">
           <button
             onClick={onTogglePlayPause}
-            disabled={
-              data.selectedMode === "playback" && data.recordedData.length === 0
-            }
             className={`w-10 h-10 border-none rounded-full text-xs font-semibold cursor-pointer ${
               playing
                 ? "bg-red-500 text-white transition-all hover:scale-105"

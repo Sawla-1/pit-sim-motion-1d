@@ -51,17 +51,14 @@ function Charts({ data, simulation, onSeek }) {
     ],
   });
 
-  const maxTime = data.recordedData.length > 0
-    ? data.recordedData[data.recordedData.length - 1].time
-    : 0;
+  const maxTime = data.recordedData[data.recordedData.length - 1].time;
 
   // Drag handlers for timeline scrubbing
   const handleMouseDown = (event) => {
     // Only start dragging if clicking on a canvas and in playback mode
     if (
       event.target.tagName === "CANVAS" &&
-      data.selectedMode === "playback" &&
-      data.recordedData.length > 0
+      data.selectedMode === "playback"
     ) {
       setIsDragging(true);
       event.preventDefault();
@@ -71,8 +68,7 @@ function Charts({ data, simulation, onSeek }) {
   const handleMouseMove = (event) => {
     if (
       isDragging &&
-      data.selectedMode === "playback" &&
-      data.recordedData.length > 0
+      data.selectedMode === "playback" 
     ) {
       // Find the chart that was clicked
       const canvas = event.target;

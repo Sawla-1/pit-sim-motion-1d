@@ -52,8 +52,6 @@ function Simulation3D({ position, velocity }) {
       className="w-full h-[125px] bg-blue-50 rounded-lg"
     >
       <CameraRig />
-      <ambientLight intensity={1} />
-
       {/* Ground with ruler markings */}
       <group>
         {/* Main ground */}
