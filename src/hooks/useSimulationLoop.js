@@ -49,7 +49,7 @@ export function useSimulationLoop({
         const sim = simulationRef.current;
         const dat = dataRef.current;
 
-        if (dat.selectedMode === "playback" && dat.recordedData.length > 1) {
+        if (dat.selectedMode === "playback" && dat.recordedData.length > 0) {
           // PLAYBACK MODE: advance through recorded data — no wall-clock refs needed
           const result = onPlaybackStep(sim, dat, frameTime);
           setSimulation(result.simulation);

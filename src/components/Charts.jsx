@@ -161,7 +161,7 @@ function Charts({ data, simulation, onSeek }) {
   };
 
   return (
-    <>
+ 
       <div
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
@@ -280,7 +280,7 @@ function Charts({ data, simulation, onSeek }) {
           </div>
         )}
       </div>
-    </>
+  
   );
 }
 
