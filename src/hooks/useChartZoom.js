@@ -2,6 +2,12 @@ import { useState } from "react";
 
 const MIN_ZOOM_WINDOW = 1; // seconds - smallest visible x-axis window when zoomed in
 
+// Tolerance for the zoom-in "at smallest window" checks below. Repeated
+// width / factor divisions drift a hair past the floor (Math.max clamps the
+// zoom itself correctly, but the raw comparison can land a few ULPs short),
+// so without this the zoom-in button can stay visibly enabled at the limit.
+const EPSILON = 1e-9;
+
 // Shifts a [min,max] window by 20% of its own width, clamped to [lower,
 // upper]. Shared by the x-axis (time) and y-axis (value) pan handlers -
 // only the bounds differ between them. Returns null when already fully
@@ -68,7 +74,7 @@ export function useChartZoom(data) {
   // X-axis disabled states - button should visibly reflect when a click
   // would be a no-op, since x-zoom/pan state is already tracked in React.
   const xZoomInDisabled = maxTime < MIN_ZOOM_WINDOW ||
-    (xRange !== null && xRange.max - xRange.min <= MIN_ZOOM_WINDOW);
+    (xRange !== null && xRange.max - xRange.min <= MIN_ZOOM_WINDOW + EPSILON);
   const xZoomOutDisabled = maxTime === 0 || xRange === null || xRange.max - xRange.min >= maxTime;
   const xPanLeftDisabled = maxTime === 0 || xRange === null || xRange.min <= 0;
   const xPanRightDisabled = maxTime === 0 || xRange === null || xRange.max >= maxTime;
@@ -139,7 +145,7 @@ export function useChartZoom(data) {
     const { yMin, yMax, yMinRange } = getYRange(valueKey);
     const current = yRanges[index];
     return {
-      zoomInDisabled: maxTime === 0 || (current !== undefined && current.max - current.min <= yMinRange),
+      zoomInDisabled: maxTime === 0 || (current !== undefined && current.max - current.min <= yMinRange + EPSILON),
       zoomOutDisabled: maxTime === 0 || current === undefined || current.max - current.min >= yMax - yMin,
       panUpDisabled: maxTime === 0 || current === undefined || current.max >= yMax,
       panDownDisabled: maxTime === 0 || current === undefined || current.min <= yMin,
