@@ -175,7 +175,7 @@ export function ChartZoomControls({
 export function ChartPanel({
   label, unit, textClass, value,
   visible, onShow, onHide,
-  showZoomControls, yControlsProps, xControls, onReset, resetDisabled,
+  showZoomControls, yControlsProps, xControls, isBottom, onReset, resetDisabled,
   chartData, chartOptions, chartRef,
 }) {
   if (!visible) {
@@ -190,7 +190,9 @@ export function ChartPanel({
   }
 
   return (
-    <div className="relative flex-auto bg-gray-100 h-[clamp(170px,20vh,220px)] pt-8 pb-6 px-8 rounded-md">
+    // Only the bottom chart needs the extra bottom padding, which holds the
+    // shared time zoom buttons.
+    <div className={`relative flex-auto bg-gray-100 h-[clamp(170px,20vh,220px)] pt-8 px-8 rounded-md ${isBottom ? "pb-6" : "pb-2"}`}>
       <span className={`absolute top-2 left-8 text-sm font-semibold ${textClass}`}>
         {label}
       </span>
@@ -206,7 +208,7 @@ export function ChartPanel({
       {showZoomControls && (
         <>
           <ChartZoomControls axis="y" {...yControlsProps} />
-          {xControls}
+          {isBottom && xControls}
           <ResetButton onClick={onReset} disabled={resetDisabled} />
         </>
       )}

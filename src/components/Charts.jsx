@@ -94,6 +94,14 @@ function Charts({ data, simulation, onSeek }) {
   const velocityYDisabled = getYDisabled("velocity", 1);
   const accelerationYDisabled = getYDisabled("acceleration", 2);
 
+  // All charts share one time axis, so (like PhET) only the lowest visible
+  // chart shows the time numbers and time zoom buttons.
+  const bottomIndex = [
+    visibility.showPosition,
+    visibility.showVelocity,
+    visibility.showAcceleration,
+  ].lastIndexOf(true);
+
   // Simplified chart options
   const getChartOptions = (index) => {
     return {
@@ -101,12 +109,15 @@ function Charts({ data, simulation, onSeek }) {
       animation: false,
       maintainAspectRatio: false,
       parsing: false, // required by the decimation plugin, and our data is already {x, y}
+      // Same right padding on every chart, so hiding the time numbers on the
+      // upper charts doesn't make their plots wider than the bottom one.
+      layout: { padding: { right: 16 } },
       scales: {
         x: {
           type: "linear",
           min: isPlayback ? xRange?.min ?? 0 : 0,
           max: isPlayback ? xRange?.max ?? maxTime : maxTime,
-          ticks: { includeBounds: false },
+          ticks: { includeBounds: false, display: index === bottomIndex },
         },
         y: {
           type: "linear",
@@ -202,6 +213,7 @@ function Charts({ data, simulation, onSeek }) {
           }}
           showZoomControls={isPlayback}
           xControls={xControls}
+          isBottom={bottomIndex === 0}
           onReset={() => handleReset(0)}
           resetDisabled={isResetDisabled(0)}
           chartData={buildChartData("position", "#1976d2")}
@@ -230,6 +242,7 @@ function Charts({ data, simulation, onSeek }) {
           }}
           showZoomControls={isPlayback}
           xControls={xControls}
+          isBottom={bottomIndex === 1}
           onReset={() => handleReset(1)}
           resetDisabled={isResetDisabled(1)}
           chartData={buildChartData("velocity", "#d32f2f")}
@@ -258,6 +271,7 @@ function Charts({ data, simulation, onSeek }) {
           }}
           showZoomControls={isPlayback}
           xControls={xControls}
+          isBottom={bottomIndex === 2}
           onReset={() => handleReset(2)}
           resetDisabled={isResetDisabled(2)}
           chartData={buildChartData("acceleration", "#2e7d32")}
