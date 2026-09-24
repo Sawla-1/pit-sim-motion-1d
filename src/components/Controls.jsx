@@ -1,28 +1,21 @@
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { evaluateExpression } from "../engine/evaluateExpression";
 
 /**
  * A single physics parameter input: label, text box, and range slider.
- * Owns the local string state, last-valid ref, and external-sync effect.
+ * While the user is typing, the box shows their draft text; otherwise it
+ * shows the live value. No effect is needed to keep the two in sync.
  */
 function PhysicsInput({ label, unit, value, min, max, labelClass, accentClass, focusClass, onChange }) {
-  const [text, setText] = useState(String(value));
-  const lastValid = useRef(value);
+  const [draft, setDraft] = useState(null); // null = not typing right now
+  const text = draft ?? String(value);
 
-  useEffect(() => {
-    setText(String(value));
-    lastValid.current = value;
-  }, [value]);
-
+  // Valid input is sent up; invalid input is simply dropped, so the box
+  // falls back to showing the last real value.
   const commit = (raw) => {
     const evaluated = evaluateExpression(raw);
-    if (evaluated !== null) {
-      setText(String(evaluated));
-      lastValid.current = evaluated;
-      onChange(evaluated);
-    } else {
-      setText(String(lastValid.current));
-    }
+    if (evaluated !== null) onChange(evaluated);
+    setDraft(null);
   };
 
   return (
@@ -34,8 +27,11 @@ function PhysicsInput({ label, unit, value, min, max, labelClass, accentClass, f
         <input
           type="text"
           value={text}
-          onFocus={(e) => e.target.select()}
-          onChange={(e) => setText(e.target.value)}
+          onFocus={(e) => {
+            setDraft(String(value));
+            e.target.select();
+          }}
+          onChange={(e) => setDraft(e.target.value)}
           onBlur={(e) => commit(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") e.target.blur(); }}
           className={`w-1/2 px-2 py-1.5 border border-gray-300 rounded text-xs bg-white text-black transition-colors focus:outline-none ${focusClass} focus:shadow-[0_0_0_3px_rgba(42,82,152,0.1)]`}

@@ -90,7 +90,7 @@ The hook takes `onRecordStep` and `onPlaybackStep` callback props and dispatches
 
 ### Controls input pattern
 
-`Controls.jsx` keeps **local string state** for each input so users can type intermediate values (e.g. `-` or `1+2`). On blur/Enter, `evaluateExpression` from `engine/evaluateExpression.js` resolves the value; invalid input reverts to the last valid value via a `useRef`. External simulation changes sync back via `useEffect`.
+`Controls.jsx` keeps a **draft string** for each input only while the user is typing, so they can enter intermediate values (e.g. `-` or `1+2`). When not typing (`draft === null`), the box shows the live `value` prop directly — no `useEffect` sync, which would set state every frame during playback. On blur/Enter, `evaluateExpression` from `engine/evaluateExpression.js` resolves the value; valid input is sent up via `onChange`, invalid input is dropped, and the draft is cleared so the box falls back to the live value.
 
 ### Utilities
 
