@@ -190,7 +190,7 @@ export function ChartPanel({
   }
 
   return (
-    <div className="relative flex-auto bg-gray-100 h-[clamp(150px,20vh,220px)] pt-8 pb-6 px-8 rounded-md">
+    <div className="relative flex-auto bg-gray-100 h-[clamp(170px,20vh,220px)] pt-8 pb-6 px-8 rounded-md">
       <span className={`absolute top-2 left-8 text-sm font-semibold ${textClass}`}>
         {label}
       </span>
