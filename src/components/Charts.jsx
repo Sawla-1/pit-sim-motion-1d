@@ -106,6 +106,7 @@ function Charts({ data, simulation, onSeek }) {
           type: "linear",
           min: isPlayback ? xRange?.min ?? 0 : 0,
           max: isPlayback ? xRange?.max ?? maxTime : maxTime,
+          ticks: { includeBounds: false },
         },
         y: {
           type: "linear",
