@@ -115,6 +115,13 @@ function Charts({ data, simulation, onSeek }) {
           // re-renders instead of being recalculated from the full dataset.
           min: isPlayback ? yRanges[index]?.min : undefined,
           max: isPlayback ? yRanges[index]?.max : undefined,
+          ticks: { maxTicksLimit: 5, includeBounds: false },
+          // Fixed width so all three plots start at the same x pixel and
+          // time 0 lines up vertically across charts. Wide enough for
+          // labels like "-10,500" or "-0.00130" without clipping.
+          afterFit: (scale) => {
+            scale.width = 60;
+          },
         },
       },
       plugins: {
