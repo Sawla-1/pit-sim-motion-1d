@@ -9,8 +9,7 @@ const MIN_ZOOM_WINDOW = 1; // seconds - smallest visible x-axis window when zoom
 const EPSILON = 1e-9;
 
 // Shifts a [min,max] window by 20% of its own width, clamped to [lower,
-// upper]. Shared by the x-axis (time) and y-axis (value) pan handlers -
-// only the bounds differ between them. Returns null when already fully
+// upper]. Used by the x-axis (time) pan. Returns null when already fully
 // zoomed out (nothing to pan).
 function panWindow(current, lower, upper, direction) {
   const width = current.max - current.min;
@@ -32,7 +31,10 @@ function panWindow(current, lower, upper, direction) {
 }
 
 // Allowed gaps between the 5 y-axis lines (0.1 is the smallest).
-const STEPS = [0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 100000];
+const STEPS = [
+  0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500,
+  1000, 2000, 5000, 10000, 20000, 50000, 100000, 200000, 500000,
+];
 
 // 5 lines `step` apart, with the middle line on a round number.
 // makeWindow(6.4, 2) → middle 6 → lines 2, 4, 6, 8, 10
@@ -103,21 +105,21 @@ export function useChartZoom(data) {
   // What a chart shows now: its zoomed window, or the default view.
   const getYWindow = (valueKey, index) => yRanges[index] ?? fitWindow(valueKey);
 
-  // Zoom: one step smaller (in) or bigger (out) in STEPS.
+  // Zoom: one step smaller (in) or bigger (out) in STEPS. The zoom buttons
+  // are disabled at both ends of the list, so `step` always exists here.
   const handleYZoom = (valueKey, index, factor) => {
     const current = getYWindow(valueKey, index);
     const step = STEPS[STEPS.indexOf(current.step) + (factor > 1 ? -1 : 1)];
-    if (!step) return; // end of the list
     const center = (current.min + current.max) / 2;
     // Back at the default size → forget the zoom.
     const next = step >= fitWindow(valueKey).step ? undefined : makeWindow(center, step);
     setYRanges((prev) => ({ ...prev, [index]: next }));
   };
 
-  // Pan: move exactly 1 line up (+1) or down (-1).
-  const handleYPan = (valueKey, index, direction) => {
+  // Pan: move exactly 1 line up (+1) or down (-1). The pan buttons are
+  // disabled until the chart is zoomed, so `current` always exists here.
+  const handleYPan = (index, direction) => {
     const current = yRanges[index];
-    if (!current) return;
     const center = (current.min + current.max) / 2 + direction * current.step;
     setYRanges((prev) => ({ ...prev, [index]: makeWindow(center, current.step) }));
   };

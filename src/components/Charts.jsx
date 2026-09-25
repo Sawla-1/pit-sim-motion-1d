@@ -136,7 +136,7 @@ function Charts({ data, simulation, onSeek }) {
           title: { display: true, text: title, color, font: { weight: "bold" } },
           // Fixed width so all three plots start at the same x pixel and
           // time 0 lines up vertically across charts. Wide enough for the
-          // title plus labels like "-10,499.8" or "-0.00130" without clipping.
+          // title plus labels like "-10,499.8" or "-500,000" without clipping.
           afterFit: (scale) => {
             scale.width = 84;
           },
@@ -208,8 +208,8 @@ function Charts({ data, simulation, onSeek }) {
           yControlsProps={{
             onZoomIn: () => handleYZoom("position", 0, 1.2),
             onZoomOut: () => handleYZoom("position", 0, 0.8),
-            onPanPositive: () => handleYPan("position", 0, 1),
-            onPanNegative: () => handleYPan("position", 0, -1),
+            onPanPositive: () => handleYPan(0, 1),
+            onPanNegative: () => handleYPan(0, -1),
             zoomInDisabled: positionYDisabled.zoomInDisabled,
             zoomOutDisabled: positionYDisabled.zoomOutDisabled,
             panPositiveDisabled: positionYDisabled.panUpDisabled,
@@ -234,8 +234,8 @@ function Charts({ data, simulation, onSeek }) {
           yControlsProps={{
             onZoomIn: () => handleYZoom("velocity", 1, 1.2),
             onZoomOut: () => handleYZoom("velocity", 1, 0.8),
-            onPanPositive: () => handleYPan("velocity", 1, 1),
-            onPanNegative: () => handleYPan("velocity", 1, -1),
+            onPanPositive: () => handleYPan(1, 1),
+            onPanNegative: () => handleYPan(1, -1),
             zoomInDisabled: velocityYDisabled.zoomInDisabled,
             zoomOutDisabled: velocityYDisabled.zoomOutDisabled,
             panPositiveDisabled: velocityYDisabled.panUpDisabled,
@@ -260,8 +260,8 @@ function Charts({ data, simulation, onSeek }) {
           yControlsProps={{
             onZoomIn: () => handleYZoom("acceleration", 2, 1.2),
             onZoomOut: () => handleYZoom("acceleration", 2, 0.8),
-            onPanPositive: () => handleYPan("acceleration", 2, 1),
-            onPanNegative: () => handleYPan("acceleration", 2, -1),
+            onPanPositive: () => handleYPan(2, 1),
+            onPanNegative: () => handleYPan(2, -1),
             zoomInDisabled: accelerationYDisabled.zoomInDisabled,
             zoomOutDisabled: accelerationYDisabled.zoomOutDisabled,
             panPositiveDisabled: accelerationYDisabled.panUpDisabled,
