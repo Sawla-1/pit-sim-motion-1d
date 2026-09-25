@@ -190,9 +190,16 @@ export function ChartPanel({
   }
 
   return (
-    // The bottom chart is taller: it also holds the time numbers and the
-    // shared time zoom buttons (in its extra bottom padding).
-    <div className={`relative flex-auto bg-gray-100 pt-2 pl-2 pr-8 rounded-md ${isBottom ? "h-[160px] pb-6" : "h-[126px] pb-2"}`}>
+    // Phones/tablets: fixed heights. Desktop: the charts share the space under
+    // the 3D scene. The bottom chart is taller (1.3 shares): it also holds the
+    // time numbers and the shared time zoom buttons (in its extra bottom padding).
+    // The minimums keep the right-edge button column (~122px) from overlapping
+    // on short screens; below them the page scrolls instead.
+    <div className={`relative bg-gray-100 pt-2 pl-2 pr-8 rounded-md ${
+      isBottom
+        ? "h-[160px] lg:h-auto lg:min-h-[160px] lg:flex-[1.3] pb-6"
+        : "h-[126px] lg:h-auto lg:min-h-[124px] lg:flex-1 pb-2"
+    }`}>
       {/* Right edge: ✖ at the top, y zoom in the middle, reset at the bottom.
           One flex column, so the buttons can't overlap however short the chart is. */}
       <div className="absolute top-2 bottom-2 right-2 flex flex-col items-center justify-between">

@@ -135,7 +135,7 @@ function App() {
   // ============================================================================
 
   return (
-    <div className="min-h-screen w-full p-2 flex flex-col gap-1 box-border bg-gradient-to-br bg-blue-700 text-gray-800 overflow-x-hidden">
+    <div className="min-h-screen lg:h-screen w-full p-2 flex flex-col gap-1 box-border bg-gradient-to-br bg-blue-700 text-gray-800 overflow-x-hidden">
       {/* Simulation Display Area */}
       <div className="relative w-full mb-1">
         <Simulation3D position={simulation.position} />
@@ -150,7 +150,7 @@ function App() {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex flex-col gap-1 w-full lg:flex-row">
+      <div className="flex flex-col gap-1 w-full lg:flex-row lg:flex-1 lg:min-h-0">
         {/* Left Panel: Charts */}
         <Charts
           data={data}
