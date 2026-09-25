@@ -18,7 +18,8 @@ function Charts({ data, simulation, onSeek }) {
   const {
     maxTime,
     xRange,
-    yRanges,
+    getYWindow,
+    fitWindow,
     handleXZoom,
     handleXPan,
     xZoomInDisabled,
@@ -103,7 +104,9 @@ function Charts({ data, simulation, onSeek }) {
   ].lastIndexOf(true);
 
   // Simplified chart options
-  const getChartOptions = (index, title, color) => {
+  const getChartOptions = (index, valueKey, title, color) => {
+    // Record mode always shows the default view (it grows with the data).
+    const yWindow = isPlayback ? getYWindow(valueKey, index) : fitWindow(valueKey);
     return {
       responsive: true,
       animation: false,
@@ -121,12 +124,14 @@ function Charts({ data, simulation, onSeek }) {
         },
         y: {
           type: "linear",
-          // undefined when never zoomed - Chart.js autoscales normally in
-          // that case. Once zoomed, this pins the range so it survives
-          // re-renders instead of being recalculated from the full dataset.
-          min: isPlayback ? yRanges[index]?.min : undefined,
-          max: isPlayback ? yRanges[index]?.max : undefined,
-          ticks: { includeBounds: false },
+          min: yWindow.min, // always round (see useChartZoom)
+          max: yWindow.max,
+          ticks: {
+            count: 5, // 5 fixed lines → 5 round, exact labels
+            // Every line is a multiple of 0.1 (the smallest step), so 1 decimal
+            // is always exact. It also hides float noise like 6.6000000000000005.
+            callback: (value) => value.toLocaleString(undefined, { maximumFractionDigits: 1 }),
+          },
           // The chart's name, written sideways along the y-axis.
           title: { display: true, text: title, color, font: { weight: "bold" } },
           // Fixed width so all three plots start at the same x pixel and
@@ -216,7 +221,7 @@ function Charts({ data, simulation, onSeek }) {
           onReset={() => handleReset(0)}
           resetDisabled={isResetDisabled(0)}
           chartData={buildChartData("position", "#1976d2")}
-          chartOptions={getChartOptions(0, "Position (m)", "#1976d2")}
+          chartOptions={getChartOptions(0, "position", "Position (m)", "#1976d2")}
           chartRef={(ref) => {
             if (ref) chartRefs.current[0] = ref;
           }}
@@ -242,7 +247,7 @@ function Charts({ data, simulation, onSeek }) {
           onReset={() => handleReset(1)}
           resetDisabled={isResetDisabled(1)}
           chartData={buildChartData("velocity", "#d32f2f")}
-          chartOptions={getChartOptions(1, "Velocity (m/s)", "#d32f2f")}
+          chartOptions={getChartOptions(1, "velocity", "Velocity (m/s)", "#d32f2f")}
           chartRef={(ref) => {
             if (ref) chartRefs.current[1] = ref;
           }}
@@ -268,7 +273,7 @@ function Charts({ data, simulation, onSeek }) {
           onReset={() => handleReset(2)}
           resetDisabled={isResetDisabled(2)}
           chartData={buildChartData("acceleration", "#2e7d32")}
-          chartOptions={getChartOptions(2, "Acceleration (m/s²)", "#2e7d32")}
+          chartOptions={getChartOptions(2, "acceleration", "Acceleration (m/s²)", "#2e7d32")}
           chartRef={(ref) => {
             if (ref) chartRefs.current[2] = ref;
           }}

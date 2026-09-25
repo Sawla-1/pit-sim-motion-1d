@@ -31,6 +31,16 @@ function panWindow(current, lower, upper, direction) {
   return { min, max };
 }
 
+// Allowed gaps between the 5 y-axis lines (0.1 is the smallest).
+const STEPS = [0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 100000];
+
+// 5 lines `step` apart, with the middle line on a round number.
+// makeWindow(6.4, 2) → middle 6 → lines 2, 4, 6, 8, 10
+function makeWindow(center, step) {
+  const middle = Math.round(center / step) * step;
+  return { min: middle - 2 * step, max: middle + 2 * step, step };
+}
+
 // Owns all zoom/pan/reset state for the three charts:
 // - X-axis (time) is a single React-state window shared across all charts,
 //   since they all share the same time axis.
@@ -79,78 +89,46 @@ export function useChartZoom(data) {
   const xPanLeftDisabled = maxTime === 0 || xRange === null || xRange.min <= 0;
   const xPanRightDisabled = maxTime === 0 || xRange === null || xRange.max >= maxTime;
 
-  // ---- Y-axis: independent per chart, same pattern as the x-axis above ----
+  // ---- Y-axis: 5 round lines, independent per chart ----
 
-  // Padded so a flat/near-constant dataset (e.g. acceleration held at 0, or a
-  // perfectly steady velocity) doesn't give zoom-in a zero-width range to
-  // shrink toward - without padding, a single zoom-in click would collapse
-  // the y-axis down to nothing (no ticks, invisible line). yMinRange is the
-  // floor the zoomed window itself can shrink to, so repeated zoom-ins stop
-  // cleanly instead of collapsing the axis.
-  const getYRange = (valueKey) => {
+  // Default view: the smallest round window that covers all the data.
+  const fitWindow = (valueKey) => {
     const values = data.recordedData.map((state) => state[valueKey]);
-    const rawMin = values.reduce((a, b) => Math.min(a, b));
-    const rawMax = values.reduce((a, b) => Math.max(a, b));
-    const span = rawMax - rawMin;
-    const pad = span > 0 ? span * 0.1 : Math.max(Math.abs(rawMax), Math.abs(rawMin), 1) * 0.1;
-    return { yMin: rawMin - pad, yMax: rawMax + pad, yMinRange: pad };
+    const low = Math.min(...values);
+    const high = Math.max(...values);
+    const windows = STEPS.map((step) => makeWindow((low + high) / 2, step));
+    return windows.find((w) => w.min <= low && w.max >= high) ?? windows.at(-1);
   };
 
-  // Zooms around the center of the current window (unlike the x-axis, a
-  // value axis has no natural zero anchor to zoom from).
+  // What a chart shows now: its zoomed window, or the default view.
+  const getYWindow = (valueKey, index) => yRanges[index] ?? fitWindow(valueKey);
+
+  // Zoom: one step smaller (in) or bigger (out) in STEPS.
   const handleYZoom = (valueKey, index, factor) => {
-    if (maxTime === 0) return;
-    const { yMin, yMax, yMinRange } = getYRange(valueKey);
-    const current = yRanges[index] ?? { min: yMin, max: yMax };
-    const width = current.max - current.min;
-    if (factor > 1 && width <= yMinRange) return; // already at the smallest allowed window
-
-    const newWidth = factor > 1
-      ? Math.max(yMinRange, width / factor)    // zoom in: never shrink below yMinRange
-      : Math.min(yMax - yMin, width / factor); // zoom out: never exceed full data view
-
-    // At the full-range floor, reset to undefined (full/auto range) instead
-    // of an explicit {yMin, yMax} snapshot - undefined auto-tracks a
-    // still-growing recording, while a frozen snapshot would go stale the
-    // moment more data comes in (and computing it via mid/halfWidth risks a
-    // floating-point hair-short edge that desyncs one pan button anyway).
-    if (newWidth >= yMax - yMin) {
-      setYRanges((prev) => {
-        const next = { ...prev };
-        delete next[index];
-        return next;
-      });
-      return;
-    }
-
-    const halfWidth = newWidth / 2;
-    // Clamp the center so a wide window can't spill past [yMin, yMax] on one
-    // side even though its width is already capped correctly.
-    const mid = Math.min(Math.max((current.min + current.max) / 2, yMin + halfWidth), yMax - halfWidth);
-
-    setYRanges((prev) => ({ ...prev, [index]: { min: mid - halfWidth, max: mid + halfWidth } }));
+    const current = getYWindow(valueKey, index);
+    const step = STEPS[STEPS.indexOf(current.step) + (factor > 1 ? -1 : 1)];
+    if (!step) return; // end of the list
+    const center = (current.min + current.max) / 2;
+    // Back at the default size → forget the zoom.
+    const next = step >= fitWindow(valueKey).step ? undefined : makeWindow(center, step);
+    setYRanges((prev) => ({ ...prev, [index]: next }));
   };
 
-  // Same shifting logic as handleXPan, clamped to [yMin, yMax] instead of [0, maxTime].
+  // Pan: move exactly 1 line up (+1) or down (-1).
   const handleYPan = (valueKey, index, direction) => {
-    if (maxTime === 0) return;
-    const { yMin, yMax } = getYRange(valueKey);
-    const current = yRanges[index] ?? { min: yMin, max: yMax };
-    const next = panWindow(current, yMin, yMax, direction);
-    if (next) setYRanges((prev) => ({ ...prev, [index]: next }));
+    const current = yRanges[index];
+    if (!current) return;
+    const center = (current.min + current.max) / 2 + direction * current.step;
+    setYRanges((prev) => ({ ...prev, [index]: makeWindow(center, current.step) }));
   };
 
-  // Y-axis disabled states, mirroring the x-axis ones above.
-  const getYDisabled = (valueKey, index) => {
-    const { yMin, yMax, yMinRange } = getYRange(valueKey);
-    const current = yRanges[index];
-    return {
-      zoomInDisabled: maxTime === 0 || (current !== undefined && current.max - current.min <= yMinRange + EPSILON),
-      zoomOutDisabled: maxTime === 0 || current === undefined || current.max - current.min >= yMax - yMin,
-      panUpDisabled: maxTime === 0 || current === undefined || current.max >= yMax,
-      panDownDisabled: maxTime === 0 || current === undefined || current.min <= yMin,
-    };
-  };
+  // Which y buttons are greyed out.
+  const getYDisabled = (valueKey, index) => ({
+    zoomInDisabled: getYWindow(valueKey, index).step === STEPS[0],
+    zoomOutDisabled: yRanges[index] === undefined,
+    panUpDisabled: yRanges[index] === undefined,
+    panDownDisabled: yRanges[index] === undefined,
+  });
 
   // ---- Reset (touches both axes) ----
 
@@ -170,7 +148,8 @@ export function useChartZoom(data) {
   return {
     maxTime,
     xRange,
-    yRanges,
+    getYWindow,
+    fitWindow,
     handleXZoom,
     handleXPan,
     xZoomInDisabled,
