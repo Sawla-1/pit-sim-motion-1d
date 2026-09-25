@@ -1,4 +1,3 @@
-import { formatNumber } from "../utils/formatNumber";
 import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -168,12 +167,13 @@ export function ChartZoomControls({
   );
 }
 
-// One chart's full panel: visibility toggle, header, zoom/pan/reset controls,
-// and the Line chart. Takes values/callbacks already bound to a specific
-// chart from the call site (same pattern as PhysicsInput in Controls.jsx),
-// so it has no idea which chart it's rendering.
+// One chart's full panel: visibility toggle, hide button, zoom/pan/reset
+// controls, and the Line chart. The chart's name is drawn by Chart.js as
+// the y-axis title (see Charts.jsx). Takes values/callbacks already bound to
+// a specific chart from the call site (same pattern as PhysicsInput in
+// Controls.jsx), so it has no idea which chart it's rendering.
 export function ChartPanel({
-  label, unit, textClass, value,
+  label,
   visible, onShow, onHide,
   showZoomControls, yControlsProps, xControls, isBottom, onReset, resetDisabled,
   chartData, chartOptions, chartRef,
@@ -192,13 +192,7 @@ export function ChartPanel({
   return (
     // Only the bottom chart needs the extra bottom padding, which holds the
     // shared time zoom buttons.
-    <div className={`relative flex-auto bg-gray-100 h-[clamp(170px,20vh,220px)] pt-8 px-8 rounded-md ${isBottom ? "pb-6" : "pb-2"}`}>
-      <span className={`absolute top-2 left-8 text-sm font-semibold ${textClass}`}>
-        {label}
-      </span>
-      <span className={`absolute top-2 right-10 text-sm font-semibold ${textClass}`}>
-        {formatNumber(value, 2)} {unit}
-      </span>
+    <div className={`relative flex-auto bg-gray-100 h-[clamp(170px,20vh,220px)] pt-2 pl-2 pr-8 rounded-md ${isBottom ? "pb-6" : "pb-2"}`}>
       <button
         className="absolute top-2 right-2 text-xs text-white font-semibold cursor-pointer bg-red-600 px-1 py-0.5 rounded-sm"
         onClick={onHide}

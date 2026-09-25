@@ -103,7 +103,7 @@ function Charts({ data, simulation, onSeek }) {
   ].lastIndexOf(true);
 
   // Simplified chart options
-  const getChartOptions = (index) => {
+  const getChartOptions = (index, title, color) => {
     return {
       responsive: true,
       animation: false,
@@ -127,11 +127,13 @@ function Charts({ data, simulation, onSeek }) {
           min: isPlayback ? yRanges[index]?.min : undefined,
           max: isPlayback ? yRanges[index]?.max : undefined,
           ticks: { includeBounds: false },
+          // The chart's name, written sideways along the y-axis.
+          title: { display: true, text: title, color, font: { weight: "bold" } },
           // Fixed width so all three plots start at the same x pixel and
-          // time 0 lines up vertically across charts. Wide enough for
-          // labels like "-10,500" or "-0.00130" without clipping.
+          // time 0 lines up vertically across charts. Wide enough for the
+          // title plus labels like "-10,499.8" or "-0.00130" without clipping.
           afterFit: (scale) => {
-            scale.width = 60;
+            scale.width = 84;
           },
         },
       },
@@ -195,9 +197,6 @@ function Charts({ data, simulation, onSeek }) {
       >
         <ChartPanel
           label="Position"
-          unit="m"
-          textClass="text-blue-600"
-          value={simulation.position}
           visible={visibility.showPosition}
           onShow={() => setVisibility({ ...visibility, showPosition: true })}
           onHide={() => setVisibility({ ...visibility, showPosition: false })}
@@ -217,16 +216,13 @@ function Charts({ data, simulation, onSeek }) {
           onReset={() => handleReset(0)}
           resetDisabled={isResetDisabled(0)}
           chartData={buildChartData("position", "#1976d2")}
-          chartOptions={getChartOptions(0)}
+          chartOptions={getChartOptions(0, "Position (m)", "#1976d2")}
           chartRef={(ref) => {
             if (ref) chartRefs.current[0] = ref;
           }}
         />
         <ChartPanel
           label="Velocity"
-          unit="m/s"
-          textClass="text-red-600"
-          value={simulation.velocity}
           visible={visibility.showVelocity}
           onShow={() => setVisibility({ ...visibility, showVelocity: true })}
           onHide={() => setVisibility({ ...visibility, showVelocity: false })}
@@ -246,16 +242,13 @@ function Charts({ data, simulation, onSeek }) {
           onReset={() => handleReset(1)}
           resetDisabled={isResetDisabled(1)}
           chartData={buildChartData("velocity", "#d32f2f")}
-          chartOptions={getChartOptions(1)}
+          chartOptions={getChartOptions(1, "Velocity (m/s)", "#d32f2f")}
           chartRef={(ref) => {
             if (ref) chartRefs.current[1] = ref;
           }}
         />
         <ChartPanel
           label="Acceleration"
-          unit="m/s²"
-          textClass="text-green-600"
-          value={simulation.acceleration}
           visible={visibility.showAcceleration}
           onShow={() => setVisibility({ ...visibility, showAcceleration: true })}
           onHide={() => setVisibility({ ...visibility, showAcceleration: false })}
@@ -275,7 +268,7 @@ function Charts({ data, simulation, onSeek }) {
           onReset={() => handleReset(2)}
           resetDisabled={isResetDisabled(2)}
           chartData={buildChartData("acceleration", "#2e7d32")}
-          chartOptions={getChartOptions(2)}
+          chartOptions={getChartOptions(2, "Acceleration (m/s²)", "#2e7d32")}
           chartRef={(ref) => {
             if (ref) chartRefs.current[2] = ref;
           }}
