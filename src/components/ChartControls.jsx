@@ -60,7 +60,7 @@ function ResetButton({ onClick, disabled }) {
       title="Reset zoom"
       onClick={onClick}
       disabled={disabled}
-      className={`absolute bottom-2 right-2 transition-transform text-gray-600 hover:text-gray-900 ${
+      className={`transition-transform text-gray-600 hover:text-gray-900 ${
         disabled ? "opacity-30 pointer-events-none" : "cursor-pointer hover:scale-125"
       }`}
     >
@@ -83,7 +83,7 @@ export function ChartZoomControls({
   const containerClass =
     axis === "x"
       ? "absolute bottom-2 right-16 flex flex-row items-center gap-3 text-gray-600"
-      : "absolute right-2 top-1/2 -translate-y-1/2 flex flex-col items-center gap-3 text-gray-600";
+      : "flex flex-col items-center gap-0.5 text-gray-600"; // placed by ChartPanel's button column
 
   const zoomInButton = (
     <button
@@ -190,22 +190,22 @@ export function ChartPanel({
   }
 
   return (
-    // Only the bottom chart needs the extra bottom padding, which holds the
-    // shared time zoom buttons.
-    <div className={`relative flex-auto bg-gray-100 h-[clamp(170px,20vh,220px)] pt-2 pl-2 pr-8 rounded-md ${isBottom ? "pb-6" : "pb-2"}`}>
-      <button
-        className="absolute top-2 right-2 text-xs text-white font-semibold cursor-pointer bg-red-600 px-1 py-0.5 rounded-sm"
-        onClick={onHide}
-      >
-        ✖
-      </button>
-      {showZoomControls && (
-        <>
-          <ChartZoomControls axis="y" {...yControlsProps} />
-          {isBottom && xControls}
-          <ResetButton onClick={onReset} disabled={resetDisabled} />
-        </>
-      )}
+    // The bottom chart is taller: it also holds the time numbers and the
+    // shared time zoom buttons (in its extra bottom padding).
+    <div className={`relative flex-auto bg-gray-100 pt-2 pl-2 pr-8 rounded-md ${isBottom ? "h-[160px] pb-6" : "h-[126px] pb-2"}`}>
+      {/* Right edge: ✖ at the top, y zoom in the middle, reset at the bottom.
+          One flex column, so the buttons can't overlap however short the chart is. */}
+      <div className="absolute top-2 bottom-2 right-2 flex flex-col items-center justify-between">
+        <button
+          className="text-xs text-white font-semibold cursor-pointer bg-red-600 px-1 py-0.5 rounded-sm"
+          onClick={onHide}
+        >
+          ✖
+        </button>
+        {showZoomControls && <ChartZoomControls axis="y" {...yControlsProps} />}
+        {showZoomControls && <ResetButton onClick={onReset} disabled={resetDisabled} />}
+      </div>
+      {showZoomControls && isBottom && xControls}
       <Line data={chartData} options={chartOptions} ref={chartRef} />
     </div>
   );
