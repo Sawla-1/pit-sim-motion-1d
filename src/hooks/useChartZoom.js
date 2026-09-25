@@ -125,12 +125,19 @@ export function useChartZoom(data) {
   };
 
   // Which y buttons are greyed out.
-  const getYDisabled = (valueKey, index) => ({
-    zoomInDisabled: getYWindow(valueKey, index).step === STEPS[0],
-    zoomOutDisabled: yRanges[index] === undefined,
-    panUpDisabled: yRanges[index] === undefined,
-    panDownDisabled: yRanges[index] === undefined,
-  });
+  const getYDisabled = (valueKey, index) => {
+    const current = yRanges[index];
+    const fit = fitWindow(valueKey);
+    return {
+      zoomInDisabled: getYWindow(valueKey, index).step === STEPS[0],
+      zoomOutDisabled: !current,
+      // Pan stops at the top/bottom of the default (full data) view. Half a
+      // step of slack absorbs float noise (15.000000000000002) and zoom steps
+      // whose lines can't land exactly on the edge (step 2 inside -5..15).
+      panUpDisabled: !current || current.max + current.step / 2 >= fit.max,
+      panDownDisabled: !current || current.min - current.step / 2 <= fit.min,
+    };
+  };
 
   // ---- Reset (touches both axes) ----
 
