@@ -2,19 +2,6 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Workflow rules (apply only when they fit the prompt)
-
-After every code change:
-- **Explain** each changed line in simple words.
-- **Standard check:** say whether it follows common best practice. If not, show the standard way.
-- **Better way:** if there is a better approach, suggest it. Don't do it without asking.
-- **Commit:** if this is a good point to commit, say so and give the reason. Commit only after the user says yes.
-- **Skills:** if a listed skill fits the task, suggest it. Use it only after the user says yes.
-
-Before a big or risky change, give an opinion first: should we do it, or not, and why?
-
-To check that a feature works in the browser, use the `browser-tester` subagent. It only reports problems. The main assistant fixes them, then runs the tester again.
-
 ## Commands
 
 ```bash
