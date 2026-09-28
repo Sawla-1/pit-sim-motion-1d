@@ -1,4 +1,4 @@
-import { Suspense, useLayoutEffect, useRef } from "react";
+import { Suspense, useLayoutEffect} from "react";
 import * as THREE from "three";
 import { Canvas, useThree } from "@react-three/fiber";
 import { useTexture, Text } from "@react-three/drei";
@@ -38,7 +38,7 @@ function Simulation3D({ position, velocity }) {
   const halfStep = step / 2;
   const toX = (meters) => (meters / range) * EDGE; // sticks, labels and the man all use this
 
-  const halfSteps = Math.floor(range / halfStep);
+  const halfSteps = Math.floor(range / halfStep);//How many halfStep-sized fit 0 to edge
   const ticks = Array.from({ length: halfSteps * 2 + 1 }, (_, i) => {
     const n = i - halfSteps;
     return { value: n * halfStep, labeled: n % 2 === 0 };
@@ -69,7 +69,7 @@ function Simulation3D({ position, velocity }) {
               </sprite>
               {labeled && (
                 <Text
-                  position={[toX(value), -0.95, 0]}
+                  position={[toX(value), -0.9, 0]}
                   fontSize={0.25}
                   color={value === 0 ? "#ff4444" : "#2d5016"}
                   anchorX="center"
@@ -102,19 +102,14 @@ const MOVING_THRESHOLD = 0.1;
 function HumanSprite({ position, velocity }) {
   const walkingTexture = useTexture("/walking-man.svg");
   const standingTexture = useTexture("/star.png");
-  const facingRef = useRef(-1);
-
-  if (velocity > MOVING_THRESHOLD) facingRef.current = -1;
-  else if (velocity < -MOVING_THRESHOLD) facingRef.current = 1;
 
   const isStanding = Math.abs(velocity) <= MOVING_THRESHOLD;
   const texture = isStanding ? standingTexture : walkingTexture;
-
-  // Sprite ignores scale's sign, so mirror by flipping the texture's UVs instead.
-  texture.wrapS = THREE.RepeatWrapping;
-  texture.repeat.x = facingRef.current;          // 1 = normal, -1 = mirrored
-  texture.offset.x = facingRef.current === -1 ? 1 : 0;
-
+ //flipping image left to right
+  const facing = velocity > 0 ? -1 : 1;          // -1 = mirrored (facing right), 1 = normal (facing left)
+  walkingTexture.wrapS = THREE.RepeatWrapping;
+  walkingTexture.repeat.x = facing;
+  
   return (
     <sprite position={[position, 0, 0]} scale={[1.2, 1.2, 1]}>
       <spriteMaterial map={texture} transparent />
