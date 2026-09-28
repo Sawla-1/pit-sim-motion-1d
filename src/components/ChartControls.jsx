@@ -9,6 +9,30 @@ import {
 } from "chart.js";
 import annotationPlugin from "chartjs-plugin-annotation";
 
+// PhET-style plot area: white inside, dark frame around it. Chart.js has no
+// built-in full frame (only the left/bottom axis lines), so this small
+// plugin draws it.
+const plotFrame = {
+  id: "plotFrame",
+  beforeDraw(chart) {
+    // Before the grid and lines: white background.
+    const { ctx, chartArea: { left, top, width, height } } = chart;
+    ctx.save();
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(left, top, width, height);
+    ctx.restore();
+  },
+  beforeDatasetsDraw(chart) {
+    // Dark frame, drawn before the data lines and the "now" marker so they
+    // stay visible on top of it (e.g. the marker at time 0 or at the end).
+    const { ctx, chartArea: { left, top, width, height } } = chart;
+    ctx.save();
+    ctx.strokeStyle = "#333";
+    ctx.strokeRect(left, top, width, height);
+    ctx.restore();
+  },
+};
+
 // Register Chart.js plugins
 ChartJS.register(
   LinearScale,
@@ -16,7 +40,8 @@ ChartJS.register(
   LineElement,
   Tooltip,
   Decimation,
-  annotationPlugin
+  annotationPlugin,
+  plotFrame
 );
 
 // One look for every small chart button: fills dark grey on hover,

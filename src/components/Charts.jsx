@@ -121,6 +121,8 @@ function Charts({ data, simulation, onSeek }) {
           min: isPlayback ? xRange?.min ?? 0 : 0,
           max: isPlayback ? xRange?.max ?? maxTime : maxTime,
           ticks: { includeBounds: false, display: index === bottomIndex },
+          grid: { color: "#ccc" },
+          border: { dash: [4, 4] }, // dashed grid lines (4px dash, 4px gap)
         },
         y: {
           type: "linear",
@@ -132,6 +134,12 @@ function Charts({ data, simulation, onSeek }) {
             // is always exact. It also hides float noise like 6.6000000000000005.
             callback: (value) => value.toLocaleString(undefined, { maximumFractionDigits: 1 }),
           },
+          // The 0 line is dark and thicker (like PhET); the others are light grey.
+          grid: {
+            color: (ctx) => (ctx.tick.value === 0 ? "#000" : "#ccc"),
+            lineWidth: (ctx) => (ctx.tick.value === 0 ? 2 : 1),
+          },
+          border: { dash: [4, 4] },
           // The chart's name, written sideways along the y-axis.
           title: { display: true, text: title, color, font: { weight: "bold" } },
           // Fixed width so all three plots start at the same x pixel and
@@ -160,14 +168,16 @@ function Charts({ data, simulation, onSeek }) {
           algorithm: "min-max", // preserves spikes/dips in the data instead of smoothing over them
         },
         annotation: {
+          clip: false, // the "now" line may draw past the plot edge (at time 0 and the end)
           annotations: {
             line1: {
               type: "line",
               xMin: simulation.time,
               xMax: simulation.time,
-              borderColor: "rgba(124, 124, 124, 0.6)",
-              borderWidth: 6,
-              borderDash: [8, 2],
+              // "Now" marker: solid so it doesn't blend with the dashed grid;
+              // orange isn't used by any data line.
+              borderColor: "#f59e0b",
+              borderWidth: 4,
             },
           },
         },
