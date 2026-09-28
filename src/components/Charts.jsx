@@ -49,20 +49,23 @@ function Charts({ data, simulation, onSeek }) {
   });
 
   // ---- Drag-to-scrub (playback mode) ----
+  // Pointer events cover mouse, finger and pen with one set of handlers.
 
-  const handleMouseDown = (event) => {
-    // Only start dragging if clicking on a canvas and in playback mode
+  const handlePointerDown = (event) => {
+    // Only start dragging if pressing on a canvas and in playback mode
     if (
       event.target.tagName === "CANVAS" &&
       data.selectedMode === "playback"
     ) {
       setIsDragging(true);
+      // Keep sending moves to this canvas even if the finger/mouse slides off it
+      event.target.setPointerCapture(event.pointerId);
       event.preventDefault();
     }
   };
 
-  const handleMouseMove = (event) => {
-    // isDragging can only be true in playback mode (see handleMouseDown)
+  const handlePointerMove = (event) => {
+    // isDragging can only be true in playback mode (see handlePointerDown)
     if (isDragging) {
       // Find the chart that was clicked
       const canvas = event.target;
@@ -82,7 +85,7 @@ function Charts({ data, simulation, onSeek }) {
     }
   };
 
-  const handleMouseUp = () => {
+  const handlePointerUp = () => {
     setIsDragging(false);
   };
 
@@ -125,6 +128,8 @@ function Charts({ data, simulation, onSeek }) {
           max: yWindow.max,
           ticks: {
             count: 5, // 5 fixed lines → 5 round, exact labels
+            // Smaller numbers on phones so they fit the narrower axis (see afterFit)
+            font: (ctx) => ({ size: ctx.chart.width < 500 ? 10 : 12 }),
             // Every line is a multiple of 0.1 (the smallest step), so 1 decimal
             // is always exact. It also hides float noise like 6.6000000000000005.
             callback: (value) => value.toLocaleString(undefined, { maximumFractionDigits: 1 }),
@@ -140,17 +145,16 @@ function Charts({ data, simulation, onSeek }) {
           // Fixed width so all three plots start at the same x pixel and
           // time 0 lines up vertically across charts. Wide enough for the
           // title plus labels like "-10,499.8" or "-500,000" without clipping.
+          // Phones (chart under 500px) get a narrower axis so the plot has more
+          // room - still fits labels up to "-100,000" at the 10px phone font.
           afterFit: (scale) => {
-            scale.width = 84;
+            scale.width = scale.chart.width < 500 ? 70 : 84;
           },
         },
       },
       plugins: {
         legend: { display: false },
         tooltip: {
-          enabled: true,
-          intersect: true,
-          mode: "index",
           displayColors: false,
           callbacks: {
             title: () => "",
@@ -163,7 +167,7 @@ function Charts({ data, simulation, onSeek }) {
           algorithm: "min-max", // preserves spikes/dips in the data instead of smoothing over them
         },
         annotation: {
-          clip: false, // the "now" line may draw past the plot edge (at time 0 and the end)
+          clip: true, // cut the "now" line off at the plot edge
           annotations: {
             line1: {
               type: "line",
@@ -198,11 +202,14 @@ function Charts({ data, simulation, onSeek }) {
 
   return (
       <div
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
-        className="flex flex-col gap-1 flex-3 min-w-0 text-white text-right"
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp} // browser took over (e.g. started scrolling)
+        // Playback: a sideways finger drag scrubs, an up/down swipe still scrolls the page
+        className={`flex flex-col gap-1 flex-3 min-w-0 text-white text-right ${
+          isPlayback ? "touch-pan-y" : ""
+        }`}
       >
         <ChartPanel
           label="Position"
