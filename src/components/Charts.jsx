@@ -184,10 +184,26 @@ function Charts({ data, simulation, onSeek }) {
               type: "line",
               xMin: simulation.time,
               xMax: simulation.time,
-              // "Now" marker: solid so it doesn't blend with the dashed grid;
+              // "Now" marker: see-through so the data line stays visible behind it;
               // orange isn't used by any data line.
-              borderColor: "#f59e0b",
-              borderWidth: 4,
+              borderColor: "rgba(245, 158, 11, 0.5)", // same orange, 50% see-through
+              borderWidth: 8,
+              // Dashed left and right edges on the see-through band
+              afterDraw: ({ chart, element }) => {
+                const { ctx, chartArea } = chart;
+                ctx.save();
+                ctx.strokeStyle = "#f59e0b";
+                ctx.lineWidth = 1;
+                ctx.setLineDash([4, 4]); // 4px dash, 4px gap (same as the grid)
+                for (const x of [element.x - 4, element.x + 4]) {
+                  if (x < chartArea.left || x > chartArea.right) continue; // don't draw outside the plot
+                  ctx.beginPath();
+                  ctx.moveTo(x, chartArea.top);
+                  ctx.lineTo(x, chartArea.bottom);
+                  ctx.stroke();
+                }
+                ctx.restore();
+              },
             },
           },
         },
