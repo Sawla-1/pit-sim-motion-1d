@@ -64,6 +64,7 @@ The hook takes `onRecordStep` and `onPlaybackStep` callback props and dispatches
    - **Playback mode**: `handlePlaybackStep` → `interpolateStateAtTime` over `recordedData` → updates `simulation` via `setSimulation`.
 3. `Charts` reads `data.recordedData` to render position/velocity/acceleration vs. time graphs.
 4. In playback mode, dragging on a chart canvas calls `onSeek`, which scrubs `simulation.time` and seeks the 3D sprite.
+5. In playback mode, the next/previous frame buttons in `Controls` call `handleNextFrame` / `handlePrevFrame` in `App.jsx`, which call the same `handleSeek` at `simulation.time ± FRAME_STEP` (0.1 s; previous is clamped at 0).
 
 ### Component responsibilities
 
@@ -73,7 +74,7 @@ The hook takes `onRecordStep` and `onPlaybackStep` callback props and dispatches
 | `src/hooks/useSimulationLoop.js` | RAF animation loop, real per-frame delta (clamped), pause/resume timing |
 | `src/components/Simulation3D.jsx` | R3F canvas, ruler, sprite rendering — receives `position` and `velocity` props (velocity picks walking/standing sprite and facing direction) |
 | `src/components/Charts.jsx` | Chart.js line graphs, timeline drag-scrub, show/hide toggles |
-| `src/components/Controls.jsx` | Parameter inputs, mode radio, play/pause/reset/clear buttons |
+| `src/components/Controls.jsx` | Parameter inputs, mode radio, play/pause/reset/clear buttons, next/previous frame buttons (playback mode only, disabled while playing) |
 
 ### Controls input pattern
 
@@ -82,3 +83,8 @@ The hook takes `onRecordStep` and `onPlaybackStep` callback props and dispatches
 ### Utilities
 
 - **`utils/formatNumber.js`** — `formatNumber(n, decimals)`: single shared implementation used by both `App.jsx` (1 decimal) and `Charts.jsx` (2 decimals).
+
+
+## Keeping This File Current
+
+After changing code or adding a feature, check whether anything in this file is now wrong or missing (file list, layer map, state shape, data flow, commands). If so, propose the CLAUDE.md update in the same task and wait for approval before editing. Skip small changes that don't affect the architecture (typos, styling, renames).
