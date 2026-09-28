@@ -49,20 +49,23 @@ function Charts({ data, simulation, onSeek }) {
   });
 
   // ---- Drag-to-scrub (playback mode) ----
+  // Pointer events cover mouse, finger and pen with one set of handlers.
 
-  const handleMouseDown = (event) => {
-    // Only start dragging if clicking on a canvas and in playback mode
+  const handlePointerDown = (event) => {
+    // Only start dragging if pressing on a canvas and in playback mode
     if (
       event.target.tagName === "CANVAS" &&
       data.selectedMode === "playback"
     ) {
       setIsDragging(true);
+      // Keep sending moves to this canvas even if the finger/mouse slides off it
+      event.target.setPointerCapture(event.pointerId);
       event.preventDefault();
     }
   };
 
-  const handleMouseMove = (event) => {
-    // isDragging can only be true in playback mode (see handleMouseDown)
+  const handlePointerMove = (event) => {
+    // isDragging can only be true in playback mode (see handlePointerDown)
     if (isDragging) {
       // Find the chart that was clicked
       const canvas = event.target;
@@ -82,7 +85,7 @@ function Charts({ data, simulation, onSeek }) {
     }
   };
 
-  const handleMouseUp = () => {
+  const handlePointerUp = () => {
     setIsDragging(false);
   };
 
@@ -195,11 +198,14 @@ function Charts({ data, simulation, onSeek }) {
 
   return (
       <div
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
-        className="flex flex-col gap-1 flex-3 min-w-0 text-white text-right"
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp} // browser took over (e.g. started scrolling)
+        // Playback: a sideways finger drag scrubs, an up/down swipe still scrolls the page
+        className={`flex flex-col gap-1 flex-3 min-w-0 text-white text-right ${
+          isPlayback ? "touch-pan-y" : ""
+        }`}
       >
         <ChartPanel
           label="Position"
