@@ -222,13 +222,15 @@ export function ChartPanel({
 
   return (
     // Phones/tablets: fixed heights. Desktop: the charts share the space under
-    // the 3D scene. The bottom chart is taller (1.3 shares): it also holds the
-    // time numbers and the shared time zoom buttons (in its extra bottom padding).
+    // the 3D scene. The bottom chart is exactly 34px taller: 26px of time
+    // numbers (fixed in Charts.jsx) minus the other charts' ~8px of x tick marks,
+    // plus 16px more bottom padding for the time zoom buttons. So all 3 plots
+    // are the same height.
     // The minimums keep the right-edge button column (~100px) from overlapping
     // on short screens; below them the page scrolls instead.
     <div className={`relative bg-gray-100 pt-2 pl-2 pr-12 rounded-md ${
       isBottom
-        ? "h-[160px] lg:h-auto lg:min-h-[160px] lg:flex-[1.3] pb-6"
+        ? "h-[160px] lg:h-auto lg:min-h-[158px] lg:flex-[1_1_34px] pb-6"
         : "h-[126px] lg:h-auto lg:min-h-[124px] lg:flex-1 pb-2"
     }`}>
       {/* Right edge: ✖ at the top, y zoom in the middle, reset at the bottom.

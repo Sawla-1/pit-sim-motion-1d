@@ -99,12 +99,13 @@ function Charts({ data, simulation, onSeek }) {
   const accelerationYDisabled = getYDisabled("acceleration", 2);
 
   // All charts share one time axis, so (like PhET) only the lowest visible
-  // chart shows the time numbers and time zoom buttons.
-  const bottomIndex = [
-    visibility.showPosition,
-    visibility.showVelocity,
-    visibility.showAcceleration,
-  ].lastIndexOf(true);
+  // chart shows the time numbers and time zoom buttons. Before anything is
+  // recorded there are no time numbers, so no chart gets the extra room (-1)
+  // and all three are the same height.
+  const hasRecording = data.recordedData.length > 1;
+  const bottomIndex = hasRecording
+    ? [visibility.showPosition, visibility.showVelocity, visibility.showAcceleration].lastIndexOf(true)
+    : -1;
 
   // Simplified chart options
   const getChartOptions = (index, valueKey, title, color) => {
@@ -126,6 +127,11 @@ function Charts({ data, simulation, onSeek }) {
           ticks: { includeBounds: false, display: index === bottomIndex },
           grid: { color: "#ccc" },
           border: { dash: [4, 4] }, // dashed grid lines (4px dash, 4px gap)
+          // Fixed height for the time numbers, so the bottom plot doesn't grow
+          // when there are no numbers yet (see ChartPanel's extra 34px).
+          afterFit: (scale) => {
+            if (index === bottomIndex) scale.height = 26;
+          },
         },
         y: {
           type: "linear",
