@@ -10,6 +10,8 @@ import {
 } from "./engine/recordPlayback";
 import { formatNumber } from "./utils/formatNumber";
 
+const FRAME_STEP = 0.1; // seconds moved by one Next/Previous frame click
+
 function App() {
   // ============================================================================
   // STATE MANAGEMENT
@@ -107,6 +109,10 @@ function App() {
     setSimulation(result.simulation);
   };
 
+  // Step playback one frame forward / back (clamped so time never goes below 0)
+  const handleNextFrame = () => handleSeek(simulation.time + FRAME_STEP);
+  const handlePrevFrame = () => handleSeek(Math.max(0, simulation.time - FRAME_STEP));
+
   // Handler for simulation parameter changes
   const handleSimulationChange = (changes) => {
     setSimulation((prev) => ({ ...prev, ...changes }));
@@ -153,6 +159,8 @@ function App() {
           onSimulationChange={handleSimulationChange}
           onModeChange={switchMode}
           onTogglePlayPause={togglePlayPause}
+          onNextFrame={handleNextFrame}
+          onPrevFrame={handlePrevFrame}
           onReset={reset}
           onClearRecordedData={clearRecordedData}
         />

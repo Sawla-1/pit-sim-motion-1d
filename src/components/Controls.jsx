@@ -67,9 +67,15 @@ function Controls({
   onSimulationChange,
   onModeChange,
   onTogglePlayPause,
+  onNextFrame,
+  onPrevFrame,
   onReset,
   onClearRecordedData,
 }) {
+  // Frame stepping only works in playback mode, and not while playing
+  const canStepFrames = data.selectedMode === "playback" && !playing;
+  const lastTime = data.recordedData[data.recordedData.length - 1].time;
+
   return (
     <div className="bg-white/95 rounded-lg p-3 shadow-lg backdrop-blur-sm flex flex-col gap-3 flex-1 min-w-0">
       {/* Parameter Input Section */}
@@ -146,7 +152,15 @@ function Controls({
       {/* Control Buttons Section */}
       <div className="bg-blue-400 rounded-md p-2 pb-4 h-full flex flex-col justify-between border-2 border-blue-500">
         <h4 className="font-semibold text-blue-800">Controls</h4>
-        <div className="flex justify-center pb-3.5">
+        <div className="flex justify-center items-center gap-3 pb-3.5">
+          <button
+            onClick={onPrevFrame}
+            disabled={!canStepFrames || simulation.time <= 0}
+            title="Previous frame"
+            className="w-8 h-7 rounded-full border-none text-xs font-semibold cursor-pointer bg-white text-black transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100"
+          >
+            ❚◀
+          </button>
           <button
             onClick={onTogglePlayPause}
             className={`w-10 h-10 border-none rounded-full text-xs font-semibold cursor-pointer ${
@@ -156,6 +170,14 @@ function Controls({
             }`}
           >
             {playing ? "❚❚" : "▶"}
+          </button>
+          <button
+            onClick={onNextFrame}
+            disabled={!canStepFrames || simulation.time >= lastTime}
+            title="Next frame"
+            className="w-8 h-7 rounded-full border-none text-xs font-semibold cursor-pointer bg-white text-black transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100"
+          >
+            ▶❚
           </button>
         </div>
         <div className="flex gap-5 justify-center">
