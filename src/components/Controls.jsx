@@ -47,7 +47,7 @@ function PhysicsInput({ label, unit, value, min, max, labelClass, accentClass, f
           step={0.1}
           value={value}
           disabled={disabled}
-          onChange={(e) => onChange(Number(e.target.value) || 0)}
+          onChange={(e) => onChange(Number(e.target.value))}
           className={`w-1/2 ${accentClass} disabled:opacity-50 disabled:cursor-not-allowed`}
         />
         <span className="text-sm">{max}</span>
