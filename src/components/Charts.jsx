@@ -217,9 +217,10 @@ function Charts({ data, simulation, onSeek }) {
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp} // browser took over (e.g. started scrolling)
-        // Playback: a sideways finger drag scrubs, an up/down swipe still scrolls the page
+        // Playback: the charts own every finger move, so the phone never takes a drag
+        // over as a scroll (scroll the page by swiping outside the charts)
         className={`flex flex-col gap-1 flex-3 min-w-0 text-white text-right ${
-          isPlayback ? "touch-pan-y" : ""
+          isPlayback ? "touch-none" : ""
         }`}
       >
         <ChartPanel
