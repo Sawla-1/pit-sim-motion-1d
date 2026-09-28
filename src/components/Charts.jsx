@@ -6,8 +6,9 @@ import { ChartZoomControls, ChartPanel } from "./ChartControls";
 // Renders the Position/Velocity/Acceleration line charts, each with its own
 // Y-axis zoom/pan and a shared X-axis (time) zoom/pan across all three.
 function Charts({ data, simulation, onSeek }) {
-  // State for drag functionality
-  const [isDragging, setIsDragging] = useState(false);
+  // A ref, not state: the moves right after pointer-down must see it at once,
+  // without waiting for React to re-render.
+  const isDragging = useRef(false);
   const [visibility, setVisibility] = useState({
     showPosition: true,
     showVelocity: true,
@@ -57,36 +58,40 @@ function Charts({ data, simulation, onSeek }) {
       event.target.tagName === "CANVAS" &&
       data.selectedMode === "playback"
     ) {
-      setIsDragging(true);
+      isDragging.current = true;
       // Keep sending moves to this canvas even if the finger/mouse slides off it
       event.target.setPointerCapture(event.pointerId);
       event.preventDefault();
+      // Jump to where the finger/mouse went down, not only once it moves
+      seekToPointer(event);
     }
   };
 
   const handlePointerMove = (event) => {
     // isDragging can only be true in playback mode (see handlePointerDown)
-    if (isDragging) {
-      // Find the chart that was clicked
-      const canvas = event.target;
-      const chart = chartRefs.current.find(
-        (items) => items && items.canvas === canvas
-      );
-      // chartRefs.current holds the 3 Chart.js chart objects
-      // (position, velocity, acceleration). Each one has its own
-      // .canvas and .scales, so we can match by canvas here.
-
-      if (chart) {
-        const x = event.clientX - canvas.getBoundingClientRect().left;
-        const timeValue = chart.scales.x.getValueForPixel(x);
-        const clampedTime = Math.max(0, Math.min(maxTime, timeValue));
-        onSeek(clampedTime);
-      }
-    }
+    if (isDragging.current) seekToPointer(event);
   };
 
   const handlePointerUp = () => {
-    setIsDragging(false);
+    isDragging.current = false;
+  };
+
+  // Seek to the time under the pointer on the chart it is on
+  const seekToPointer = (event) => {
+    const canvas = event.target;
+    // chartRefs.current holds the 3 Chart.js chart objects
+    // (position, velocity, acceleration). Each one has its own
+    // .canvas and .scales, so we can match by canvas here.
+    const chart = chartRefs.current.find(
+      (items) => items && items.canvas === canvas
+    );
+
+    if (chart) {
+      const x = event.clientX - canvas.getBoundingClientRect().left;
+      const timeValue = chart.scales.x.getValueForPixel(x);
+      const clampedTime = Math.max(0, Math.min(maxTime, timeValue));
+      onSeek(clampedTime);
+    }
   };
 
   const positionYDisabled = getYDisabled("position", 0);
