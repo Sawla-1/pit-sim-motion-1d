@@ -69,10 +69,9 @@ function App() {
   const switchMode = (mode) => {
     setData((prev) => ({ ...prev, selectedMode: mode }));
 
-    if (mode === "playback" && data.recordedData.length > 0) {
+    if (mode === "playback") {
       // Switch to playback: reset playback time
-      setSimulation((prev) => ({
-        ...prev,
+      setSimulation(() => ({
         time: 0,
         position: data.recordedData[0].position,
         velocity: data.recordedData[0].velocity,
@@ -81,7 +80,6 @@ function App() {
       setPlaying(false);
     } else if (mode === "record") {
       // Switch to record: continue from latest recorded data
-      if (data.recordedData.length > 0) {
         const lastState = data.recordedData[data.recordedData.length - 1];
         setSimulation({
           position: lastState.position,
@@ -90,16 +88,6 @@ function App() {
           time: lastState.time,
         });
         setPlaying(false);
-      } else {
-        // No recorded data: start from beginning
-        setSimulation({
-          position: 0,
-          velocity: 0,
-          acceleration: 0,
-          time: 0,
-        });
-        setPlaying(false);
-      }
     }
   };
 
@@ -122,7 +110,7 @@ function App() {
   // Handler for simulation parameter changes
   const handleSimulationChange = (changes) => {
     setSimulation((prev) => ({ ...prev, ...changes }));
-    if (simulation.time === 0) {
+    if (simulation.time === 0 && data.selectedMode === 'record') {
       setData((prev) => ({
         ...prev,
         recordedData: [{ ...prev.recordedData[0], ...changes }],
@@ -135,10 +123,10 @@ function App() {
   // ============================================================================
 
   return (
-    <div className="min-h-screen lg:h-screen w-full p-2 flex flex-col gap-1 box-border bg-gradient-to-br bg-blue-700 text-gray-800 overflow-x-hidden">
+    <div className="min-h-screen lg:h-screen w-full p-2 flex flex-col gap-1 box-border bg-blue-700 text-gray-800 overflow-x-hidden">
       {/* Simulation Display Area */}
       <div className="relative w-full mb-1">
-        <Simulation3D position={simulation.position} />
+        <Simulation3D position={simulation.position} velocity={simulation.velocity} />
 
         {/* Time Display */}
         <div

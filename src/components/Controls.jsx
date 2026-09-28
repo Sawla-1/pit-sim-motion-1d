@@ -6,15 +6,17 @@ import { evaluateExpression } from "../engine/evaluateExpression";
  * While the user is typing, the box shows their draft text; otherwise it
  * shows the live value. No effect is needed to keep the two in sync.
  */
-function PhysicsInput({ label, unit, value, min, max, labelClass, accentClass, focusClass, onChange }) {
+function PhysicsInput({ label, unit, value, min, max, labelClass, accentClass, focusClass, disabled, onChange }) {
   const [draft, setDraft] = useState(null); // null = not typing right now
-  const text = draft ?? String(value);
+  const shown = String(Math.round(value * 100) / 100); // 2 decimals
+  const text = draft ?? shown;
 
   // Valid input is sent up; invalid input is simply dropped, so the box
-  // falls back to showing the last real value.
+  // falls back to showing the last real value. Unchanged text is skipped,
+  // so clicking in and out doesn't round the real value to 2 decimals.
   const commit = (raw) => {
     const evaluated = evaluateExpression(raw);
-    if (evaluated !== null) onChange(evaluated);
+    if (evaluated !== null && raw !== shown) onChange(evaluated);
     setDraft(null);
   };
 
@@ -27,14 +29,15 @@ function PhysicsInput({ label, unit, value, min, max, labelClass, accentClass, f
         <input
           type="text"
           value={text}
+          disabled={disabled}
           onFocus={(e) => {
-            setDraft(String(value));
+            setDraft(shown);
             e.target.select();
           }}
           onChange={(e) => setDraft(e.target.value)}
           onBlur={(e) => commit(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") e.target.blur(); }}
-          className={`w-1/2 px-2 py-1.5 border border-gray-300 rounded text-xs bg-white text-black transition-colors focus:outline-none ${focusClass} focus:shadow-[0_0_0_3px_rgba(42,82,152,0.1)]`}
+          className={`w-1/2 px-2 py-1.5 border border-gray-300 rounded text-xs bg-white text-black transition-colors focus:outline-none ${focusClass} focus:shadow-[0_0_0_3px_rgba(42,82,152,0.1)] disabled:opacity-50 disabled:cursor-not-allowed`}
         />
         <span className="text-sm">{min}</span>
         <input
@@ -43,8 +46,9 @@ function PhysicsInput({ label, unit, value, min, max, labelClass, accentClass, f
           max={max}
           step={0.1}
           value={value}
+          disabled={disabled}
           onChange={(e) => onChange(Number(e.target.value) || 0)}
-          className={`w-1/2 ${accentClass}`}
+          className={`w-1/2 ${accentClass} disabled:opacity-50 disabled:cursor-not-allowed`}
         />
         <span className="text-sm">{max}</span>
       </div>
@@ -77,6 +81,7 @@ function Controls({
         <PhysicsInput
           label="Position" unit="m"
           value={simulation.position} min={-10} max={10}
+          disabled={playing}
           labelClass="text-blue-600"
           accentClass="accent-blue-600"
           focusClass="focus:border-blue-600"
@@ -85,6 +90,7 @@ function Controls({
         <PhysicsInput
           label="Velocity" unit="m/s"
           value={simulation.velocity} min={-10} max={10}
+          disabled={playing}
           labelClass="text-red-600"
           accentClass="accent-red-600"
           focusClass="focus:border-red-600"
@@ -93,6 +99,7 @@ function Controls({
         <PhysicsInput
           label="Acceleration" unit="m/s²"
           value={simulation.acceleration} min={-10} max={10}
+          disabled={playing}
           labelClass="text-green-600"
           accentClass="accent-green-700"
           focusClass="focus:border-green-600"
@@ -142,9 +149,6 @@ function Controls({
         <div className="flex justify-center pb-3.5">
           <button
             onClick={onTogglePlayPause}
-            disabled={
-              data.selectedMode === "playback" && data.recordedData.length === 0
-            }
             className={`w-10 h-10 border-none rounded-full text-xs font-semibold cursor-pointer ${
               playing
                 ? "bg-red-500 text-white transition-all hover:scale-105"

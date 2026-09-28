@@ -82,9 +82,8 @@ export function handlePlaybackSeek(recordedData, targetTime) {
  * this same function, so they always agree.
  */
 function resolvePlaybackState(recordedData, targetTime) {
-  const maxTime =
-    recordedData.length > 0 ? recordedData[recordedData.length - 1].time : 0;
-
+  const maxTime = recordedData[recordedData.length - 1].time;
+   
   if (targetTime >= maxTime) {
     const lastState = recordedData[recordedData.length - 1];
     return { simulation: lastState, isEndOfPlayback: true };
