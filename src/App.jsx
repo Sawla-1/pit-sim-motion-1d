@@ -78,16 +78,16 @@ function App() {
         acceleration: data.recordedData[0].acceleration,
       }));
       setPlaying(false);
-    } else if (mode === "record") {
+    } else {
       // Switch to record: continue from latest recorded data
-        const lastState = data.recordedData[data.recordedData.length - 1];
-        setSimulation({
-          position: lastState.position,
-          velocity: lastState.velocity,
-          acceleration: lastState.acceleration,
-          time: lastState.time,
-        });
-        setPlaying(false);
+      const lastState = data.recordedData[data.recordedData.length - 1];
+      setSimulation({
+        position: lastState.position,
+        velocity: lastState.velocity,
+        acceleration: lastState.acceleration,
+        time: lastState.time,
+      });
+      setPlaying(false);
     }
   };
 

@@ -53,7 +53,7 @@ The hook takes `onRecordStep` and `onPlaybackStep` callback props and dispatches
 ### Engine layer
 
 - **`engine/kinematics1d.js`** — `calculatePhysicsStep(simulation, deltaTime)`: pure average-velocity integration. No side effects.
-- **`engine/recordPlayback.js`** — `handleRecordingStep`, `handlePlaybackStep`, `handlePlaybackSeek`, `interpolateStateAtTime`: recording/playback state machine. Only `handleRecordingStep` imports from `kinematics1d`; the rest are physics-agnostic and operate purely on the timestamped `recordedData` array.
+- **`engine/recordPlayback.js`** — exports `handleRecordingStep`, `handlePlaybackStep`, `handlePlaybackSeek` (internal helpers: `resolvePlaybackState`, `interpolateStateAtTime`): recording/playback state machine. Only `handleRecordingStep` imports from `kinematics1d`; the rest are physics-agnostic and operate purely on the timestamped `recordedData` array.
 - **`engine/evaluateExpression.js`** — `evaluateExpression(expression)`: safely evaluates math expressions typed by users (uses `Function` constructor, strips non-math chars).
 
 ### Data flow
@@ -71,7 +71,7 @@ The hook takes `onRecordStep` and `onPlaybackStep` callback props and dispatches
 |---|---|
 | `src/App.jsx` | State, control logic, wires all components and the loop hook |
 | `src/hooks/useSimulationLoop.js` | RAF animation loop, real per-frame delta (clamped), pause/resume timing |
-| `src/components/Simulation3D.jsx` | R3F canvas, ruler, sprite rendering — receives only `position` prop |
+| `src/components/Simulation3D.jsx` | R3F canvas, ruler, sprite rendering — receives `position` and `velocity` props (velocity picks walking/standing sprite and facing direction) |
 | `src/components/Charts.jsx` | Chart.js line graphs, timeline drag-scrub, show/hide toggles |
 | `src/components/Controls.jsx` | Parameter inputs, mode radio, play/pause/reset/clear buttons |
 

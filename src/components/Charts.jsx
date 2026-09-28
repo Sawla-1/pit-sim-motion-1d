@@ -62,21 +62,16 @@ function Charts({ data, simulation, onSeek }) {
   };
 
   const handleMouseMove = (event) => {
-    if (
-      isDragging &&
-      data.selectedMode === "playback"
-    ) {
+    // isDragging can only be true in playback mode (see handleMouseDown)
+    if (isDragging) {
       // Find the chart that was clicked
       const canvas = event.target;
       const chart = chartRefs.current.find(
         (items) => items && items.canvas === canvas
       );
-      // example data inside chartRefs.current
-      // chartRefs.current = [
-      //   { canvas: positionChartCanvas, chart: positionChart },
-      //   { canvas: velocityChartCanvas, chart: velocityChart },
-      //   { canvas: accelerationChartCanvas, chart: accelerationChart }
-      // ]
+      // chartRefs.current holds the 3 Chart.js chart objects
+      // (position, velocity, acceleration). Each one has its own
+      // .canvas and .scales, so we can match by canvas here.
 
       if (chart) {
         const x = event.clientX - canvas.getBoundingClientRect().left;
