@@ -148,9 +148,6 @@ function Charts({ data, simulation, onSeek }) {
       plugins: {
         legend: { display: false },
         tooltip: {
-          enabled: true,
-          intersect: true,
-          mode: "index",
           displayColors: false,
           callbacks: {
             title: () => "",
@@ -163,7 +160,7 @@ function Charts({ data, simulation, onSeek }) {
           algorithm: "min-max", // preserves spikes/dips in the data instead of smoothing over them
         },
         annotation: {
-          clip: false, // the "now" line may draw past the plot edge (at time 0 and the end)
+          clip: true, // cut the "now" line off at the plot edge
           annotations: {
             line1: {
               type: "line",
