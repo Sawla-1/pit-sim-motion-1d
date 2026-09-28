@@ -128,6 +128,8 @@ function Charts({ data, simulation, onSeek }) {
           max: yWindow.max,
           ticks: {
             count: 5, // 5 fixed lines → 5 round, exact labels
+            // Smaller numbers on phones so they fit the narrower axis (see afterFit)
+            font: (ctx) => ({ size: ctx.chart.width < 500 ? 10 : 12 }),
             // Every line is a multiple of 0.1 (the smallest step), so 1 decimal
             // is always exact. It also hides float noise like 6.6000000000000005.
             callback: (value) => value.toLocaleString(undefined, { maximumFractionDigits: 1 }),
@@ -143,8 +145,10 @@ function Charts({ data, simulation, onSeek }) {
           // Fixed width so all three plots start at the same x pixel and
           // time 0 lines up vertically across charts. Wide enough for the
           // title plus labels like "-10,499.8" or "-500,000" without clipping.
+          // Phones (chart under 500px) get a narrower axis so the plot has more
+          // room - still fits labels up to "-100,000" at the 10px phone font.
           afterFit: (scale) => {
-            scale.width = 84;
+            scale.width = scale.chart.width < 500 ? 70 : 84;
           },
         },
       },
