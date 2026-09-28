@@ -21,11 +21,11 @@ function PhysicsInput({ label, unit, value, min, max, labelClass, accentClass, f
   };
 
   return (
-    <div className="flex flex-col gap-1 mb-1.5 last:mb-0">
+    <div className="flex flex-col gap-1 mb-1 last:mb-0">
       <span className={`${labelClass} font-semibold text-sm`}>
         {label} ({unit})
       </span>
-      <div className="flex gap-1">
+      <div className="flex items-center gap-1">
         <input
           type="text"
           value={text}
@@ -37,7 +37,7 @@ function PhysicsInput({ label, unit, value, min, max, labelClass, accentClass, f
           onChange={(e) => setDraft(e.target.value)}
           onBlur={(e) => commit(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") e.target.blur(); }}
-          className={`w-1/2 px-2 py-1.5 border border-gray-300 rounded text-xs bg-white text-black transition-colors focus:outline-none ${focusClass} focus:shadow-[0_0_0_3px_rgba(42,82,152,0.1)] disabled:opacity-50 disabled:cursor-not-allowed`}
+          className={`w-16 px-2 py-1.5 border border-gray-300 rounded text-xs bg-white text-black transition-colors focus:outline-none ${focusClass} focus:shadow-[0_0_0_3px_rgba(42,82,152,0.1)] disabled:opacity-50 disabled:cursor-not-allowed`}
         />
         <span className="text-sm">{min}</span>
         <input
@@ -48,7 +48,7 @@ function PhysicsInput({ label, unit, value, min, max, labelClass, accentClass, f
           value={value}
           disabled={disabled}
           onChange={(e) => onChange(Number(e.target.value))}
-          className={`w-1/2 ${accentClass} disabled:opacity-50 disabled:cursor-not-allowed`}
+          className={`flex-1 min-w-0 ${accentClass} disabled:opacity-50 disabled:cursor-not-allowed`}
         />
         <span className="text-sm">{max}</span>
       </div>
@@ -77,10 +77,10 @@ function Controls({
   const lastTime = data.recordedData[data.recordedData.length - 1].time;
 
   return (
-    <div className="bg-white/95 rounded-lg p-3 shadow-lg backdrop-blur-sm flex flex-col gap-3 flex-1 min-w-0">
+    <div className="bg-white/95 rounded-lg p-2 shadow-lg backdrop-blur-sm flex flex-col gap-2 flex-1 min-w-0 lg:overflow-y-auto">
       {/* Parameter Input Section */}
       <div className="rounded-md p-2 border-2 border-blue-400 bg-blue-100">
-        <h4 className="m-0 mb-1.5 font-semibold text-blue-800 border-b border-blue-100 pb-1">
+        <h4 className="m-0 mb-1 font-semibold text-blue-800 border-b border-blue-100 pb-1">
           Initial Conditions
         </h4>
 
@@ -115,10 +115,10 @@ function Controls({
 
       {/* Mode Selection Section */}
       <div className="rounded-md p-2 border-2 border-blue-400 bg-blue-100">
-        <h4 className="m-0 mb-1.5 font-semibold text-blue-800 border-b border-blue-100 pb-1">
+        <h4 className="m-0 mb-1 font-semibold text-blue-800 border-b border-blue-100 pb-1">
           Mode
         </h4>
-        <div className="flex gap-3 mt-1">
+        <div className="flex gap-3">
           <label className="flex items-center gap-1.5 cursor-pointer text-sm text-gray-800 font-medium mb-0 py-0.5">
             <input
               type="radio"
@@ -150,9 +150,8 @@ function Controls({
       </div>
 
       {/* Control Buttons Section */}
-      <div className="bg-blue-400 rounded-md p-2 pb-4 h-full flex flex-col justify-between border-2 border-blue-500">
-        <h4 className="font-semibold text-blue-800">Controls</h4>
-        <div className="flex justify-center items-center gap-3 pb-3.5">
+      <div className="bg-blue-400 rounded-md p-2 flex flex-col justify-center gap-2 flex-1 border-2 border-blue-500">
+        <div className="flex justify-center items-center gap-3">
           <button
             onClick={onPrevFrame}
             disabled={!canStepFrames || simulation.time <= 0}
