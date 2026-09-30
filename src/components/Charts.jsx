@@ -234,7 +234,7 @@ function Charts({ data, simulation, onSeek }) {
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp} // browser took over (e.g. started scrolling)
         // Playback: a sideways finger drag scrubs, an up/down swipe still scrolls the page
-        className={`flex flex-col gap-1 flex-3 min-w-0 text-white text-right ${
+        className={`flex flex-col gap-1 flex-1 min-h-0 min-w-0 text-white text-right ${
           isPlayback ? "touch-pan-y" : ""
         }`}
       >

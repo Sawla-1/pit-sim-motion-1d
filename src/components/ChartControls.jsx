@@ -230,8 +230,8 @@ export function ChartPanel({
     // on short screens; below them the page scrolls instead.
     <div className={`relative bg-gray-100 pt-2 pl-2 pr-12 rounded-md ${
       isBottom
-        ? "h-[160px] lg:h-auto lg:min-h-[158px] lg:flex-[1_1_34px] pb-6"
-        : "h-[126px] lg:h-auto lg:min-h-[124px] lg:flex-1 pb-2"
+        ? "h-[160px] lg:h-auto lg:min-h-[134px] lg:flex-[1_1_34px] pb-6"
+        : "h-[126px] lg:h-auto lg:min-h-[100px] lg:flex-1 pb-2"
     }`}>
       {/* Right edge: ✖ at the top, y zoom in the middle, reset at the bottom.
           One flex column, so the buttons can't overlap however short the chart is. */}
