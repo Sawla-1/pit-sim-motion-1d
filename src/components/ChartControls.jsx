@@ -45,18 +45,24 @@ ChartJS.register(
   plotFrame
 );
 
-// One look for every small chart button: fills dark grey on hover,
-// darker while pressed, faded when it can't be used.
+// Same look as the bottom bar's prev/next buttons: white, thin grey border,
+// soft shadow, dark slate icon. Kept at 20px so all buttons fit on short charts.
+// Active = white, raised (shadow), dark icon. Disabled = grey, flat, pale icon.
+const whiteButton = "bg-white border border-[#d9dee6] text-slate-700 shadow-sm disabled:bg-gray-100 disabled:border-gray-200 disabled:text-gray-300 disabled:shadow-none";
+const roundButton = `w-5 h-5 rounded-full flex items-center justify-center ${whiteButton}`;
+
+// One behaviour for every small chart button: light grey on hover,
+// a bit darker while pressed, "not allowed" cursor when it can't be used.
 function iconButtonClass(disabled) {
   return `transition-colors ${
     disabled
-      ? "opacity-30 pointer-events-none"
-      : "cursor-pointer hover:bg-gray-500 hover:text-white active:bg-gray-700"
+      ? "cursor-not-allowed"
+      : "cursor-pointer hover:bg-gray-100 active:bg-gray-200"
   }`;
 }
 
-// Single chevron button, rotated per direction, used for the pan controls.
-// It's one half of the pan pill (see panGroup), which gives it the grey.
+// Single filled triangle button, rotated per direction, used for the pan controls.
+// It's one half of the pan pill (see panGroup), which gives it the white look.
 function PanButton({ direction, onClick, label, disabled }) {
   const rotation = { up: 0, right: 90, down: 180, left: 270 }[direction];
   return (
@@ -66,27 +72,16 @@ function PanButton({ direction, onClick, label, disabled }) {
       title={label}
       onClick={onClick}
       disabled={disabled}
-      className={iconButtonClass(disabled)}
+      className={`w-5 h-5 flex items-center justify-center disabled:bg-gray-100 disabled:text-gray-300 ${iconButtonClass(disabled)}`}
     >
-      <svg
-        width="20"
-        height="20"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        style={{ transform: `rotate(${rotation}deg)` }}
-      >
-        <polyline points="6 15 12 9 18 15" />
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style={{ transform: `rotate(${rotation}deg)` }}>
+        <path d="M12 4 22 20H2z" />
       </svg>
     </button>
   );
 }
 
-// Reset-zoom button - small counterclockwise-arrow icon, same visual
-// language as the other chart controls.
+// Reset-zoom button - small counterclockwise-arrow icon, same white look.
 function ResetButton({ onClick, disabled }) {
   return (
     <button
@@ -95,9 +90,9 @@ function ResetButton({ onClick, disabled }) {
       title="Reset zoom"
       onClick={onClick}
       disabled={disabled}
-      className={`rounded-full bg-gray-200 text-gray-600 p-0.5 ${iconButtonClass(disabled)}`}
+      className={`${roundButton} ${iconButtonClass(disabled)}`}
     >
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
         <polyline points="3 3 3 8 8 8" />
       </svg>
@@ -115,8 +110,8 @@ export function ChartZoomControls({
 }) {
   // y: 2 columns (zoom stacked | pan pill up/down); x: 2 rows (zoom row, pan pill left/right)
   const containerClass = axis === "x"
-    ? "flex flex-col items-center gap-0.5 text-gray-600"
-    : "grid grid-cols-2 gap-0.5 text-gray-600"; // placed by ChartPanel's button column
+    ? "flex flex-col items-center gap-0.5"
+    : "grid grid-cols-2 gap-0.5"; // placed by ChartPanel's button column
 
   const zoomInButton = (
     <button
@@ -126,13 +121,12 @@ export function ChartZoomControls({
       title="Zoom in"
       onClick={onZoomIn}
       disabled={zoomInDisabled}
-      className={`rounded-full bg-gray-200 p-0.5 ${iconButtonClass(zoomInDisabled)}`}
+      className={`${roundButton} ${iconButtonClass(zoomInDisabled)}`}
     >
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="11" cy="11" r="7" />
-        <line x1="21" y1="21" x2="16.65" y2="16.65" />
-        <line x1="11" y1="8" x2="11" y2="14" />
-        <line x1="8" y1="11" x2="14" y2="11" />
+      {/* Plus = zoom in */}
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" aria-hidden="true">
+        <line x1="12" y1="4" x2="12" y2="20" />
+        <line x1="4" y1="12" x2="20" y2="12" />
       </svg>
     </button>
   );
@@ -145,12 +139,11 @@ export function ChartZoomControls({
       title="Zoom out"
       onClick={onZoomOut}
       disabled={zoomOutDisabled}
-      className={`rounded-full bg-gray-200 p-0.5 ${iconButtonClass(zoomOutDisabled)}`}
+      className={`${roundButton} ${iconButtonClass(zoomOutDisabled)}`}
     >
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="11" cy="11" r="7" />
-        <line x1="21" y1="21" x2="16.65" y2="16.65" />
-        <line x1="8" y1="11" x2="14" y2="11" />
+      {/* Minus = zoom out */}
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" aria-hidden="true">
+        <line x1="4" y1="12" x2="20" y2="12" />
       </svg>
     </button>
   );
@@ -175,12 +168,12 @@ export function ChartZoomControls({
     />
   );
 
-  // Both pan buttons share one pill, split by a thin line (like PhET).
+  // Both pan buttons share one white pill, split by a thin line (like PhET).
   // overflow-hidden keeps each half's hover color inside the rounded ends.
   const panGroup = (
     <div
       key="pan-group"
-      className={`flex rounded-full bg-gray-200 overflow-hidden divide-gray-300 ${
+      className={`flex rounded-full overflow-hidden divide-[#d9dee6] ${whiteButton} ${
         axis === "x" ? "flex-row divide-x" : "flex-col divide-y row-span-2" // y: spans both grid rows
       }`}
     >
@@ -220,10 +213,10 @@ export function ChartPanel({
           onClick={onShow}
           aria-label={`Show ${label} chart`}
           title={`Show ${label} chart`}
-          className="w-9 h-9 rounded-full border border-[#d9dee6] bg-white text-slate-700 flex items-center justify-center shadow-sm cursor-pointer hover:bg-gray-50"
+          className={`w-8 h-8 rounded-full flex items-center justify-center ${whiteButton} ${iconButtonClass(false)}`}
         >
           {/* Plus icon = "add this chart back" (pairs with the ✖) */}
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
             <line x1="12" y1="5" x2="12" y2="19" />
             <line x1="5" y1="12" x2="19" y2="12" />
           </svg>
