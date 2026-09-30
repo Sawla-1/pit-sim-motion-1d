@@ -21,10 +21,10 @@ function PhysicsInput({ id, label, unit, value, min, max, color, track, disabled
   return (
     // Phones: fixed height (the slider needs one). sm and up: fills its row.
     // Short screens (under 600px tall): tighter spacing so 3 rows fit.
-    <div className="w-[206px] shrink-0 sm:ml-4 flex gap-2.5 py-3 [@media(max-height:600px)]:py-1.5 h-24 sm:h-auto">
+    <div className="w-[184px] shrink-0 sm:ml-4 flex gap-2.5 py-3 [@media(max-height:600px)]:py-1.5 h-24 sm:h-auto">
       {/* flex-1 + min-w-0: same width in every row, so all 3 sliders line up */}
-      <div className="flex-1 min-w-0 flex flex-col items-start gap-3 [@media(max-height:600px)]:gap-2">
-        <label htmlFor={id} className="text-xl font-bold" style={{ color }}>
+      <div className="flex-1 min-w-0 flex flex-col items-start gap-2 [@media(max-height:600px)]:gap-1.5">
+        <label htmlFor={id} className="text-base font-bold" style={{ color }}>
           {label}
         </label>
         <div className="self-end flex items-center gap-2 whitespace-nowrap">
@@ -40,9 +40,9 @@ function PhysicsInput({ id, label, unit, value, min, max, color, track, disabled
             onChange={(e) => setDraft(e.target.value)}
             onBlur={(e) => commit(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") e.target.blur(); }}
-            className="w-[84px] px-2.5 py-1.5 border-2 border-gray-400 rounded-lg text-lg font-semibold text-right bg-white text-gray-800 shadow-sm focus:outline-none focus:border-gray-700 focus:shadow-[0_0_0_3px_rgba(55,65,81,0.18)] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-[72px] h-8 px-2 border border-gray-400 rounded text-base font-semibold text-right bg-white text-gray-800 shadow-sm focus:outline-none focus:border-gray-700 focus:shadow-[0_0_0_3px_rgba(55,65,81,0.18)] disabled:opacity-50 disabled:cursor-not-allowed"
           />
-          <span className="w-[38px] text-lg font-semibold" style={{ color }}>
+          <span className="w-[34px] text-base font-semibold" style={{ color }}>
             {unit}
           </span>
         </div>
