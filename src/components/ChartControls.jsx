@@ -243,12 +243,16 @@ export function ChartPanel({
     // The minimums keep the right-edge button column from overlapping on
     // short screens; below them the middle area scrolls instead.
     <div className={`flex flex-col sm:flex-row gap-3 ${
-      isBottom ? "lg:flex-[1_1_34px] lg:min-h-[122px]" : "lg:flex-1 lg:min-h-[88px]"
+      // Tablets: the row has the fixed height (not just the chart), so the
+      // vertical slider has a real height to fill instead of the whole screen.
+      isBottom
+        ? "sm:h-[160px] lg:h-auto lg:flex-[1_1_34px] lg:min-h-[122px]"
+        : "sm:h-[126px] lg:h-auto lg:flex-1 lg:min-h-[88px]"
     }`}>
       {/* Bottom row: 34px under the input, so its slider ends where the plot ends */}
       <div className={`flex ${isBottom ? "sm:pb-[34px]" : ""}`}>{input}</div>
       <div className={`relative flex-1 min-w-0 pt-2 pr-12 ${
-        isBottom ? "h-[160px] lg:h-auto pb-6" : "h-[126px] lg:h-auto pb-2"
+        isBottom ? "h-[160px] sm:h-auto pb-6" : "h-[126px] sm:h-auto pb-2"
       }`}>
         {/* Hide button: inside the plot's top-right corner
             (48px button column + 16px chart padding + 4px gap) */}
