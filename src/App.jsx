@@ -161,7 +161,7 @@ function App() {
       </div>
 
       {/* Middle: charts take all the space that is left (short screens: less padding) */}
-      <div className="flex flex-col w-full px-4 pt-4 pb-2 [@media(max-height:600px)]:pt-2.5 [@media(max-height:600px)]:pb-1 lg:flex-1 lg:min-h-0 lg:overflow-y-auto">
+      <div className="flex flex-col w-full px-4 pt-4 pb-2 [@media(max-height:600px)]:pt-2.5 max-lg:[@media(max-height:600px)]:pb-1 lg:pb-0 lg:flex-1 lg:min-h-0 lg:overflow-y-auto">
         <Charts
           data={data}
           simulation={simulation}
