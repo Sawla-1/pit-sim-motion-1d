@@ -26,12 +26,9 @@ function Controls({
   const lastTime = data.recordedData[data.recordedData.length - 1].time;
 
   return (
-    <div className="flex flex-col bg-[#C9EEEA]">
-      {/* Bottom bar: Clear | mode | prev / play / next | Reset All
-          (short screens under 600px tall: 72px bar, smaller Play) */}
-      <div className="flex items-end justify-center px-4 py-3 lg:h-[80px] [@media(max-height:600px)]:lg:h-[72px] lg:pt-0 lg:pb-2">
-      {/* White rounded toolbar around the controls only (the teal comes from the outer bar) */}
-      <div className="flex flex-wrap items-center justify-center gap-6 lg:gap-[72px] px-8 py-2 bg-white border border-[#d9dee6] rounded-2xl shadow-[0_4px_14px_rgba(15,23,42,0.08)]">
+    // The white rounded toolbar: Clear | mode | prev / play / next | Reset All
+    // (App.jsx places it; short screens under 600px tall: smaller Play)
+    <div className="flex flex-wrap items-center justify-center gap-6 lg:gap-[72px] px-8 py-2 bg-white border border-[#d9dee6] rounded-2xl shadow-[0_4px_14px_rgba(15,23,42,0.08)]">
         <button
           onClick={onClearRecordedData}
           disabled={data.recordedData.length <= 1}
@@ -109,8 +106,6 @@ function Controls({
         >
           Reset All
         </button>
-      </div>
-      </div>
     </div>
   );
 }

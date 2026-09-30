@@ -146,7 +146,7 @@ function App() {
   ));
 
   return (
-    <div className="min-h-screen lg:h-screen w-full flex flex-col box-border bg-white text-gray-800 overflow-x-clip">
+    <div className="min-h-screen lg:h-screen w-full flex flex-col box-border bg-[#C9EEEA] text-gray-800 overflow-x-clip">
       {/* Top: 3D scene + time */}
       <div className="relative w-full shrink-0 h-[125px] [@media(max-height:600px)]:h-[112px]">
         <Simulation3D position={simulation.position} velocity={simulation.velocity} />
@@ -161,7 +161,7 @@ function App() {
       </div>
 
       {/* Middle: charts take all the space that is left (short screens: less padding) */}
-      <div className="flex flex-col w-full px-4 py-4 [@media(max-height:600px)]:py-2.5 bg-[#C9EEEA] lg:flex-1 lg:min-h-0 lg:overflow-y-auto">
+      <div className="flex flex-col w-full px-4 pt-4 pb-2 [@media(max-height:600px)]:pt-2.5 [@media(max-height:600px)]:pb-1 lg:flex-1 lg:min-h-0 lg:overflow-y-auto">
         <Charts
           data={data}
           simulation={simulation}
@@ -170,8 +170,8 @@ function App() {
         />
       </div>
 
-      {/* Bottom: controls bar */}
-      <div className="w-full shrink-0">
+      {/* Bottom: the toolbar pill, centered, 8px gap under it */}
+      <div className="shrink-0 flex justify-center px-4 pb-2">
         <Controls
           simulation={simulation}
           playing={playing}

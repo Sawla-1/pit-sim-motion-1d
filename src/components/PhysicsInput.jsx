@@ -47,9 +47,9 @@ function PhysicsInput({ id, label, unit, value, min, max, color, track, disabled
           </span>
         </div>
       </div>
-      {/* The slider starts and ends where the plot does: 19px from the row edge
-          (panel padding 12 + 7, or on short screens 6 + 13) */}
-      <div className="shrink-0 flex gap-1 py-[7px] [@media(max-height:600px)]:py-[13px]">
+      {/* The slider starts and ends where the plot does: 13px from the row edge
+          (panel padding 12 + 1, or on short screens 6 + 7) */}
+      <div className="shrink-0 flex gap-1 py-px [@media(max-height:600px)]:py-[7px]">
         <div className="w-7 flex flex-col justify-between items-end text-base leading-none text-gray-600">
           <span>{max}</span>
           <span>{min}</span>

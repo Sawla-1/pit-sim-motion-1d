@@ -116,7 +116,7 @@ export function ChartZoomControls({
 }) {
   const containerClass =
     axis === "x"
-      ? "absolute bottom-1 right-16 flex flex-row items-center gap-3 text-gray-600"
+      ? "absolute bottom-0 right-16 flex flex-row items-center gap-3 text-gray-600"
       : "grid grid-cols-2 gap-0.5 text-gray-600"; // placed by ChartPanel's button column
 
   const zoomInButton = (
@@ -236,23 +236,23 @@ export function ChartPanel({
   return (
     // One row: input on the left, chart on the right (phones: input on top).
     // Phones/tablets: fixed chart heights. Desktop: the rows share the space
-    // under the 3D scene. The bottom row is exactly 34px taller: 26px of time
+    // under the 3D scene. The bottom row is exactly 32px taller: 26px of time
     // numbers (fixed in Charts.jsx) minus the other charts' ~8px of x tick marks,
-    // plus 16px more bottom padding for the time zoom buttons. So all 3 plots
-    // are the same height.
+    // plus 14px more bottom padding (pb-4 vs pb-0.5) for the time zoom buttons.
+    // So all 3 plots are the same height.
     // The minimums keep the right-edge button column from overlapping on
     // short screens; below them the middle area scrolls instead.
     <div className={`flex flex-col sm:flex-row gap-3 ${
       // Tablets: the row has the fixed height (not just the chart), so the
       // vertical slider has a real height to fill instead of the whole screen.
       isBottom
-        ? "sm:h-[160px] lg:h-auto lg:flex-[1_1_34px] lg:min-h-[122px]"
+        ? "sm:h-[158px] lg:h-auto lg:flex-[1_1_32px] lg:min-h-[120px]"
         : "sm:h-[126px] lg:h-auto lg:flex-1 lg:min-h-[88px]"
     }`}>
-      {/* Bottom row: 34px under the input, so its slider ends where the plot ends */}
-      <div className={`flex ${isBottom ? "sm:pb-[34px]" : ""}`}>{input}</div>
-      <div className={`relative flex-1 min-w-0 pt-2 pr-12 ${
-        isBottom ? "h-[160px] sm:h-auto pb-6" : "h-[126px] sm:h-auto pb-2"
+      {/* Bottom row: 32px under the input, so its slider ends where the plot ends */}
+      <div className={`flex ${isBottom ? "sm:pb-[32px]" : ""}`}>{input}</div>
+      <div className={`relative flex-1 min-w-0 pt-0.5 pr-12 ${
+        isBottom ? "h-[158px] sm:h-auto pb-4" : "h-[126px] sm:h-auto pb-0.5"
       }`}>
         {/* Hide button: inside the plot's top-right corner
             (48px button column + 16px chart padding + 4px gap) */}
@@ -260,7 +260,7 @@ export function ChartPanel({
           type="button"
           aria-label={`Hide ${label} chart`}
           onClick={onHide}
-          className="absolute top-5 right-[68px] z-10 w-6 h-6 rounded bg-[#E31E24] text-white text-xs font-bold cursor-pointer"
+          className="absolute top-[14px] right-[68px] z-10 w-6 h-6 rounded bg-[#E31E24] text-white text-xs font-bold cursor-pointer"
         >
           ✖
         </button>

@@ -4,9 +4,10 @@ import { useChartZoom } from "../hooks/useChartZoom";
 import { ChartZoomControls, ChartPanel } from "./ChartControls";
 import { SERIES_COLORS } from "./seriesColors";
 
-// Bigger, bolder axis numbers; smaller on phones and on short charts
+// Bigger, bolder axis numbers; smaller on phones and on short pages
+// (same ≤600px-tall rule as the CSS), so all 3 charts always match
 const tickFont = (ctx) => ({
-  size: ctx.chart.width < 500 || ctx.chart.height < 120 ? 13 : 16,
+  size: ctx.chart.width < 500 || window.innerHeight <= 600 ? 13 : 16,
   weight: 600,
 });
 
@@ -239,7 +240,7 @@ function Charts({ data, simulation, onSeek, inputs }) {
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp} // browser took over (e.g. started scrolling)
         // Playback: a sideways finger drag scrubs, an up/down swipe still scrolls the page
-        className={`flex flex-col gap-3 [@media(max-height:600px)]:gap-1.5 flex-1 min-h-0 min-w-0 text-gray-700 ${
+        className={`flex flex-col gap-1 [@media(max-height:600px)]:gap-0.5 flex-1 min-h-0 min-w-0 text-gray-700 ${
           isPlayback ? "touch-pan-y" : ""
         }`}
       >
