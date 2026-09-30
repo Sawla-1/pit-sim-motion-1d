@@ -213,7 +213,8 @@ export function ChartPanel({
     return (
       // Hidden chart: its input hides too; one slim line with a round
       // "show" button (same style as the prev/next buttons)
-      <div className="flex items-center gap-3 sm:ml-4 text-lg font-semibold text-gray-700">
+      <div className="flex items-center justify-end gap-3 pr-2 py-1 text-lg font-semibold text-gray-700">
+        {label}
         <button
           type="button"
           onClick={onShow}
@@ -227,7 +228,6 @@ export function ChartPanel({
             <line x1="5" y1="12" x2="19" y2="12" />
           </svg>
         </button>
-        {label}
       </div>
     );
   }
