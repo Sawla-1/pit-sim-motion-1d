@@ -2,6 +2,8 @@ import { useState } from "react";
 import Simulation3D from "./components/Simulation3D";
 import Charts from "./components/Charts";
 import Controls from "./components/Controls";
+import PhysicsInput from "./components/PhysicsInput";
+import { SERIES_COLORS } from "./components/seriesColors";
 import { useSimulationLoop } from "./hooks/useSimulationLoop";
 import {
   handleRecordingStep,
@@ -128,10 +130,25 @@ function App() {
   // RENDER - Using refactored components
   // ============================================================================
 
+  // The 3 inputs are shown beside their charts (Charts puts each in its row)
+  const inputs = [
+    { key: "position", label: "Position", unit: "m" },
+    { key: "velocity", label: "Velocity", unit: "m/s" },
+    { key: "acceleration", label: "Acceleration", unit: "m/s²" },
+  ].map(({ key, label, unit }) => (
+    <PhysicsInput
+      key={key} id={key} label={label} unit={unit}
+      value={simulation[key]} min={-10} max={10}
+      color={SERIES_COLORS[key].color} track={SERIES_COLORS[key].track}
+      disabled={playing}
+      onChange={(v) => handleSimulationChange({ [key]: v })}
+    />
+  ));
+
   return (
-    <div className="min-h-screen lg:h-screen w-full flex flex-col box-border bg-blue-700 text-gray-800 overflow-x-clip">
+    <div className="min-h-screen lg:h-screen w-full flex flex-col box-border bg-white text-gray-800 overflow-x-clip">
       {/* Top: 3D scene + time */}
-      <div className="relative w-full shrink-0">
+      <div className="relative w-full shrink-0 h-[125px] [@media(max-height:600px)]:h-[112px]">
         <Simulation3D position={simulation.position} velocity={simulation.velocity} />
 
         {/* Time Display */}
@@ -143,22 +160,22 @@ function App() {
         </div>
       </div>
 
-      {/* Middle: charts take all the space that is left */}
-      <div className="flex flex-col w-full px-4 py-3 lg:flex-1 lg:min-h-0 lg:overflow-y-auto">
+      {/* Middle: charts take all the space that is left (short screens: less padding) */}
+      <div className="flex flex-col w-full px-4 py-4 [@media(max-height:600px)]:py-2.5 bg-[#C9EEEA] lg:flex-1 lg:min-h-0 lg:overflow-y-auto">
         <Charts
           data={data}
           simulation={simulation}
           onSeek={handleSeek}
+          inputs={inputs}
         />
       </div>
 
-      {/* Bottom: controls bar (reshaped in step 2) */}
+      {/* Bottom: controls bar */}
       <div className="w-full shrink-0">
         <Controls
           simulation={simulation}
           playing={playing}
           data={data}
-          onSimulationChange={handleSimulationChange}
           onModeChange={switchMode}
           onTogglePlayPause={togglePlayPause}
           onNextFrame={handleNextFrame}

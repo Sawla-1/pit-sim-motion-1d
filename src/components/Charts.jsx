@@ -2,10 +2,18 @@ import { useState, useRef } from "react";
 import { formatNumber } from "../utils/formatNumber";
 import { useChartZoom } from "../hooks/useChartZoom";
 import { ChartZoomControls, ChartPanel } from "./ChartControls";
+import { SERIES_COLORS } from "./seriesColors";
+
+// Bigger, bolder axis numbers; smaller on phones and on short charts
+const tickFont = (ctx) => ({
+  size: ctx.chart.width < 500 || ctx.chart.height < 120 ? 13 : 16,
+  weight: 600,
+});
 
 // Renders the Position/Velocity/Acceleration line charts, each with its own
 // Y-axis zoom/pan and a shared X-axis (time) zoom/pan across all three.
-function Charts({ data, simulation, onSeek }) {
+// `inputs` = the 3 input panels (built in App), one shown beside each chart.
+function Charts({ data, simulation, onSeek, inputs }) {
   // A ref, not state: the moves right after pointer-down must see it at once,
   // without waiting for React to re-render.
   const isDragging = useRef(false);
@@ -108,7 +116,7 @@ function Charts({ data, simulation, onSeek }) {
     : -1;
 
   // Simplified chart options
-  const getChartOptions = (index, valueKey, title, color) => {
+  const getChartOptions = (index, valueKey) => {
     // Record mode always shows the default view (it grows with the data).
     const yWindow = isPlayback ? getYWindow(valueKey, index) : fitWindow(valueKey);
     return {
@@ -124,8 +132,8 @@ function Charts({ data, simulation, onSeek }) {
           type: "linear",
           min: isPlayback ? xRange?.min ?? 0 : 0,
           max: isPlayback ? xRange?.max ?? maxTime : maxTime,
-          ticks: { includeBounds: false, display: index === bottomIndex },
-          grid: { color: "#ccc" },
+          ticks: { includeBounds: false, display: index === bottomIndex, color: "#1f2937", font: tickFont },
+          grid: { color: "#e5e7eb" },
           border: { dash: [4, 4] }, // dashed grid lines (4px dash, 4px gap)
           // Fixed height for the time numbers, so the bottom plot doesn't grow
           // when there are no numbers yet (see ChartPanel's extra 34px).
@@ -139,27 +147,24 @@ function Charts({ data, simulation, onSeek }) {
           max: yWindow.max,
           ticks: {
             count: 5, // 5 fixed lines → 5 round, exact labels
-            // Smaller numbers on phones so they fit the narrower axis (see afterFit)
-            font: (ctx) => ({ size: ctx.chart.width < 500 ? 10 : 12 }),
+            color: "#1f2937",
+            font: tickFont,
             // Every line is a multiple of 0.1 (the smallest step), so 1 decimal
             // is always exact. It also hides float noise like 6.6000000000000005.
             callback: (value) => value.toLocaleString(undefined, { maximumFractionDigits: 1 }),
           },
           // The 0 line is dark and thicker (like PhET); the others are light grey.
           grid: {
-            color: (ctx) => (ctx.tick.value === 0 ? "#000" : "#ccc"),
+            color: (ctx) => (ctx.tick.value === 0 ? "#1f2937" : "#e5e7eb"),
             lineWidth: (ctx) => (ctx.tick.value === 0 ? 2 : 1),
           },
           border: { dash: [4, 4] },
-          // The chart's name, written sideways along the y-axis.
-          title: { display: true, text: title, color, font: { weight: "bold" } },
           // Fixed width so all three plots start at the same x pixel and
-          // time 0 lines up vertically across charts. Wide enough for the
-          // title plus labels like "-10,499.8" or "-500,000" without clipping.
-          // Phones (chart under 500px) get a narrower axis so the plot has more
-          // room - still fits labels up to "-100,000" at the 10px phone font.
+          // time 0 lines up vertically across charts. (The chart's name is
+          // in its input panel now, so there's no sideways title here.)
+          // Phones (chart under 500px) get a narrower axis so the plot has more room.
           afterFit: (scale) => {
-            scale.width = scale.chart.width < 500 ? 70 : 84;
+            scale.width = scale.chart.width < 500 ? 56 : 70;
           },
         },
       },
@@ -234,7 +239,7 @@ function Charts({ data, simulation, onSeek }) {
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp} // browser took over (e.g. started scrolling)
         // Playback: a sideways finger drag scrubs, an up/down swipe still scrolls the page
-        className={`flex flex-col gap-1 flex-1 min-h-0 min-w-0 text-white text-right ${
+        className={`flex flex-col gap-3 [@media(max-height:600px)]:gap-1.5 flex-1 min-h-0 min-w-0 text-gray-700 ${
           isPlayback ? "touch-pan-y" : ""
         }`}
       >
@@ -258,8 +263,9 @@ function Charts({ data, simulation, onSeek }) {
           isBottom={bottomIndex === 0}
           onReset={() => handleReset(0)}
           resetDisabled={isResetDisabled(0)}
-          chartData={buildChartData("position", "#1976d2")}
-          chartOptions={getChartOptions(0, "position", "Position (m)", "#1976d2")}
+          input={inputs[0]}
+          chartData={buildChartData("position", SERIES_COLORS.position.color)}
+          chartOptions={getChartOptions(0, "position")}
           chartRef={(ref) => {
             if (ref) chartRefs.current[0] = ref;
           }}
@@ -284,8 +290,9 @@ function Charts({ data, simulation, onSeek }) {
           isBottom={bottomIndex === 1}
           onReset={() => handleReset(1)}
           resetDisabled={isResetDisabled(1)}
-          chartData={buildChartData("velocity", "#d32f2f")}
-          chartOptions={getChartOptions(1, "velocity", "Velocity (m/s)", "#d32f2f")}
+          input={inputs[1]}
+          chartData={buildChartData("velocity", SERIES_COLORS.velocity.color)}
+          chartOptions={getChartOptions(1, "velocity")}
           chartRef={(ref) => {
             if (ref) chartRefs.current[1] = ref;
           }}
@@ -310,8 +317,9 @@ function Charts({ data, simulation, onSeek }) {
           isBottom={bottomIndex === 2}
           onReset={() => handleReset(2)}
           resetDisabled={isResetDisabled(2)}
-          chartData={buildChartData("acceleration", "#2e7d32")}
-          chartOptions={getChartOptions(2, "acceleration", "Acceleration (m/s²)", "#2e7d32")}
+          input={inputs[2]}
+          chartData={buildChartData("acceleration", SERIES_COLORS.acceleration.color)}
+          chartOptions={getChartOptions(2, "acceleration")}
           chartRef={(ref) => {
             if (ref) chartRefs.current[2] = ref;
           }}

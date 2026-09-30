@@ -11,3 +11,49 @@ body {
   color: #333;
   overflow-x: hidden;
 }
+
+/* Vertical slider: max at the top (rtl flips it). Handle uses the text color. */
+input[type="range"].vslider {
+  appearance: none;
+  writing-mode: vertical-lr;
+  direction: rtl;
+  width: 6px;
+  height: 100%;
+  margin: 0 7px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+input[type="range"].vslider::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: currentColor;
+  border: 3px solid #fff;
+  box-shadow: 0 1px 4px rgba(31, 41, 55, 0.3);
+}
+input[type="range"].vslider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: currentColor;
+  border: 3px solid #fff;
+  box-shadow: 0 1px 4px rgba(31, 41, 55, 0.3);
+}
+
+/* Grey radio buttons, like the mockup */
+input[type="radio"] {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #9ca3af;
+  border-radius: 50%;
+  cursor: pointer;
+}
+input[type="radio"]:checked {
+  border-color: #374151;
+  background: radial-gradient(circle, #374151 0 45%, transparent 50%);
+}
+input[type="radio"]:disabled {
+  cursor: not-allowed;
+}

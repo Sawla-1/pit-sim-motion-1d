@@ -27,7 +27,8 @@ const plotFrame = {
     // stay visible on top of it (e.g. the marker at time 0 or at the end).
     const { ctx, chartArea: { left, top, width, height } } = chart;
     ctx.save();
-    ctx.strokeStyle = "#333";
+    ctx.strokeStyle = "#6b7280"; // grey, 2px, like the mockup
+    ctx.lineWidth = 2;
     ctx.strokeRect(left, top, width, height);
     ctx.restore();
   },
@@ -204,49 +205,71 @@ export function ChartZoomControls({
 // a specific chart from the call site (same pattern as PhysicsInput in
 // Controls.jsx), so it has no idea which chart it's rendering.
 export function ChartPanel({
-  label,
+  label, input,
   visible, onShow, onHide,
   showZoomControls, yControlsProps, xControls, isBottom, onReset, resetDisabled,
   chartData, chartOptions, chartRef,
 }) {
   if (!visible) {
     return (
-      <div>
-        {label} Graph{" "}
-        <button className="cursor-pointer" onClick={onShow}>
-          ❇️
-        </button>{" "}
+      // Hidden chart: its input hides too; one slim line with a round
+      // "show" button (same style as the prev/next buttons)
+      <div className="flex items-center gap-3 sm:ml-4 text-lg font-semibold text-gray-700">
+        <button
+          type="button"
+          onClick={onShow}
+          aria-label={`Show ${label} chart`}
+          title={`Show ${label} chart`}
+          className="w-9 h-9 rounded-full border border-[#d9dee6] bg-white text-slate-700 flex items-center justify-center shadow-sm cursor-pointer hover:bg-gray-50"
+        >
+          {/* Plus icon = "add this chart back" (pairs with the ✖) */}
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+        </button>
+        {label}
       </div>
     );
   }
 
   return (
-    // Phones/tablets: fixed heights. Desktop: the charts share the space under
-    // the 3D scene. The bottom chart is exactly 34px taller: 26px of time
+    // One row: input on the left, chart on the right (phones: input on top).
+    // Phones/tablets: fixed chart heights. Desktop: the rows share the space
+    // under the 3D scene. The bottom row is exactly 34px taller: 26px of time
     // numbers (fixed in Charts.jsx) minus the other charts' ~8px of x tick marks,
     // plus 16px more bottom padding for the time zoom buttons. So all 3 plots
     // are the same height.
-    // The minimums keep the right-edge button column (~100px) from overlapping
-    // on short screens; below them the page scrolls instead.
-    <div className={`relative bg-gray-100 pt-2 pl-2 pr-12 rounded-md ${
-      isBottom
-        ? "h-[160px] lg:h-auto lg:min-h-[134px] lg:flex-[1_1_34px] pb-6"
-        : "h-[126px] lg:h-auto lg:min-h-[100px] lg:flex-1 pb-2"
+    // The minimums keep the right-edge button column from overlapping on
+    // short screens; below them the middle area scrolls instead.
+    <div className={`flex flex-col sm:flex-row gap-3 ${
+      isBottom ? "lg:flex-[1_1_34px] lg:min-h-[122px]" : "lg:flex-1 lg:min-h-[88px]"
     }`}>
-      {/* Right edge: ✖ at the top, y zoom in the middle, reset at the bottom.
-          One flex column, so the buttons can't overlap however short the chart is. */}
-      <div className="absolute top-2 bottom-2 right-1 flex flex-col items-center justify-between">
+      {/* Bottom row: 34px under the input, so its slider ends where the plot ends */}
+      <div className={`flex ${isBottom ? "sm:pb-[34px]" : ""}`}>{input}</div>
+      <div className={`relative flex-1 min-w-0 pt-2 pr-12 ${
+        isBottom ? "h-[160px] lg:h-auto pb-6" : "h-[126px] lg:h-auto pb-2"
+      }`}>
+        {/* Hide button: inside the plot's top-right corner
+            (48px button column + 16px chart padding + 4px gap) */}
         <button
-          className="text-xs text-white font-semibold cursor-pointer bg-red-600 px-1 py-0.5 rounded-sm"
+          type="button"
+          aria-label={`Hide ${label} chart`}
           onClick={onHide}
+          className="absolute top-5 right-[68px] z-10 w-6 h-6 rounded bg-[#E31E24] text-white text-xs font-bold cursor-pointer"
         >
           ✖
         </button>
-        {showZoomControls && <ChartZoomControls axis="y" {...yControlsProps} />}
-        {showZoomControls && <ResetButton onClick={onReset} disabled={resetDisabled} />}
+        {/* Right edge: y zoom + pan in the middle, reset at the bottom.
+            One flex column, so the buttons can't overlap however short the chart is. */}
+        <div className="absolute top-2 bottom-2 right-1 flex flex-col items-center justify-between">
+          <div />
+          {showZoomControls && <ChartZoomControls axis="y" {...yControlsProps} />}
+          {showZoomControls && <ResetButton onClick={onReset} disabled={resetDisabled} />}
+        </div>
+        {showZoomControls && isBottom && xControls}
+        <Line data={chartData} options={chartOptions} ref={chartRef} />
       </div>
-      {showZoomControls && isBottom && xControls}
-      <Line data={chartData} options={chartOptions} ref={chartRef} />
     </div>
   );
 }
