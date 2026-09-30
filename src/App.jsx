@@ -129,29 +129,31 @@ function App() {
   // ============================================================================
 
   return (
-    <div className="min-h-screen lg:h-screen w-full p-2 flex flex-col gap-1 box-border bg-blue-700 text-gray-800 overflow-x-hidden">
-      {/* Simulation Display Area */}
-      <div className="relative w-full mb-1">
+    <div className="min-h-screen lg:h-screen w-full flex flex-col box-border bg-blue-700 text-gray-800 overflow-x-clip">
+      {/* Top: 3D scene + time */}
+      <div className="relative w-full shrink-0">
         <Simulation3D position={simulation.position} velocity={simulation.velocity} />
 
         {/* Time Display */}
         <div
-          className="absolute top-2 right-4 font-mono text-3xl font-bold z-10 text-gray-800"
+          className="absolute top-2 left-8 font-mono text-3xl font-bold z-10 text-gray-800"
           style={{ textShadow: "1px 1px 2px rgba(255, 255, 255, 0.8)" }}
         >
           {formatNumber(simulation.time, 1)} s
         </div>
       </div>
 
-      {/* Main Content Area */}
-      <div className="flex flex-col gap-1 w-full lg:flex-row lg:flex-1 lg:min-h-0">
-        {/* Left Panel: Charts */}
+      {/* Middle: charts take all the space that is left */}
+      <div className="flex flex-col w-full px-4 py-3 lg:flex-1 lg:min-h-0 lg:overflow-y-auto">
         <Charts
           data={data}
           simulation={simulation}
           onSeek={handleSeek}
         />
-        {/* Right Panel: Controls */}
+      </div>
+
+      {/* Bottom: controls bar (reshaped in step 2) */}
+      <div className="w-full shrink-0">
         <Controls
           simulation={simulation}
           playing={playing}

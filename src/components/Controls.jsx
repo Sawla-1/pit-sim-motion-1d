@@ -56,6 +56,14 @@ function PhysicsInput({ label, unit, value, min, max, labelClass, accentClass, f
   );
 }
 
+const stepButton = "w-[46px] h-[46px] rounded-full border border-[#d9dee6] bg-white text-slate-700 flex items-center justify-center shadow-sm cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed";
+
+// Small SVG icons, same shapes as the mockup
+const PlayIcon = () => <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.14v13.72a1 1 0 0 0 1.52.85l11-6.86a1 1 0 0 0 0-1.7l-11-6.86A1 1 0 0 0 8 5.14z" /></svg>;
+const PauseIcon = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1" /><rect x="14" y="5" width="4" height="14" rx="1" /></svg>;
+const PrevIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="5" y="5" width="3" height="14" rx="1" /><path d="M19 5.5v13a1 1 0 0 1-1.5.86l-10-6.5a1 1 0 0 1 0-1.72l10-6.5A1 1 0 0 1 19 5.5z" /></svg>;
+const NextIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="16" y="5" width="3" height="14" rx="1" /><path d="M5 5.5v13a1 1 0 0 0 1.5.86l10-6.5a1 1 0 0 0 0-1.72l-10-6.5A1 1 0 0 0 5 5.5z" /></svg>;
+
 /**
  * Controls Component - Parameter inputs, mode selection, and control buttons
  * Contains all the UI controls for the simulation
@@ -77,49 +85,56 @@ function Controls({
   const lastTime = data.recordedData[data.recordedData.length - 1].time;
 
   return (
-    <div className="bg-white/95 rounded-lg p-2 shadow-lg backdrop-blur-sm flex flex-col gap-2 flex-1 min-w-0 lg:overflow-y-auto">
-      {/* Parameter Input Section */}
-      <div className="rounded-md p-2 border-2 border-blue-400 bg-blue-100">
-        <h4 className="m-0 mb-1 font-semibold text-blue-800 border-b border-blue-100 pb-1">
-          Initial Conditions
-        </h4>
-
-        <PhysicsInput
-          label="Position" unit="m"
-          value={simulation.position} min={-10} max={10}
-          disabled={playing}
-          labelClass="text-blue-600"
-          accentClass="accent-blue-600"
-          focusClass="focus:border-blue-600"
-          onChange={(v) => onSimulationChange({ position: v })}
-        />
-        <PhysicsInput
-          label="Velocity" unit="m/s"
-          value={simulation.velocity} min={-10} max={10}
-          disabled={playing}
-          labelClass="text-red-600"
-          accentClass="accent-red-600"
-          focusClass="focus:border-red-600"
-          onChange={(v) => onSimulationChange({ velocity: v })}
-        />
-        <PhysicsInput
-          label="Acceleration" unit="m/s²"
-          value={simulation.acceleration} min={-10} max={10}
-          disabled={playing}
-          labelClass="text-green-600"
-          accentClass="accent-green-700"
-          focusClass="focus:border-green-600"
-          onChange={(v) => onSimulationChange({ acceleration: v })}
-        />
+    <div className="flex flex-col bg-white">
+      {/* Inputs: stay here for now; step 3 moves them next to each chart */}
+      <div className="flex flex-wrap justify-center gap-6 px-4 pt-2">
+        <div className="w-64">
+          <PhysicsInput
+            label="Position" unit="m"
+            value={simulation.position} min={-10} max={10}
+            disabled={playing}
+            labelClass="text-blue-600"
+            accentClass="accent-blue-600"
+            focusClass="focus:border-blue-600"
+            onChange={(v) => onSimulationChange({ position: v })}
+          />
+        </div>
+        <div className="w-64">
+          <PhysicsInput
+            label="Velocity" unit="m/s"
+            value={simulation.velocity} min={-10} max={10}
+            disabled={playing}
+            labelClass="text-red-600"
+            accentClass="accent-red-600"
+            focusClass="focus:border-red-600"
+            onChange={(v) => onSimulationChange({ velocity: v })}
+          />
+        </div>
+        <div className="w-64">
+          <PhysicsInput
+            label="Acceleration" unit="m/s²"
+            value={simulation.acceleration} min={-10} max={10}
+            disabled={playing}
+            labelClass="text-green-600"
+            accentClass="accent-green-700"
+            focusClass="focus:border-green-600"
+            onChange={(v) => onSimulationChange({ acceleration: v })}
+          />
+        </div>
       </div>
 
-      {/* Mode Selection Section */}
-      <div className="rounded-md p-2 border-2 border-blue-400 bg-blue-100">
-        <h4 className="m-0 mb-1 font-semibold text-blue-800 border-b border-blue-100 pb-1">
-          Mode
-        </h4>
-        <div className="flex gap-3">
-          <label className="flex items-center gap-1.5 cursor-pointer text-sm text-gray-800 font-medium mb-0 py-0.5">
+      {/* Bottom bar: Clear | mode | prev / play / next | Reset All */}
+      <div className="flex flex-wrap items-center justify-center gap-6 py-3 lg:gap-[88px] lg:h-[116px] lg:py-0">
+        <button
+          onClick={onClearRecordedData}
+          disabled={data.recordedData.length <= 1}
+          className="w-[140px] h-11 rounded-[10px] border border-gray-300 bg-white text-slate-800 text-base font-bold uppercase tracking-wide shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Clear
+        </button>
+
+        <div className="flex flex-col gap-1.5 text-[19px] text-gray-800">
+          <label className="flex items-center gap-2.5 cursor-pointer">
             <input
               type="radio"
               name="mode"
@@ -127,13 +142,11 @@ function Controls({
               checked={data.selectedMode === "record"}
               onChange={() => onModeChange("record")}
             />
-            <span>Record</span>
+            Record
           </label>
           <label
-            className={`flex items-center gap-1.5 text-sm text-gray-800 font-medium mb-0 py-0.5 cursor-pointer ${
-              data.recordedData.length <= 1
-                ? "opacity-50 cursor-not-allowed"
-                : ""
+            className={`flex items-center gap-2.5 cursor-pointer ${
+              data.recordedData.length <= 1 ? "opacity-50 cursor-not-allowed" : ""
             }`}
           >
             <input
@@ -144,61 +157,51 @@ function Controls({
               onChange={() => onModeChange("playback")}
               disabled={data.recordedData.length <= 1}
             />
-            <span>Playback</span>
+            Playback
           </label>
         </div>
-      </div>
 
-      {/* Control Buttons Section */}
-      <div className="bg-blue-400 rounded-md p-2 flex flex-col justify-center gap-2 flex-1 border-2 border-blue-500">
-        <div className="flex justify-center items-center gap-3">
+        <div className="flex items-center gap-5">
           <button
             onClick={onPrevFrame}
             disabled={!canStepFrames || simulation.time <= 0}
             title="Previous frame"
-            className="w-8 h-7 rounded-full border-none text-xs font-semibold cursor-pointer bg-white text-black transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100"
+            aria-label="Previous frame"
+            className={stepButton}
           >
-            ❚◀
+            <PrevIcon />
           </button>
           <button
             onClick={onTogglePlayPause}
-            className={`w-10 h-10 border-none rounded-full text-xs font-semibold cursor-pointer ${
-              playing
-                ? "bg-red-500 text-white transition-all hover:scale-105"
-                : "bg-blue-600 text-white transition-all hover:scale-105"
+            aria-label={playing ? "Pause" : "Play"}
+            className={`w-16 h-16 rounded-full flex items-center justify-center text-white cursor-pointer shadow-lg ${
+              playing ? "bg-red-500" : "bg-[#2f6fe4]"
             }`}
           >
-            {playing ? "❚❚" : "▶"}
+            {playing ? <PauseIcon /> : <PlayIcon />}
           </button>
           <button
             onClick={onNextFrame}
             disabled={!canStepFrames || simulation.time >= lastTime}
             title="Next frame"
-            className="w-8 h-7 rounded-full border-none text-xs font-semibold cursor-pointer bg-white text-black transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100"
+            aria-label="Next frame"
+            className={stepButton}
           >
-            ▶❚
+            <NextIcon />
           </button>
         </div>
-        <div className="flex gap-5 justify-center">
-          <button
-            onClick={onClearRecordedData}
-            disabled={data.recordedData.length <= 1}
-            className="w-22 h-6 rounded-sm border-none text-xs font-semibold cursor-pointer uppercase bg-white text-black transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100"
-          >
-            Clear
-          </button>
-          <button
-            onClick={onReset}
-            disabled={
-              simulation.position === 0 &&
-              simulation.velocity === 0 &&
-              simulation.acceleration === 0
-            }
-            className="w-22 h-6 rounded-sm border-none text-xs font-semibold cursor-pointer uppercase bg-red-500 text-white transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100"
-          >
-            Reset All
-          </button>
-        </div>
+
+        <button
+          onClick={onReset}
+          disabled={
+            simulation.position === 0 &&
+            simulation.velocity === 0 &&
+            simulation.acceleration === 0
+          }
+          className="w-[140px] h-11 rounded-[10px] bg-rose-600 text-white text-base font-bold uppercase tracking-wide shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Reset All
+        </button>
       </div>
     </div>
   );
