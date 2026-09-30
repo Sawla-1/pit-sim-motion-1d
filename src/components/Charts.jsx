@@ -137,7 +137,7 @@ function Charts({ data, simulation, onSeek, inputs }) {
           grid: { color: "#e5e7eb" },
           border: { dash: [4, 4] }, // dashed grid lines (4px dash, 4px gap)
           // Fixed height for the time numbers, so the bottom plot doesn't grow
-          // when there are no numbers yet (see ChartPanel's extra 34px).
+          // when there are no numbers yet (see ChartPanel's extra 18px).
           afterFit: (scale) => {
             if (index === bottomIndex) scale.height = 26;
           },

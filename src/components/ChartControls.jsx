@@ -106,18 +106,17 @@ function ResetButton({ onClick, disabled }) {
 }
 
 // Zoom + pan toolbar: zoom in / pan buttons / zoom out.
-// axis="y" is a 2x2 grid on the right edge: zoom in/out stacked on the left,
-// the up/down pan pill beside them (only 2 rows tall, so the buttons can be
-// bigger). axis="x" is a row along the bottom edge (pan left/right between
-// the zoom buttons).
+// Both axes sit in ChartPanel's right-edge button column (like PhET).
+// axis="y": zoom in/out stacked on the left, the up/down pan pill beside them.
+// axis="x" (time, bottom chart only): zoom out/in on top, left/right pan pill below.
 export function ChartZoomControls({
   axis, onZoomIn, onZoomOut, onPanPositive, onPanNegative,
   zoomInDisabled, zoomOutDisabled, panPositiveDisabled, panNegativeDisabled,
 }) {
-  const containerClass =
-    axis === "x"
-      ? "absolute bottom-0 right-16 flex flex-row items-center gap-3 text-gray-600"
-      : "grid grid-cols-2 gap-0.5 text-gray-600"; // placed by ChartPanel's button column
+  // y: 2 columns (zoom stacked | pan pill up/down); x: 2 rows (zoom row, pan pill left/right)
+  const containerClass = axis === "x"
+    ? "flex flex-col items-center gap-0.5 text-gray-600"
+    : "grid grid-cols-2 gap-0.5 text-gray-600"; // placed by ChartPanel's button column
 
   const zoomInButton = (
     <button
@@ -193,7 +192,7 @@ export function ChartZoomControls({
   return (
     <div className={containerClass}>
       {axis === "x"
-        ? [zoomOutButton, panGroup, zoomInButton]
+        ? [<div key="zoom" className="flex gap-0.5">{zoomOutButton}{zoomInButton}</div>, panGroup]
         : [zoomInButton, panGroup, zoomOutButton]}
     </div>
   );
@@ -236,9 +235,8 @@ export function ChartPanel({
   return (
     // One row: input on the left, chart on the right (phones: input on top).
     // Phones/tablets: fixed chart heights. Desktop: the rows share the space
-    // under the 3D scene. The bottom row is exactly 32px taller: 26px of time
-    // numbers (fixed in Charts.jsx) minus the other charts' ~8px of x tick marks,
-    // plus 14px more bottom padding (pb-4 vs pb-0.5) for the time zoom buttons.
+    // under the 3D scene. The bottom row is exactly 18px taller: 26px of time
+    // numbers (fixed in Charts.jsx) minus the other charts' ~8px of x tick marks.
     // So all 3 plots are the same height.
     // The minimums keep the right-edge button column from overlapping on
     // short screens; below them the middle area scrolls instead.
@@ -246,13 +244,13 @@ export function ChartPanel({
       // Tablets: the row has the fixed height (not just the chart), so the
       // vertical slider has a real height to fill instead of the whole screen.
       isBottom
-        ? "sm:h-[158px] lg:h-auto lg:flex-[1_1_32px] lg:min-h-[120px]"
+        ? "sm:h-[144px] lg:h-auto lg:flex-[1_1_18px] lg:min-h-[106px]"
         : "sm:h-[126px] lg:h-auto lg:flex-1 lg:min-h-[88px]"
     }`}>
-      {/* Bottom row: 32px under the input, so its slider ends where the plot ends */}
-      <div className={`flex ${isBottom ? "sm:pb-[32px]" : ""}`}>{input}</div>
-      <div className={`relative flex-1 min-w-0 pt-0.5 pr-12 ${
-        isBottom ? "h-[158px] sm:h-auto pb-4" : "h-[126px] sm:h-auto pb-0.5"
+      {/* Bottom row: 18px under the input, so its slider ends where the plot ends */}
+      <div className={`flex ${isBottom ? "sm:pb-[18px]" : ""}`}>{input}</div>
+      <div className={`relative flex-1 min-w-0 pt-0.5 pb-0.5 pr-12 ${
+        isBottom ? "h-[144px] sm:h-auto" : "h-[126px] sm:h-auto"
       }`}>
         {/* Hide button: inside the plot's top-right corner
             (48px button column + 16px chart padding + 4px gap) */}
@@ -264,14 +262,15 @@ export function ChartPanel({
         >
           ✖
         </button>
-        {/* Right edge: y zoom + pan in the middle, reset at the bottom.
-            One flex column, so the buttons can't overlap however short the chart is. */}
+        {/* Right edge (like PhET): y zoom + pan, then time zoom + pan (bottom chart
+            only), reset at the bottom. One flex column, so the buttons can't
+            overlap however short the chart is. */}
         <div className="absolute top-2 bottom-2 right-1 flex flex-col items-center justify-between">
           <div />
           {showZoomControls && <ChartZoomControls axis="y" {...yControlsProps} />}
+          {showZoomControls && isBottom && xControls}
           {showZoomControls && <ResetButton onClick={onReset} disabled={resetDisabled} />}
         </div>
-        {showZoomControls && isBottom && xControls}
         <Line data={chartData} options={chartOptions} ref={chartRef} />
       </div>
     </div>
