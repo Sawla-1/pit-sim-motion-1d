@@ -90,7 +90,7 @@ The hook takes `onRecordStep` and `onPlaybackStep` callback props and dispatches
 
 ### Styles
 
-- **`styles/buttonStyles.js`** — shared Tailwind class strings for buttons: `whiteLook` ("on" look), `disabledIcon` / `disabledText` ("off" looks), `offPill` ("off" look for a wrapper div). Change button colors here, not in the components.
+- **`styles/buttonStyles.js`** — shared Tailwind class strings for buttons: `whiteLook` ("on" look), `disabledIcon` ("off" look), `offPill` ("off" look for a wrapper div). Used by the chart buttons; the dark bottom bar keeps its own looks in `Controls.jsx`.
 - **`styles/seriesColors.js`** — `SERIES_COLORS`: one color (plus a lighter slider track color) per quantity: position, velocity, acceleration.
 
 

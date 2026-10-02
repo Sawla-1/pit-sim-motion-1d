@@ -46,8 +46,8 @@ ChartJS.register(
   plotFrame
 );
 
-// Same look as the bottom bar's prev/next buttons: white, thin grey border,
-// soft shadow, dark slate icon. Used by the round "show chart" button.
+// White, thin grey border, soft shadow, dark slate icon.
+// Used by the round "show chart" button.
 // Active = white, raised (shadow), dark icon. Disabled = grey, flat, pale icon
 // (the icon stays visible so you can still tell which button it is).
 const whiteButton = `${whiteLook} ${disabledIcon}`;
