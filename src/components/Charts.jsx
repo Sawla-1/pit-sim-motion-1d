@@ -11,6 +11,13 @@ const tickFont = (ctx) => ({
   weight: 600,
 });
 
+// The 3 charts, top to bottom. `key` is the field name in the recorded data.
+const CHARTS = [
+  { key: "position", label: "Position" },
+  { key: "velocity", label: "Velocity" },
+  { key: "acceleration", label: "Acceleration" },
+];
+
 // Renders the Position/Velocity/Acceleration line charts, each with its own
 // Y-axis zoom/pan and a shared X-axis (time) zoom/pan across all three.
 // `inputs` = the 3 input panels (built in App), one shown beside each chart.
@@ -19,9 +26,9 @@ function Charts({ data, simulation, onSeek, inputs }) {
   // without waiting for React to re-render.
   const isDragging = useRef(false);
   const [visibility, setVisibility] = useState({
-    showPosition: true,
-    showVelocity: true,
-    showAcceleration: true,
+    position: true,
+    velocity: true,
+    acceleration: true,
   });
   const chartRefs = useRef([]);
 
@@ -103,17 +110,13 @@ function Charts({ data, simulation, onSeek, inputs }) {
     }
   };
 
-  const positionYDisabled = getYDisabled("position", 0);
-  const velocityYDisabled = getYDisabled("velocity", 1);
-  const accelerationYDisabled = getYDisabled("acceleration", 2);
-
   // All charts share one time axis, so (like PhET) only the lowest visible
   // chart shows the time numbers and time zoom buttons. Before anything is
   // recorded there are no time numbers, so no chart gets the extra room (-1)
   // and all three are the same height.
   const hasRecording = data.recordedData.length > 1;
   const bottomIndex = hasRecording
-    ? [visibility.showPosition, visibility.showVelocity, visibility.showAcceleration].lastIndexOf(true)
+    ? CHARTS.map(({ key }) => visibility[key]).lastIndexOf(true)
     : -1;
 
   // Simplified chart options
@@ -244,87 +247,40 @@ function Charts({ data, simulation, onSeek, inputs }) {
           isPlayback ? "touch-pan-y" : ""
         }`}
       >
-        <ChartPanel
-          label="Position"
-          visible={visibility.showPosition}
-          onShow={() => setVisibility({ ...visibility, showPosition: true })}
-          onHide={() => setVisibility({ ...visibility, showPosition: false })}
-          yControlsProps={{
-            onZoomIn: () => handleYZoom("position", 0, 1.2),
-            onZoomOut: () => handleYZoom("position", 0, 0.8),
-            onPanPositive: () => handleYPan(0, 1),
-            onPanNegative: () => handleYPan(0, -1),
-            zoomInDisabled: positionYDisabled.zoomInDisabled,
-            zoomOutDisabled: positionYDisabled.zoomOutDisabled,
-            panPositiveDisabled: positionYDisabled.panUpDisabled,
-            panNegativeDisabled: positionYDisabled.panDownDisabled,
-          }}
-          showZoomControls={isPlayback}
-          xControls={xControls}
-          isBottom={bottomIndex === 0}
-          onReset={() => handleReset(0, bottomIndex === 0)}
-          resetDisabled={isResetDisabled(0, bottomIndex === 0)}
-          input={inputs[0]}
-          chartData={buildChartData("position", SERIES_COLORS.position.color)}
-          chartOptions={getChartOptions(0, "position")}
-          chartRef={(ref) => {
-            if (ref) chartRefs.current[0] = ref;
-          }}
-        />
-        <ChartPanel
-          label="Velocity"
-          visible={visibility.showVelocity}
-          onShow={() => setVisibility({ ...visibility, showVelocity: true })}
-          onHide={() => setVisibility({ ...visibility, showVelocity: false })}
-          yControlsProps={{
-            onZoomIn: () => handleYZoom("velocity", 1, 1.2),
-            onZoomOut: () => handleYZoom("velocity", 1, 0.8),
-            onPanPositive: () => handleYPan(1, 1),
-            onPanNegative: () => handleYPan(1, -1),
-            zoomInDisabled: velocityYDisabled.zoomInDisabled,
-            zoomOutDisabled: velocityYDisabled.zoomOutDisabled,
-            panPositiveDisabled: velocityYDisabled.panUpDisabled,
-            panNegativeDisabled: velocityYDisabled.panDownDisabled,
-          }}
-          showZoomControls={isPlayback}
-          xControls={xControls}
-          isBottom={bottomIndex === 1}
-          onReset={() => handleReset(1, bottomIndex === 1)}
-          resetDisabled={isResetDisabled(1, bottomIndex === 1)}
-          input={inputs[1]}
-          chartData={buildChartData("velocity", SERIES_COLORS.velocity.color)}
-          chartOptions={getChartOptions(1, "velocity")}
-          chartRef={(ref) => {
-            if (ref) chartRefs.current[1] = ref;
-          }}
-        />
-        <ChartPanel
-          label="Acceleration"
-          visible={visibility.showAcceleration}
-          onShow={() => setVisibility({ ...visibility, showAcceleration: true })}
-          onHide={() => setVisibility({ ...visibility, showAcceleration: false })}
-          yControlsProps={{
-            onZoomIn: () => handleYZoom("acceleration", 2, 1.2),
-            onZoomOut: () => handleYZoom("acceleration", 2, 0.8),
-            onPanPositive: () => handleYPan(2, 1),
-            onPanNegative: () => handleYPan(2, -1),
-            zoomInDisabled: accelerationYDisabled.zoomInDisabled,
-            zoomOutDisabled: accelerationYDisabled.zoomOutDisabled,
-            panPositiveDisabled: accelerationYDisabled.panUpDisabled,
-            panNegativeDisabled: accelerationYDisabled.panDownDisabled,
-          }}
-          showZoomControls={isPlayback}
-          xControls={xControls}
-          isBottom={bottomIndex === 2}
-          onReset={() => handleReset(2, bottomIndex === 2)}
-          resetDisabled={isResetDisabled(2, bottomIndex === 2)}
-          input={inputs[2]}
-          chartData={buildChartData("acceleration", SERIES_COLORS.acceleration.color)}
-          chartOptions={getChartOptions(2, "acceleration")}
-          chartRef={(ref) => {
-            if (ref) chartRefs.current[2] = ref;
-          }}
-        />
+        {CHARTS.map(({ key, label }, index) => {
+          const yDisabled = getYDisabled(key, index);
+          const isBottom = index === bottomIndex;
+          return (
+            <ChartPanel
+              key={key}
+              label={label}
+              visible={visibility[key]}
+              onShow={() => setVisibility({ ...visibility, [key]: true })}
+              onHide={() => setVisibility({ ...visibility, [key]: false })}
+              yControlsProps={{
+                onZoomIn: () => handleYZoom(key, index, 1.2),
+                onZoomOut: () => handleYZoom(key, index, 0.8),
+                onPanPositive: () => handleYPan(index, 1),
+                onPanNegative: () => handleYPan(index, -1),
+                zoomInDisabled: yDisabled.zoomInDisabled,
+                zoomOutDisabled: yDisabled.zoomOutDisabled,
+                panPositiveDisabled: yDisabled.panUpDisabled,
+                panNegativeDisabled: yDisabled.panDownDisabled,
+              }}
+              showZoomControls={isPlayback}
+              xControls={xControls}
+              isBottom={isBottom}
+              onReset={() => handleReset(index, isBottom)}
+              resetDisabled={isResetDisabled(index, isBottom)}
+              input={inputs[index]}
+              chartData={buildChartData(key, SERIES_COLORS[key].color)}
+              chartOptions={getChartOptions(index, key)}
+              chartRef={(ref) => {
+                if (ref) chartRefs.current[index] = ref;
+              }}
+            />
+          );
+        })}
       </div>
   );
 }
