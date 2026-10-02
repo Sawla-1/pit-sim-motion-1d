@@ -3,7 +3,7 @@ import Simulation3D from "./components/Simulation3D";
 import Charts from "./components/Charts";
 import Controls from "./components/Controls";
 import PhysicsInput from "./components/PhysicsInput";
-import { SERIES_COLORS } from "./components/seriesColors";
+import { SERIES_COLORS } from "./styles/seriesColors";
 import { useSimulationLoop } from "./hooks/useSimulationLoop";
 import {
   handleRecordingStep,

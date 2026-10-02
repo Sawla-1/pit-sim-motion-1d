@@ -8,7 +8,7 @@ import {
   Decimation,
 } from "chart.js";
 import annotationPlugin from "chartjs-plugin-annotation";
-import { whiteLook, disabledIcon, offPill } from "./buttonStyles";
+import { whiteLook, disabledIcon, offPill } from "../styles/buttonStyles";
 
 // PhET-style plot area: white inside, dark frame around it. Chart.js has no
 // built-in full frame (only the left/bottom axis lines), so this small

@@ -1,4 +1,4 @@
-import { whiteLook, disabledIcon, disabledText } from "./buttonStyles";
+import { whiteLook, disabledIcon, disabledText } from "../styles/buttonStyles";
 
 // Prev/next buttons: same white look and "off" look as the chart buttons
 const stepButton = `w-8 h-8 rounded-full flex items-center justify-center cursor-pointer ${whiteLook} ${disabledIcon}`;

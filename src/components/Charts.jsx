@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { formatNumber } from "../utils/formatNumber";
 import { useChartZoom } from "../hooks/useChartZoom";
 import { ChartZoomControls, ChartPanel } from "./ChartControls";
-import { SERIES_COLORS } from "./seriesColors";
+import { SERIES_COLORS } from "../styles/seriesColors";
 
 // Bigger, bolder axis numbers; smaller on phones and on short pages
 // (same ≤600px-tall rule as the CSS), so all 3 charts always match
