@@ -21,7 +21,7 @@ function PhysicsInput({ id, label, unit, value, min, max, color, track, disabled
   return (
     // Phones: fixed height (the slider needs one). sm and up: fills its row.
     // Short screens (under 600px tall): tighter spacing so 3 rows fit.
-    <div className="w-[184px] shrink-0 sm:ml-4 flex gap-2.5 py-3 [@media(max-height:600px)]:py-1.5 h-24 sm:h-auto">
+    <div className="w-[184px] shrink-0 flex gap-2.5 py-3 [@media(max-height:600px)]:py-1.5 h-24 sm:h-auto">
       {/* flex-1 + min-w-0: same width in every row, so all 3 sliders line up */}
       <div className="flex-1 min-w-0 flex flex-col items-start gap-2 [@media(max-height:600px)]:gap-1.5">
         <label htmlFor={id} className="text-base font-bold" style={{ color }}>
