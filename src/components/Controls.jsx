@@ -1,8 +1,10 @@
 // Disabled look for every button in the bar (same as the chart buttons):
-// grey, flat (no shadow), pale text/icon, "not allowed" cursor
-const disabledLook = "disabled:bg-gray-100 disabled:border-gray-200 disabled:text-gray-300 disabled:shadow-none disabled:cursor-not-allowed";
+// grey, flat (no shadow), "not allowed" cursor. Words turn mid grey so they
+// can still be read; icons turn pale grey (still visible).
+const disabledLook = "disabled:bg-gray-200 disabled:border-gray-300 disabled:shadow-none disabled:cursor-not-allowed";
+const disabledText = `${disabledLook} disabled:text-gray-500`;
 
-const stepButton = `w-8 h-8 rounded-full border border-[#d9dee6] bg-white text-slate-700 flex items-center justify-center shadow-sm cursor-pointer ${disabledLook}`;
+const stepButton = `w-8 h-8 rounded-full border border-[#d9dee6] bg-white text-slate-700 flex items-center justify-center shadow-sm cursor-pointer ${disabledLook} disabled:text-gray-400`;
 
 // Small SVG icons, same shapes as the mockup
 const PlayIcon = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.14v13.72a1 1 0 0 0 1.52.85l11-6.86a1 1 0 0 0 0-1.7l-11-6.86A1 1 0 0 0 8 5.14z" /></svg>;
@@ -36,7 +38,7 @@ function Controls({
         <button
           onClick={onClearRecordedData}
           disabled={data.recordedData.length <= 1}
-          className={`w-24 h-8 rounded-lg border border-gray-300 bg-white text-slate-800 text-sm font-bold uppercase tracking-wide shadow-sm cursor-pointer ${disabledLook}`}
+          className={`w-24 h-8 rounded-lg border border-gray-300 bg-white text-slate-800 text-sm font-bold uppercase tracking-wide shadow-sm cursor-pointer ${disabledText}`}
         >
           Clear
         </button>
@@ -106,7 +108,7 @@ function Controls({
             simulation.velocity === 0 &&
             simulation.acceleration === 0
           }
-          className={`w-24 h-8 rounded-lg bg-rose-600 text-white text-sm font-bold uppercase tracking-wide shadow-sm cursor-pointer ${disabledLook}`}
+          className={`w-24 h-8 rounded-lg bg-rose-600 text-white text-sm font-bold uppercase tracking-wide shadow-sm cursor-pointer ${disabledText}`}
         >
           Reset All
         </button>
