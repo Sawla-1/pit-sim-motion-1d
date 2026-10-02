@@ -1,10 +1,7 @@
-// Disabled look for every button in the bar (same as the chart buttons):
-// grey, flat (no shadow), "not allowed" cursor. Words turn mid grey so they
-// can still be read; icons turn pale grey (still visible).
-const disabledLook = "disabled:bg-gray-200 disabled:border-gray-300 disabled:shadow-none disabled:cursor-not-allowed";
-const disabledText = `${disabledLook} disabled:text-gray-500`;
+import { whiteLook, disabledIcon, disabledText } from "./buttonStyles";
 
-const stepButton = `w-8 h-8 rounded-full border border-[#d9dee6] bg-white text-slate-700 flex items-center justify-center shadow-sm cursor-pointer ${disabledLook} disabled:text-gray-400`;
+// Prev/next buttons: same white look and "off" look as the chart buttons
+const stepButton = `w-8 h-8 rounded-full flex items-center justify-center cursor-pointer ${whiteLook} ${disabledIcon}`;
 
 // Small SVG icons, same shapes as the mockup
 const PlayIcon = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.14v13.72a1 1 0 0 0 1.52.85l11-6.86a1 1 0 0 0 0-1.7l-11-6.86A1 1 0 0 0 8 5.14z" /></svg>;

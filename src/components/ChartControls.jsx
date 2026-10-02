@@ -8,6 +8,7 @@ import {
   Decimation,
 } from "chart.js";
 import annotationPlugin from "chartjs-plugin-annotation";
+import { whiteLook, disabledIcon, offPill } from "./buttonStyles";
 
 // PhET-style plot area: white inside, dark frame around it. Chart.js has no
 // built-in full frame (only the left/bottom axis lines), so this small
@@ -49,7 +50,7 @@ ChartJS.register(
 // soft shadow, dark slate icon. Kept at 20px so all buttons fit on short charts.
 // Active = white, raised (shadow), dark icon. Disabled = grey, flat, pale icon
 // (the icon stays visible so you can still tell which button it is).
-const whiteButton = "bg-white border border-[#d9dee6] text-slate-700 shadow-sm disabled:bg-gray-200 disabled:border-gray-300 disabled:text-gray-400 disabled:shadow-none";
+const whiteButton = `${whiteLook} ${disabledIcon}`;
 const roundButton = `w-5 h-5 rounded-full flex items-center justify-center ${whiteButton}`;
 
 // One behaviour for every small chart button: light grey on hover,
@@ -73,7 +74,7 @@ function PanButton({ direction, onClick, label, disabled }) {
       title={label}
       onClick={onClick}
       disabled={disabled}
-      className={`w-5 h-5 flex items-center justify-center disabled:bg-gray-200 disabled:text-gray-400 ${iconButtonClass(disabled)}`}
+      className={`w-5 h-5 flex items-center justify-center ${disabledIcon} ${iconButtonClass(disabled)}`}
     >
       <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style={{ transform: `rotate(${rotation}deg)` }}>
         <path d="M12 4 22 20H2z" />
@@ -178,8 +179,8 @@ export function ChartZoomControls({
       key="pan-group"
       className={`flex rounded-full overflow-hidden ${
         panAllOff
-          ? "bg-gray-200 border border-gray-300 divide-gray-300"
-          : `${whiteButton} divide-[#d9dee6]`
+          ? offPill
+          : `${whiteLook} divide-[#d9dee6]`
       } ${
         axis === "x" ? "flex-row divide-x" : "flex-col divide-y row-span-2" // y: spans both grid rows
       }`}
