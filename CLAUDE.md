@@ -22,9 +22,10 @@ This is a 1D kinematics physics simulation built with React + Vite. The simulati
 | Layer | Files | Rule |
 |---|---|---|
 | Engine | `src/engine/kinematics1d.js`, `src/engine/recordPlayback.js`, `src/engine/evaluateExpression.js` | Pure functions only — no React, no state, no imports from other layers |
-| Utils | `src/utils/formatNumber.js` | Shared pure utilities |
-| Hook | `src/hooks/useSimulationLoop.js` | Animation loop — framework infrastructure, not simulation-specific |
-| Components | `src/components/Simulation3D.jsx`, `src/components/Charts.jsx`, `src/components/Controls.jsx` | Purely presentational — receive props, call callbacks, hold no physics state |
+| Utils | `src/utils/formatNumber.js`, `src/utils/niceStep.js` | Shared pure utilities |
+| Styles | `src/styles/buttonStyles.js`, `src/styles/seriesColors.js` | Style constants only (class strings, colors) — no React, no logic |
+| Hooks | `src/hooks/useSimulationLoop.js`, `src/hooks/useChartZoom.js` | Animation loop (framework infrastructure, not simulation-specific); chart zoom/pan state |
+| Components | `src/components/Simulation3D.jsx`, `src/components/Charts.jsx`, `src/components/ChartControls.jsx`, `src/components/PhysicsInput.jsx`, `src/components/Controls.jsx` | Purely presentational — receive props, call callbacks, hold no physics state |
 | Shell | `src/App.jsx` | All state and control logic |
 
 ### State lives entirely in `App.jsx`
@@ -74,15 +75,23 @@ The hook takes `onRecordStep` and `onPlaybackStep` callback props and dispatches
 | `src/hooks/useSimulationLoop.js` | RAF animation loop, real per-frame delta (clamped), pause/resume timing |
 | `src/components/Simulation3D.jsx` | R3F canvas, ruler, sprite rendering — receives `position` and `velocity` props (velocity picks walking/standing sprite and facing direction) |
 | `src/components/Charts.jsx` | Chart.js line graphs, timeline drag-scrub, show/hide toggles |
-| `src/components/Controls.jsx` | Parameter inputs, mode radio, play/pause/reset/clear buttons, next/previous frame buttons (playback mode only, disabled while playing) |
+| `src/components/ChartControls.jsx` | `ChartPanel` (one chart with its show/hide, zoom, pan and reset buttons) and `ChartZoomControls` |
+| `src/components/PhysicsInput.jsx` | One parameter input beside its chart: name, number box + unit, vertical slider |
+| `src/components/Controls.jsx` | Bottom bar: Clear, mode radio, prev/play/next buttons (prev/next: playback mode only, disabled while playing), Reset All |
 
-### Controls input pattern
+### Input pattern
 
-`Controls.jsx` keeps a **draft string** for each input only while the user is typing, so they can enter intermediate values (e.g. `-` or `1+2`). When not typing (`draft === null`), the box shows the live `value` prop directly — no `useEffect` sync, which would set state every frame during playback. On blur/Enter, `evaluateExpression` from `engine/evaluateExpression.js` resolves the value; valid input is sent up via `onChange`, invalid input is dropped, and the draft is cleared so the box falls back to the live value.
+`PhysicsInput.jsx` keeps a **draft string** for its input only while the user is typing, so they can enter intermediate values (e.g. `-` or `1+2`). When not typing (`draft === null`), the box shows the live `value` prop directly — no `useEffect` sync, which would set state every frame during playback. On blur/Enter, `evaluateExpression` from `engine/evaluateExpression.js` resolves the value; valid input is sent up via `onChange`, invalid input is dropped, and the draft is cleared so the box falls back to the live value.
 
 ### Utilities
 
 - **`utils/formatNumber.js`** — `formatNumber(n, decimals)`: single shared implementation used by both `App.jsx` (1 decimal) and `Charts.jsx` (2 decimals).
+- **`utils/niceStep.js`** — `niceStep(range, maxCount)`: smallest round step (1, 2, 5, 10, ...) that splits a range into at most `maxCount` pieces. Used by the ruler in `Simulation3D.jsx`.
+
+### Styles
+
+- **`styles/buttonStyles.js`** — shared Tailwind class strings for buttons: `whiteLook` ("on" look), `disabledIcon` / `disabledText` ("off" looks), `offPill` ("off" look for a wrapper div). Change button colors here, not in the components.
+- **`styles/seriesColors.js`** — `SERIES_COLORS`: one color (plus a lighter slider track color) per quantity: position, velocity, acceleration.
 
 
 ## Keeping This File Current
