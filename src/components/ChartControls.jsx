@@ -47,13 +47,12 @@ ChartJS.register(
 );
 
 // Same look as the bottom bar's prev/next buttons: white, thin grey border,
-// soft shadow, dark slate icon. Kept at 20px so all buttons fit on short charts.
+// soft shadow, dark slate icon. Used by the round "show chart" button.
 // Active = white, raised (shadow), dark icon. Disabled = grey, flat, pale icon
 // (the icon stays visible so you can still tell which button it is).
 const whiteButton = `${whiteLook} ${disabledIcon}`;
-const roundButton = `w-5 h-5 rounded-full flex items-center justify-center ${whiteButton}`;
 
-// One behaviour for every small chart button: light grey on hover,
+// Hover/press behaviour for the "show chart" button: light grey on hover,
 // a bit darker while pressed, "not allowed" cursor when it can't be used.
 function iconButtonClass(disabled) {
   return `transition-colors ${
@@ -63,10 +62,21 @@ function iconButtonClass(disabled) {
   }`;
 }
 
-// Single filled triangle button, rotated per direction, used for the pan controls.
-// It's one half of the pan pill (see panGroup), which gives it the white look.
-function PanButton({ direction, onClick, label, disabled }) {
-  const rotation = { up: 0, right: 90, down: 180, left: 270 }[direction];
+// Thin-line icons (drawn inside a 24x24 box), one per pill button
+const ICONS = {
+  up: <polyline points="6 15 12 9 18 15" />,
+  down: <polyline points="6 9 12 15 18 9" />,
+  left: <polyline points="15 6 9 12 15 18" />,
+  right: <polyline points="9 6 15 12 9 18" />,
+  plus: <><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></>,
+  minus: <line x1="5" y1="12" x2="19" y2="12" />,
+  reset: <><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><polyline points="3 3 3 8 8 8" /></>,
+};
+
+// One cell of a pill: 20px square with a thin-line icon (kept at 20px so all
+// buttons fit on short charts). `wide` = 44px, as wide as two pills side by side.
+// Hover = light blue cell + blue icon. Off = grey cell + pale icon.
+function PillButton({ label, icon, onClick, disabled, wide }) {
   return (
     <button
       type="button"
@@ -74,127 +84,66 @@ function PanButton({ direction, onClick, label, disabled }) {
       title={label}
       onClick={onClick}
       disabled={disabled}
-      className={`w-5 h-5 flex items-center justify-center ${disabledIcon} ${iconButtonClass(disabled)}`}
-    >
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style={{ transform: `rotate(${rotation}deg)` }}>
-        <path d="M12 4 22 20H2z" />
-      </svg>
-    </button>
-  );
-}
-
-// Reset-zoom button - small counterclockwise-arrow icon, same white look.
-function ResetButton({ onClick, disabled }) {
-  return (
-    <button
-      type="button"
-      aria-label="Reset zoom"
-      title="Reset zoom"
-      onClick={onClick}
-      disabled={disabled}
-      className={`${roundButton} ${iconButtonClass(disabled)}`}
+      className={`${wide ? "w-11" : "w-5"} h-5 flex items-center justify-center cursor-pointer transition-colors enabled:hover:bg-blue-50 enabled:hover:text-blue-600 enabled:active:bg-blue-100 ${disabledIcon}`}
     >
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-        <polyline points="3 3 3 8 8 8" />
+        {icon}
       </svg>
     </button>
   );
 }
 
-// Zoom + pan toolbar: zoom in / pan buttons / zoom out.
-// Both axes sit in ChartPanel's right-edge button column (like PhET).
-// axis="y": zoom in/out stacked on the left, the up/down pan pill beside them.
-// axis="x" (time, bottom chart only): zoom out/in on top, left/right pan pill below.
-export function ChartZoomControls({
-  axis, onZoomIn, onZoomOut, onPanPositive, onPanNegative,
-  zoomInDisabled, zoomOutDisabled, panPositiveDisabled, panNegativeDisabled,
-}) {
-  // y: 2 columns (zoom stacked | pan pill up/down); x: 2 rows (zoom row, pan pill left/right)
-  const containerClass = axis === "x"
-    ? "flex flex-col items-center gap-0.5"
-    : "grid grid-cols-2 gap-0.5"; // placed by ChartPanel's button column
-
-  const zoomInButton = (
-    <button
-      key="in"
-      type="button"
-      aria-label="Zoom in"
-      title="Zoom in"
-      onClick={onZoomIn}
-      disabled={zoomInDisabled}
-      className={`${roundButton} ${iconButtonClass(zoomInDisabled)}`}
-    >
-      {/* Plus = zoom in */}
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" aria-hidden="true">
-        <line x1="12" y1="4" x2="12" y2="20" />
-        <line x1="4" y1="12" x2="20" y2="12" />
-      </svg>
-    </button>
-  );
-
-  const zoomOutButton = (
-    <button
-      key="out"
-      type="button"
-      aria-label="Zoom out"
-      title="Zoom out"
-      onClick={onZoomOut}
-      disabled={zoomOutDisabled}
-      className={`${roundButton} ${iconButtonClass(zoomOutDisabled)}`}
-    >
-      {/* Minus = zoom out */}
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" aria-hidden="true">
-        <line x1="4" y1="12" x2="20" y2="12" />
-      </svg>
-    </button>
-  );
-
-  const panPositiveButton = (
-    <PanButton
-      key="pan-pos"
-      direction={axis === "x" ? "left" : "up"}
-      onClick={onPanPositive}
-      label={axis === "x" ? "Pan left" : "Pan up"}
-      disabled={panPositiveDisabled}
-    />
-  );
-
-  const panNegativeButton = (
-    <PanButton
-      key="pan-neg"
-      direction={axis === "x" ? "right" : "down"}
-      onClick={onPanNegative}
-      label={axis === "x" ? "Pan right" : "Pan down"}
-      disabled={panNegativeDisabled}
-    />
-  );
-
-  // Both pan buttons share one white pill, split by a thin line (like PhET).
-  // overflow-hidden keeps each half's hover color inside the rounded ends.
-  // Whole pill looks "off" only when both halves are off
-  const panAllOff = panPositiveDisabled && panNegativeDisabled;
-  const panGroup = (
-    <div
-      key="pan-group"
-      className={`flex rounded-full overflow-hidden ${
-        panAllOff
-          ? offPill
-          : `${whiteLook} divide-[#d9dee6]`
-      } ${
-        axis === "x" ? "flex-row divide-x" : "flex-col divide-y row-span-2" // y: spans both grid rows
-      }`}
-    >
-      {panPositiveButton}
-      {panNegativeButton}
+// A white rounded box holding PillButtons, split by thin lines.
+// overflow-hidden keeps each cell's hover color inside the rounded corners.
+// allOff: every cell is off, so the whole box turns grey.
+function Pill({ vertical, allOff, children }) {
+  return (
+    <div className={`flex rounded-md overflow-hidden ${
+      allOff ? offPill : `${whiteLook} divide-[#d9dee6]`
+    } ${vertical ? "flex-col divide-y" : "flex-row divide-x"}`}>
+      {children}
     </div>
   );
+}
+
+// Zoom + pan buttons for one axis, as two pills.
+// Both axes sit in ChartPanel's right-edge button column.
+// axis="y": pan pill (up/down) on the left, zoom pill (+, -, reset) on the right.
+// The reset cell is only there when onReset is given (not on the bottom chart,
+// which has its own wide reset under both axes, see ChartPanel).
+// axis="x" (time, bottom chart only): zoom pill (-, +) on top, pan pill (left/right) below.
+export function ChartZoomControls({
+  axis, onZoomIn, onZoomOut, onPanPositive, onPanNegative, onReset,
+  zoomInDisabled, zoomOutDisabled, panPositiveDisabled, panNegativeDisabled, resetDisabled,
+}) {
+  const isX = axis === "x";
+  const zoomIn = <PillButton label="Zoom in" icon={ICONS.plus} onClick={onZoomIn} disabled={zoomInDisabled} />;
+  const zoomOut = <PillButton label="Zoom out" icon={ICONS.minus} onClick={onZoomOut} disabled={zoomOutDisabled} />;
+
+  const panPill = (
+    <Pill vertical={!isX} allOff={panPositiveDisabled && panNegativeDisabled}>
+      <PillButton label={isX ? "Pan left" : "Pan up"} icon={isX ? ICONS.left : ICONS.up} onClick={onPanPositive} disabled={panPositiveDisabled} />
+      <PillButton label={isX ? "Pan right" : "Pan down"} icon={isX ? ICONS.right : ICONS.down} onClick={onPanNegative} disabled={panNegativeDisabled} />
+    </Pill>
+  );
+
+  if (isX) {
+    return (
+      <div className="flex flex-col items-center gap-0.5">
+        <Pill allOff={zoomInDisabled && zoomOutDisabled}>{zoomOut}{zoomIn}</Pill>
+        {panPill}
+      </div>
+    );
+  }
 
   return (
-    <div className={containerClass}>
-      {axis === "x"
-        ? [<div key="zoom" className="flex gap-0.5">{zoomOutButton}{zoomInButton}</div>, panGroup]
-        : [zoomInButton, panGroup, zoomOutButton]}
+    <div className="flex items-center gap-0.5">
+      {panPill}
+      <Pill vertical allOff={zoomInDisabled && zoomOutDisabled && (!onReset || resetDisabled)}>
+        {zoomIn}
+        {zoomOut}
+        {onReset && <PillButton label="Reset zoom" icon={ICONS.reset} onClick={onReset} disabled={resetDisabled} />}
+      </Pill>
     </div>
   );
 }
@@ -263,14 +212,19 @@ export function ChartPanel({
         >
           ✖
         </button>
-        {/* Right edge (like PhET): y zoom + pan, then time zoom + pan (bottom chart
-            only), reset at the bottom. One flex column, so the buttons can't
-            overlap however short the chart is. */}
-        <div className="absolute top-2 bottom-2 right-1 flex flex-col items-center justify-between">
-          <div />
-          {showZoomControls && <ChartZoomControls axis="y" {...yControlsProps} />}
+        {/* Right edge: y pan + zoom pills (reset is inside the zoom pill).
+            Bottom chart only: the time pills below, then one wide reset under
+            both axes. One flex column, so the buttons can't overlap. */}
+        <div className="absolute top-2 bottom-2 right-1 flex flex-col items-center justify-center gap-1">
+          {showZoomControls && (
+            <ChartZoomControls axis="y" {...yControlsProps} onReset={isBottom ? undefined : onReset} resetDisabled={resetDisabled} />
+          )}
           {showZoomControls && isBottom && xControls}
-          {showZoomControls && <ResetButton onClick={onReset} disabled={resetDisabled} />}
+          {showZoomControls && isBottom && (
+            <Pill allOff={resetDisabled}>
+              <PillButton wide label="Reset zoom" icon={ICONS.reset} onClick={onReset} disabled={resetDisabled} />
+            </Pill>
+          )}
         </div>
         <Line data={chartData} options={chartOptions} ref={chartRef} />
       </div>

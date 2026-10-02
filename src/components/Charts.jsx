@@ -262,8 +262,8 @@ function Charts({ data, simulation, onSeek, inputs }) {
           showZoomControls={isPlayback}
           xControls={xControls}
           isBottom={bottomIndex === 0}
-          onReset={() => handleReset(0)}
-          resetDisabled={isResetDisabled(0)}
+          onReset={() => handleReset(0, bottomIndex === 0)}
+          resetDisabled={isResetDisabled(0, bottomIndex === 0)}
           input={inputs[0]}
           chartData={buildChartData("position", SERIES_COLORS.position.color)}
           chartOptions={getChartOptions(0, "position")}
@@ -289,8 +289,8 @@ function Charts({ data, simulation, onSeek, inputs }) {
           showZoomControls={isPlayback}
           xControls={xControls}
           isBottom={bottomIndex === 1}
-          onReset={() => handleReset(1)}
-          resetDisabled={isResetDisabled(1)}
+          onReset={() => handleReset(1, bottomIndex === 1)}
+          resetDisabled={isResetDisabled(1, bottomIndex === 1)}
           input={inputs[1]}
           chartData={buildChartData("velocity", SERIES_COLORS.velocity.color)}
           chartOptions={getChartOptions(1, "velocity")}
@@ -316,8 +316,8 @@ function Charts({ data, simulation, onSeek, inputs }) {
           showZoomControls={isPlayback}
           xControls={xControls}
           isBottom={bottomIndex === 2}
-          onReset={() => handleReset(2)}
-          resetDisabled={isResetDisabled(2)}
+          onReset={() => handleReset(2, bottomIndex === 2)}
+          resetDisabled={isResetDisabled(2, bottomIndex === 2)}
           input={inputs[2]}
           chartData={buildChartData("acceleration", SERIES_COLORS.acceleration.color)}
           chartOptions={getChartOptions(2, "acceleration")}

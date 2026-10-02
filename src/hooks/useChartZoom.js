@@ -139,12 +139,13 @@ export function useChartZoom(data) {
     };
   };
 
-  // ---- Reset (touches both axes) ----
+  // ---- Reset ----
 
-  // Resets this chart's y-axis zoom/pan, and the shared x-axis window
-  // (which resets it for all three charts, same as x-zoom/pan already do).
-  const handleReset = (index) => {
-    setXRange(null);
+  // Resets this chart's y-axis zoom/pan. With `withTime` (the bottom chart's
+  // reset, which sits under both button groups) it also resets the shared
+  // time window for all three charts.
+  const handleReset = (index, withTime) => {
+    if (withTime) setXRange(null);
     setYRanges((prev) => {
       const next = { ...prev };
       delete next[index];
@@ -152,7 +153,9 @@ export function useChartZoom(data) {
     });
   };
 
-  const isResetDisabled = (index) => xRange === null && yRanges[index] === undefined;
+  // Off when there is nothing to reset (time only counts with `withTime`)
+  const isResetDisabled = (index, withTime) =>
+    yRanges[index] === undefined && (!withTime || xRange === null);
 
   return {
     maxTime,
