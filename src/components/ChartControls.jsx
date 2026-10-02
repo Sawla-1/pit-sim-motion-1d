@@ -46,22 +46,6 @@ ChartJS.register(
   plotFrame
 );
 
-// White, thin grey border, soft shadow, dark slate icon.
-// Used by the round "show chart" button.
-// Active = white, raised (shadow), dark icon. Disabled = grey, flat, pale icon
-// (the icon stays visible so you can still tell which button it is).
-const whiteButton = `${whiteLook} ${disabledIcon}`;
-
-// Hover/press behaviour for the "show chart" button: light grey on hover,
-// a bit darker while pressed, "not allowed" cursor when it can't be used.
-function iconButtonClass(disabled) {
-  return `transition-colors ${
-    disabled
-      ? "cursor-not-allowed"
-      : "cursor-pointer hover:bg-gray-100 active:bg-gray-200"
-  }`;
-}
-
 // Thin-line icons (drawn inside a 24x24 box), one per pill button
 const ICONS = {
   up: <polyline points="6 15 12 9 18 15" />,
@@ -148,11 +132,11 @@ export function ChartZoomControls({
   );
 }
 
-// One chart's full panel: visibility toggle, hide button, zoom/pan/reset
-// controls, and the Line chart. The chart's name is drawn by Chart.js as
-// the y-axis title (see Charts.jsx). Takes values/callbacks already bound to
+// One chart's full row: its input panel, the hide button, the zoom/pan/reset
+// pills, and the Line chart. When hidden, it shows one slim line with the
+// chart's name and a "show" button. Takes values/callbacks already bound to
 // a specific chart from the call site (same pattern as PhysicsInput in
-// Controls.jsx), so it has no idea which chart it's rendering.
+// App.jsx), so it has no idea which chart it's rendering.
 export function ChartPanel({
   label, input,
   visible, onShow, onHide,
@@ -162,7 +146,7 @@ export function ChartPanel({
   if (!visible) {
     return (
       // Hidden chart: its input hides too; one slim line with a round
-      // "show" button (same style as the prev/next buttons)
+      // white "show" button (light grey on hover)
       <div className="flex items-center justify-end gap-3 pr-2 py-1 text-lg font-semibold text-gray-700">
         {label}
         <button
@@ -170,7 +154,7 @@ export function ChartPanel({
           onClick={onShow}
           aria-label={`Show ${label} chart`}
           title={`Show ${label} chart`}
-          className={`w-8 h-8 rounded-full flex items-center justify-center ${whiteButton} ${iconButtonClass(false)}`}
+          className={`w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-colors hover:bg-gray-100 active:bg-gray-200 ${whiteLook}`}
         >
           {/* Plus icon = "add this chart back" (pairs with the ✖) */}
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
