@@ -28,6 +28,8 @@ function App() {
   });
 
   const [playing, setPlaying] = useState(false);
+  // Turns true the first time the user opens Playback; stops the "try me" hint
+  const [playbackTried, setPlaybackTried] = useState(false);
 
   // Data and mode state
   const [data, setData] = useState({
@@ -74,6 +76,7 @@ function App() {
     setData((prev) => ({ ...prev, selectedMode: mode }));
 
     if (mode === "playback") {
+      setPlaybackTried(true);
       // Switch to playback: reset playback time
       setSimulation(() => ({
         time: 0,
@@ -195,6 +198,7 @@ function App() {
           simulation={simulation}
           playing={playing}
           data={data}
+          playbackTried={playbackTried}
           onModeChange={switchMode}
           onTogglePlayPause={togglePlayPause}
           onNextFrame={handleNextFrame}

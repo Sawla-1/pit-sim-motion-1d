@@ -24,12 +24,12 @@ const RefreshIcon = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="
 // view) keeps keyboard and screen reader support; the label is what you see.
 // Chosen = solid colour (activeLook), white text. Not chosen = outlined, so it
 // looks clickable; brighter on hover.
-function ModeOption({ value, label, icon, activeLook, title, selectedMode, disabled, onModeChange }) {
+function ModeOption({ value, label, icon, activeLook, title, hint, selectedMode, disabled, onModeChange }) {
   return (
-    <label title={title} className={`px-4 h-8 flex items-center gap-2 rounded-lg text-sm font-bold transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-blue-400 ${
+    <label title={title} className={`relative px-4 h-8 flex items-center gap-2 rounded-lg text-sm font-bold transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-blue-400 ${
       selectedMode === value
         ? `${activeLook} text-white`
-        : `border border-white/20 text-slate-300 ${disabled ? "" : "hover:text-white hover:border-white/50 hover:bg-white/10"}`
+        : `border border-white/20 text-slate-300 ${disabled ? "" : "hover:text-white hover:border-white/70 hover:bg-white/20"}`
     } ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}>
       <input
         type="radio"
@@ -42,6 +42,8 @@ function ModeOption({ value, label, icon, activeLook, title, selectedMode, disab
       />
       {icon}
       {label}
+      {/* Hint: a soft ring that grows and fades, to say "try me" */}
+      {hint && <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-lg ring-2 ring-blue-400 motion-safe:animate-ping" />}
     </label>
   );
 }
@@ -54,6 +56,7 @@ function Controls({
   simulation,
   playing,
   data,
+  playbackTried,
   onModeChange,
   onTogglePlayPause,
   onNextFrame,
@@ -113,7 +116,7 @@ function Controls({
           {/* Mode switch: one darker box, two parts */}
           <div className="flex gap-1 p-1 rounded-xl bg-black/25 border border-white/10">
             <ModeOption value="record" label="Record" icon={<RecordDot />} activeLook="bg-red-600" title="Make new data" selectedMode={data.selectedMode} onModeChange={onModeChange} />
-            <ModeOption value="playback" label="Playback" icon={<SmallPlay />} activeLook="bg-blue-600" title={noRecording ? "Record something first" : "Replay what you recorded"} selectedMode={data.selectedMode} onModeChange={onModeChange} disabled={noRecording} />
+            <ModeOption value="playback" label="Playback" icon={<SmallPlay />} activeLook="bg-blue-600" title={noRecording ? "Record something first" : "Replay what you recorded"} hint={data.selectedMode === "record" && !noRecording && !playing && !playbackTried} selectedMode={data.selectedMode} onModeChange={onModeChange} disabled={noRecording} />
           </div>
         </div>
 

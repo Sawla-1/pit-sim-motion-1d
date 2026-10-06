@@ -37,6 +37,8 @@ This is a 1D kinematics physics simulation built with React + Vite. The simulati
 
 **`playing` state** — boolean, separate from `simulation`.
 
+**`playbackTried` state** — boolean. Turns `true` the first time the user switches to Playback; `Controls` uses it to stop the pulsing hint ring on the Playback button.
+
 **`data` state** — recording/playback metadata:
 ```js
 { recordedData, selectedMode }
@@ -77,7 +79,7 @@ The hook takes `onRecordStep` and `onPlaybackStep` callback props and dispatches
 | `src/components/Charts.jsx` | Chart.js line graphs, timeline drag-scrub, show/hide toggles |
 | `src/components/ChartControls.jsx` | `ChartPanel` (one chart with its show/hide, zoom, pan and reset buttons) and `ChartZoomControls` |
 | `src/components/PhysicsInput.jsx` | One parameter input beside its chart: name, number box + unit, vertical slider |
-| `src/components/Controls.jsx` | Bottom bar: Clear, mode radio, prev/play/next buttons (prev/next: playback mode only, disabled while playing), Reset All |
+| `src/components/Controls.jsx` | Bottom bar: Clear, mode radio, prev/play/next buttons (prev/next: playback mode only, disabled while playing), Reset All; the Playback button shows a hint ring until `playbackTried` |
 
 ### Input pattern
 
