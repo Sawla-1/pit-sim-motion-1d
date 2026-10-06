@@ -233,8 +233,12 @@ function Charts({ data, simulation, pin, onSeek, showScrubHint, inputs }) {
                 type: "label",
                 xValue: pin.time,
                 yValue: pin[valueKey],
-                xAdjust: ({ chart }) =>
-                  pin.time > (chart.scales.x.min + chart.scales.x.max) / 2 ? -40 : 40,
+                // Right half: label goes left, and stays clear of the hide (X) button in the corner
+                xAdjust: ({ chart }) => {
+                  if (pin.time <= (chart.scales.x.min + chart.scales.x.max) / 2) return 40;
+                  const dotX = chart.scales.x.getPixelForValue(pin.time);
+                  return Math.min(-40, chart.chartArea.right - 72 - dotX);
+                },
                 yAdjust: ({ chart }) =>
                   pin[valueKey] > (chart.scales.y.min + chart.scales.y.max) / 2 ? 16 : -16,
                 content: `(${formatNumber(pin.time, 2)}, ${formatNumber(pin[valueKey], 2)})`,
