@@ -145,6 +145,8 @@ function App() {
     />
   ));
 
+  const isRecording = data.selectedMode === "record";
+
   return (
     <div className="min-h-screen lg:h-screen w-full flex flex-col box-border bg-[#C9EEEA] text-gray-800 overflow-x-clip">
       {/* Top: 3D scene + time */}
@@ -161,10 +163,18 @@ function App() {
 
         {/* Mode badge (right), only while playing */}
         {playing && (
-          <span role="status" className={`absolute top-3 right-8 z-10 px-3 py-1 rounded-full text-sm font-bold text-white motion-safe:animate-pulse ${
-            data.selectedMode === "record" ? "bg-red-600" : "bg-blue-600"
+          <span role="status" className={`absolute top-3 right-8 z-10 flex items-center gap-2 text-sm font-bold uppercase tracking-widest ${
+            isRecording ? "text-red-600" : "text-blue-600"
           }`}>
-            {data.selectedMode === "record" ? "● Recording" : "▶ Playing back"}
+            <span className="relative flex h-3 w-3">
+              <span className={`absolute inline-flex h-full w-full rounded-full opacity-75 motion-safe:animate-ping ${
+                isRecording ? "bg-red-500" : "bg-blue-500"
+              }`} />
+              <span className={`relative inline-flex h-3 w-3 rounded-full ${
+                isRecording ? "bg-red-600 shadow-[0_0_10px_rgba(220,38,38,0.7)]" : "bg-blue-600 shadow-[0_0_10px_rgba(37,99,235,0.7)]"
+              }`} />
+            </span>
+            {isRecording ? "Recording" : "Playing back"}
           </span>
         )}
       </div>
