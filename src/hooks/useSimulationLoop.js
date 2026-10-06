@@ -9,6 +9,8 @@ export function useSimulationLoop({
   setPlaying,
   onRecordStep,
   onPlaybackStep,
+  onDragStep,
+  dragSamplesRef,
 }) {
   const last = useRef(performance.now());
 
@@ -54,6 +56,15 @@ export function useSimulationLoop({
           const result = onPlaybackStep(sim, dat, frameTime);
           setSimulation(result.simulation);
           if (result.isEndOfPlayback) setPlaying(false);
+        } else if (dragSamplesRef && dragSamplesRef.current) {
+          // DRAGGING: same recording pipeline as below, but the position comes
+          // from the mouse (smoothed) instead of calculatePhysicsStep's acceleration math
+          const result = onDragStep(sim, frameTime);
+          setSimulation(result.simulation);
+          setData((prev) => ({
+            ...prev,
+            recordedData: [...prev.recordedData, result.recordedState],
+          }));
         } else {
           // RECORDING MODE: time accumulates as simulation.time + frameTime,
           // so pausing just stops adding to it — no anchor/pause bookkeeping needed
@@ -72,5 +83,5 @@ export function useSimulationLoop({
     }
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
-  }, [playing, setSimulation, setData, setPlaying, onRecordStep, onPlaybackStep]); // setters are stable React refs; listed to satisfy exhaustive-deps
+  }, [playing, setSimulation, setData, setPlaying, onRecordStep, onPlaybackStep, onDragStep, dragSamplesRef]); // setters are stable React refs; listed to satisfy exhaustive-deps
 }

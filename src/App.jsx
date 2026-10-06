@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState,useRef } from "react";
 import Simulation3D from "./components/Simulation3D";
 import Charts from "./components/Charts";
 import Controls from "./components/Controls";
@@ -8,6 +8,7 @@ import {
   handlePlaybackStep,
   handlePlaybackSeek,
 } from "./engine/recordPlayback";
+import { calculateDragStep, NUMBER_MOUSE_POINTS_TO_AVERAGE } from "./engine/kinematics1d";
 import { formatNumber } from "./utils/formatNumber";
 
 function App() {
@@ -32,6 +33,22 @@ function App() {
     playbackTime: 0, // Current playback time
   });
 
+  // null = not dragging; array of { x: meters, t: wallClockMs } while dragging
+  const dragSamples = useRef(null);
+
+  const onDragStep = (sim, frameTime) => {
+    const next = calculateDragStep(sim, frameTime, dragSamples.current);
+    return {
+      simulation: next,
+      recordedState: {
+        time: next.time,
+        position: next.position,
+        velocity: next.velocity,
+        acceleration: next.acceleration,
+      },
+    };
+  };
+
   useSimulationLoop({
     playing,
     simulation,
@@ -41,6 +58,8 @@ function App() {
     setPlaying,
     onRecordStep: handleRecordingStep,
     onPlaybackStep: handlePlaybackStep,
+    onDragStep,
+    dragSamplesRef: dragSamples,
   });
 
   // ============================================================================
@@ -138,6 +157,27 @@ function App() {
     }
   };
 
+  const handleManDragStart = () => {
+    dragSamples.current = [];
+    setData((prev) => ({ ...prev, selectedMode: "record" }));
+    setPlaying(true);
+  };
+
+  // Called on every raw mouse reading while dragging. Just records the
+  // reading — the smoothing and the actual position/velocity math happen
+  // once per frame in onDragStep above, not here.
+  const handleManDragSample = (meters) => {
+    if (!dragSamples.current) return;
+    const next = [...dragSamples.current, { x: meters, t: performance.now() }];
+    dragSamples.current = next.slice(-NUMBER_MOUSE_POINTS_TO_AVERAGE);
+  };
+
+  const handleManDragEnd = () => {
+    dragSamples.current = null;
+    setSimulation((prev) => ({ ...prev, velocity: 0, acceleration: 0 }));
+  };
+
+
   // ============================================================================
   // RENDER - Using refactored components
   // ============================================================================
@@ -146,7 +186,13 @@ function App() {
     <div className="min-h-screen w-full p-2 flex flex-col gap-1 box-border bg-gradient-to-br bg-blue-700 text-gray-800 overflow-x-hidden">
       {/* Simulation Display Area */}
       <div className="relative w-full mb-1">
-        <Simulation3D position={simulation.position} velocity={simulation.velocity} />
+        <Simulation3D
+          position={simulation.position}
+          velocity={simulation.velocity}
+          onManDragStart={handleManDragStart}
+          onManDragSample={handleManDragSample}
+          onManDragEnd={handleManDragEnd}
+        />
 
         {/* Time Display */}
         <div

@@ -31,12 +31,13 @@ function CameraRig() {
   return null;
 }
 
-function Simulation3D({ position, velocity }) {
+function Simulation3D({ position, velocity, onManDragStart, onManDragSample, onManDragEnd }) {
   // The ruler spans -range..range with 0 in the center, and follows the man both ways.
   const range = Math.max(MIN_RANGE, Math.abs(position));
   const step = niceStep(range, MAX_LABELS_PER_SIDE);
   const halfStep = step / 2;
   const toX = (meters) => (meters / range) * EDGE; // sticks, labels and the man all use this
+  const fromX = (worldX) => (worldX / EDGE) * range; // undoes toX — turns a drag back into meters
 
   const halfSteps = Math.floor(range / halfStep);
   const ticks = Array.from({ length: halfSteps * 2 + 1 }, (_, i) => {
@@ -93,7 +94,11 @@ function Simulation3D({ position, velocity }) {
       </group>
 
       <Suspense fallback={null}>
-        <HumanSprite position={toX(position)} velocity={velocity} />
+        <HumanSprite  position={toX(position)}
+                      velocity={velocity}
+                      onDragStart={onManDragStart}
+                      onDragSample={(worldX) => onManDragSample(fromX(worldX))}
+                      onDragEnd={onManDragEnd}/>
       </Suspense>
     </Canvas>
   );
@@ -101,7 +106,8 @@ function Simulation3D({ position, velocity }) {
 
 const MOVING_THRESHOLD = 0.1;
 
-function HumanSprite({ position, velocity }) {
+function HumanSprite({ position, velocity, onDragStart, onDragSample, onDragEnd }) {
+  const { camera, gl } = useThree();
   const walkingTexture = useTexture("/walking-man.svg");
   const standingTexture = useTexture("/star.png");
   const facingRef = useRef(-1);
@@ -117,8 +123,41 @@ function HumanSprite({ position, velocity }) {
   texture.repeat.x = facingRef.current;          // 1 = normal, -1 = mirrored
   texture.offset.x = facingRef.current === -1 ? 1 : 0;
 
+  // Dragging must START on the man (this handler only exists on his sprite),
+  // but once started it tracks the mouse anywhere on the page — even over
+  // the Charts or Controls panels — same as PhET. That means plain
+  // window-level listeners instead of React Three Fiber's canvas-only
+  // pointer events, and converting screen pixels to world units ourselves
+  // via the camera (unproject), since R3F's own raycasting only works for
+  // events that land on the canvas.
+  const handlePointerDown = (event) => {
+    event.stopPropagation();
+    onDragStart();
+
+    const canvasRect = gl.domElement.getBoundingClientRect();
+
+    const handleWindowPointerMove = (moveEvent) => {
+      const ndcX = ((moveEvent.clientX - canvasRect.left) / canvasRect.width) * 2 - 1;
+      const worldX = new THREE.Vector3(ndcX, 0, 0).unproject(camera).x;
+      onDragSample(worldX);
+    };
+
+    const handleWindowPointerUp = () => {
+      window.removeEventListener("pointermove", handleWindowPointerMove);
+      window.removeEventListener("pointerup", handleWindowPointerUp);
+      onDragEnd();
+    };
+
+    window.addEventListener("pointermove", handleWindowPointerMove);
+    window.addEventListener("pointerup", handleWindowPointerUp);
+  };
+
   return (
-    <sprite position={[position, 0, 0]} scale={[1.2, 1.2, 1]}>
+    <sprite
+      position={[position, 0, 0]}
+      scale={[1.2, 1.2, 1]}
+      onPointerDown={handlePointerDown}
+    >
       <spriteMaterial map={texture} transparent />
     </sprite>
   );
