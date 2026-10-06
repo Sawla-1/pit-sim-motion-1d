@@ -83,7 +83,7 @@ The hook takes `onRecordStep` and `onPlaybackStep` callback props and dispatches
 | `src/components/Charts.jsx` | Chart.js line graphs, timeline drag-scrub, show/hide toggles, scrub hint, pinned point (dot + label) |
 | `src/components/ChartControls.jsx` | `ChartPanel` (one chart with its show/hide, zoom, pan and reset buttons, and the scrub hint) and `ChartZoomControls` |
 | `src/components/PhysicsInput.jsx` | One parameter input beside its chart: name, number box + unit, vertical slider |
-| `src/components/Controls.jsx` | Bottom bar: Clear, mode radio, prev/play/next buttons (prev/next: playback mode only, disabled while playing), Pin / Unpin button and a Go-to-pin icon button (playback mode only), Reset All; the Playback button shows a hint ring until `playbackTried` |
+| `src/components/Controls.jsx` | Bottom bar: Clear, mode radio, icon buttons Pin (toggle) / prev / play / next / Go-to-pin (all except play are playback mode only: hidden but keeping their space in record mode, so Play never moves; prev/next/Go-to-pin disabled while playing), Reset All; the Playback button shows a hint ring until `playbackTried` |
 
 ### Input pattern
 
