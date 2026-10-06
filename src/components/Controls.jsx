@@ -5,6 +5,9 @@ const offLook = "disabled:opacity-40 disabled:cursor-not-allowed";
 // (lighter on hover, darker while pressed). Off = dark square, pale icon.
 const stepButton = `w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer bg-blue-600 border border-blue-500 text-white transition-colors enabled:hover:bg-blue-500 enabled:active:bg-blue-700 disabled:bg-white/5 disabled:border-white/10 disabled:text-slate-400 disabled:cursor-not-allowed`;
 
+// Pin / go to pin: just a blue icon, no box (lighter blue and a soft glow on hover)
+const iconOnlyButton = `w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer text-blue-400 transition-colors enabled:hover:text-blue-300 enabled:hover:bg-white/15 enabled:active:bg-white/5 disabled:text-slate-500 disabled:cursor-not-allowed`;
+
 // Clear Data / Reset All: icon + words
 const wordButton = `h-9 px-4 rounded-xl flex items-center gap-2 text-sm font-bold cursor-pointer transition-colors ${offLook}`;
 
@@ -18,9 +21,9 @@ const NextIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="non
 const RecordDot = () => <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" aria-hidden="true"><circle cx="5" cy="5" r="5" /></svg>;
 const SmallPlay = () => <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4v16l14-8z" /></svg>;
 // Map pin: outline = nothing pinned here, filled = pinned here
-const PinIcon = ({ filled }) => <svg width="18" height="18" viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinejoin="round" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z" /><circle cx="12" cy="10" r="2.5" stroke={filled ? "#2563eb" : "currentColor"} /></svg>;
+const PinIcon = ({ filled }) => <svg width="22" height="22" viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinejoin="round" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z" /><circle cx="12" cy="10" r="2.5" stroke={filled ? "#1f2437" : "currentColor"} /></svg>;
 // Target / crosshair: "go to the pinned point"
-const GoToPinIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="12" r="7" /><circle cx="12" cy="12" r="1.5" fill="currentColor" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3" /></svg>;
+const GoToPinIcon = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="12" r="7" /><circle cx="12" cy="12" r="1.5" fill="currentColor" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3" /></svg>;
 const TrashIcon =() => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></svg>;
 const RefreshIcon = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M8 16H3v5" /></svg>;
 
@@ -103,7 +106,7 @@ function Controls({
               title={isPinned ? "Remove the pinned tooltip" : "Keep a tooltip at this time"}
               aria-label={isPinned ? "Unpin" : "Pin"}
               aria-pressed={isPinned}
-              className={`${stepButton} ${hideInRecord}`}
+              className={`${iconOnlyButton} ${hideInRecord}`}
             >
               <PinIcon filled={isPinned} />
             </button>
@@ -137,7 +140,7 @@ function Controls({
               disabled={!hasPin || isPinned || playing}
               title="Go to the pinned point"
               aria-label="Go to the pinned point"
-              className={`${stepButton} ${hideInRecord}`}
+              className={`${iconOnlyButton} ${hideInRecord}`}
             >
               <GoToPinIcon />
             </button>
