@@ -120,6 +120,9 @@ function App() {
   // At the pinned time: unpin. Anywhere else: pin here (replaces the old pin).
   const togglePin = () => setPin(isPinned ? null : simulation);
 
+  // Jump the time to the pinned point (same seek as the frame buttons)
+  const goToPin = () => handleSeek(pin.time);
+
   // Handle timeline scrubbing from charts
   const handleSeek = (newTime) => {
     const result = handlePlaybackSeek(data.recordedData, newTime);
@@ -220,7 +223,9 @@ function App() {
           data={data}
           playbackTried={playbackTried}
           isPinned={isPinned}
+          hasPin={pin !== null}
           onTogglePin={togglePin}
+          onGoToPin={goToPin}
           onModeChange={switchMode}
           onTogglePlayPause={togglePlayPause}
           onNextFrame={handleNextFrame}

@@ -17,6 +17,8 @@ const NextIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="non
 // Mode icons: red dot = record, small triangle = playback
 const RecordDot = () => <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" aria-hidden="true"><circle cx="5" cy="5" r="5" /></svg>;
 const SmallPlay = () => <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4v16l14-8z" /></svg>;
+// Target / crosshair: "go to the pinned point"
+const GoToPinIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="12" r="7" /><circle cx="12" cy="12" r="1.5" fill="currentColor" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3" /></svg>;
 const TrashIcon =() => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></svg>;
 const RefreshIcon = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M8 16H3v5" /></svg>;
 
@@ -58,7 +60,9 @@ function Controls({
   data,
   playbackTried,
   isPinned,
+  hasPin,
   onTogglePin,
+  onGoToPin,
   onModeChange,
   onTogglePlayPause,
   onNextFrame,
@@ -75,8 +79,9 @@ function Controls({
     // The dark rounded toolbar: Clear Data | prev / play / next + mode | Reset All
     // Phones: the middle group takes the first row; Clear and Reset share the second.
     // (App.jsx places it; short screens under 600px tall: smaller Play)
-    // Fills the page width, up to 1100px, so Clear and Reset sit at the two ends.
-    <div className="w-full max-w-[800px] flex flex-wrap items-center justify-between gap-x-6 gap-y-2 px-5 py-3 bg-[#1f2437] rounded-2xl shadow-[0_4px_14px_rgba(15,23,42,0.25)]">
+    // Fills the page width, up to 800px (880px on large screens, to fit the Pin buttons),
+    // so Clear and Reset sit at the two ends.
+    <div className="w-full max-w-[800px] lg:max-w-[880px] flex flex-wrap items-center justify-between gap-x-6 gap-y-2 px-5 py-3 bg-[#1f2437] rounded-2xl shadow-[0_4px_14px_rgba(15,23,42,0.25)]">
         <button
           onClick={onClearRecordedData}
           disabled={data.recordedData.length <= 1}
@@ -120,6 +125,15 @@ function Controls({
               className={`${wordButton} bg-blue-600 text-white enabled:hover:bg-blue-500`}
             >
               {isPinned ? "Unpin" : "Pin"}
+            </button>
+            <button
+              onClick={onGoToPin}
+              disabled={!hasPin || isPinned || playing || data.selectedMode !== "playback"}
+              title="Go to the pinned point"
+              aria-label="Go to the pinned point"
+              className={stepButton}
+            >
+              <GoToPinIcon />
             </button>
           </div>
 
