@@ -147,7 +147,7 @@ export function ChartPanel({
     return (
       // Hidden chart: its input hides too; one slim line with a round
       // white "show" button (light grey on hover)
-      <div className="flex items-center justify-end gap-3 pr-2 py-1 text-lg font-semibold text-gray-700">
+      <div className="flex items-center justify-end gap-3 pr-16 py-1 text-lg font-semibold text-gray-700">
         {label}
         <button
           type="button"
