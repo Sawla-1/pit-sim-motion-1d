@@ -30,6 +30,8 @@ function App() {
   const [playing, setPlaying] = useState(false);
   // Turns true the first time the user opens Playback; stops the "try me" hint
   const [playbackTried, setPlaybackTried] = useState(false);
+  // Turns true the first time the user drags a chart; stops the scrub hint
+  const [scrubTried, setScrubTried] = useState(false);
 
   // Data and mode state
   const [data, setData] = useState({
@@ -114,6 +116,12 @@ function App() {
     setSimulation(result.simulation);
   };
 
+  // Dragging on a chart: remember it (the hint goes away), then move the time
+  const handleScrub = (newTime) => {
+    setScrubTried(true);
+    handleSeek(newTime);
+  };
+
   // Step playback one frame forward / back (clamped so time never goes below 0)
   const handleNextFrame = () => handleSeek(simulation.time + FRAME_STEP);
   const handlePrevFrame = () => handleSeek(Math.max(0, simulation.time - FRAME_STEP));
@@ -187,7 +195,8 @@ function App() {
         <Charts
           data={data}
           simulation={simulation}
-          onSeek={handleSeek}
+          onSeek={handleScrub}
+          showScrubHint={data.selectedMode === "playback" && !scrubTried}
           inputs={inputs}
         />
       </div>

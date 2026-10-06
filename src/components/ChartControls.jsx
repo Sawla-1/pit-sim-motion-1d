@@ -132,6 +132,30 @@ export function ChartZoomControls({
   );
 }
 
+// Scrub hint: a hand + ↔ arrow + text that fades in and out, centered on the
+// plot. It ignores clicks, so dragging still works under it.
+function ScrubHint() {
+  return (
+    <div role="status" className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 flex items-center gap-2 text-blue-600 drop-shadow-[0_0_3px_white] motion-safe:animate-pulse">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M22 14a8 8 0 0 1-8 8" />
+        <path d="M18 11v-1a2 2 0 0 0-2-2a2 2 0 0 0-2 2" />
+        <path d="M14 10V9a2 2 0 0 0-2-2a2 2 0 0 0-2 2v1" />
+        <path d="M10 9.5V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v10" />
+        <path d="M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15" />
+      </svg>
+      <div className="flex flex-col items-center">
+        <svg width="40" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <polyline points="18 8 22 12 18 16" />
+          <polyline points="6 8 2 12 6 16" />
+          <line x1="2" y1="12" x2="22" y2="12" />
+        </svg>
+        <span className="text-sm font-bold whitespace-nowrap">Drag to move time</span>
+      </div>
+    </div>
+  );
+}
+
 // One chart's full row: its input panel, the hide button, the zoom/pan/reset
 // pills, and the Line chart. When hidden, it shows one slim line with the
 // chart's name and a "show" button. Takes values/callbacks already bound to
@@ -140,7 +164,7 @@ export function ChartZoomControls({
 export function ChartPanel({
   label, input,
   visible, onShow, onHide,
-  showZoomControls, yControlsProps, xControls, isBottom, onReset, resetDisabled,
+  showZoomControls, yControlsProps, xControls, isBottom, scrubHint, onReset, resetDisabled,
   chartData, chartOptions, chartRef,
 }) {
   if (!visible) {
@@ -196,6 +220,7 @@ export function ChartPanel({
         >
           ✖
         </button>
+        {scrubHint && <ScrubHint />}
         {/* Right edge: y pan + zoom pills (reset is inside the zoom pill).
             Bottom chart only: the time pills below, then one wide reset under
             both axes. One flex column, so the buttons can't overlap. */}

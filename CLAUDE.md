@@ -39,6 +39,8 @@ This is a 1D kinematics physics simulation built with React + Vite. The simulati
 
 **`playbackTried` state** — boolean. Turns `true` the first time the user switches to Playback; `Controls` uses it to stop the pulsing hint ring on the Playback button.
 
+**`scrubTried` state** — boolean. Turns `true` the first time the user drags a chart in Playback; `Charts` uses it to hide the scrub hint (a pulsing hand + ↔ arrow icon with the text "Drag to move time"). Next/previous frame buttons don't count.
+
 **`data` state** — recording/playback metadata:
 ```js
 { recordedData, selectedMode }
@@ -76,8 +78,8 @@ The hook takes `onRecordStep` and `onPlaybackStep` callback props and dispatches
 | `src/App.jsx` | State, control logic, wires all components and the loop hook |
 | `src/hooks/useSimulationLoop.js` | RAF animation loop, real per-frame delta (clamped), pause/resume timing |
 | `src/components/Simulation3D.jsx` | R3F canvas, ruler, sprite rendering — receives `position` and `velocity` props (velocity picks walking/standing sprite and facing direction) |
-| `src/components/Charts.jsx` | Chart.js line graphs, timeline drag-scrub, show/hide toggles |
-| `src/components/ChartControls.jsx` | `ChartPanel` (one chart with its show/hide, zoom, pan and reset buttons) and `ChartZoomControls` |
+| `src/components/Charts.jsx` | Chart.js line graphs, timeline drag-scrub, show/hide toggles, scrub hint |
+| `src/components/ChartControls.jsx` | `ChartPanel` (one chart with its show/hide, zoom, pan and reset buttons, and the scrub hint) and `ChartZoomControls` |
 | `src/components/PhysicsInput.jsx` | One parameter input beside its chart: name, number box + unit, vertical slider |
 | `src/components/Controls.jsx` | Bottom bar: Clear, mode radio, prev/play/next buttons (prev/next: playback mode only, disabled while playing), Reset All; the Playback button shows a hint ring until `playbackTried` |
 

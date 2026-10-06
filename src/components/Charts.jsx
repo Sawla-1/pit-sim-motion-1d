@@ -21,7 +21,7 @@ const CHARTS = [
 // Renders the Position/Velocity/Acceleration line charts, each with its own
 // Y-axis zoom/pan and a shared X-axis (time) zoom/pan across all three.
 // `inputs` = the 3 input panels (built in App), one shown beside each chart.
-function Charts({ data, simulation, onSeek, inputs }) {
+function Charts({ data, simulation, onSeek, showScrubHint, inputs }) {
   // A ref, not state: the moves right after pointer-down must see it at once,
   // without waiting for React to re-render.
   const isDragging = useRef(false);
@@ -118,6 +118,9 @@ function Charts({ data, simulation, onSeek, inputs }) {
   const bottomIndex = hasRecording
     ? CHARTS.map(({ key }) => visibility[key]).lastIndexOf(true)
     : -1;
+
+  // The top visible chart shows the scrub hint
+  const topIndex = CHARTS.findIndex(({ key }) => visibility[key]);
 
   // Simplified chart options
   const getChartOptions = (index, valueKey) => {
@@ -270,6 +273,7 @@ function Charts({ data, simulation, onSeek, inputs }) {
               showZoomControls={isPlayback}
               xControls={xControls}
               isBottom={isBottom}
+              scrubHint={showScrubHint && index === topIndex}
               onReset={() => handleReset(index, isBottom)}
               resetDisabled={isResetDisabled(index, isBottom)}
               input={inputs[index]}
