@@ -43,7 +43,7 @@ This is a 1D kinematics physics simulation built with React + Vite. The simulati
 
 **`pin` state** — `null` or one pinned snapshot `{ time, position, velocity, acceleration }`. Set by the Pin button in `Controls` (playback only); `Charts` draws a dot + always-visible label for it on all 3 charts. Pressing the button at the pinned time (within `PIN_TOLERANCE`, 0.05 s) unpins; anywhere else it moves the pin there. Cleared by Clear Data and Reset All.
 
-**`confirmingReset` state** — boolean. Reset All opens a confirm popup (`ConfirmDialog`) first, unless nothing is recorded; the popup lists what will be lost (recording length, values, pin). Clear Data has no popup.
+**`confirmingReset` state** — boolean. Reset All opens a confirm popup (`ConfirmDialog`) first, unless nothing is recorded; the popup says how long a recording will be deleted. Clear Data has no popup.
 
 **`data` state** — recording/playback metadata:
 ```js

@@ -23,17 +23,19 @@ function ConfirmDialog({ title, message, confirmLabel, onConfirm, onCancel }) {
         <h2 className="text-base font-bold text-slate-800">{title}</h2>
       </div>
       <div className="mt-3 text-sm text-slate-600">{message}</div>
-      <div className="mt-4 flex justify-end gap-2">
+      <div className="mt-4 flex justify-end gap-3">
+        {/* Secondary: outline only, so it looks quiet */}
         <button
           autoFocus
           onClick={onCancel}
-          className="h-8 px-3 rounded-xl text-sm font-bold bg-slate-200 text-slate-800 cursor-pointer hover:bg-slate-300"
+          className="h-9 px-4 rounded-xl text-sm font-semibold bg-white text-slate-700 border border-slate-300 cursor-pointer transition-colors hover:bg-slate-50 hover:border-slate-400 active:bg-slate-100"
         >
           Cancel
         </button>
+        {/* Primary: solid red with a soft shadow, so it stands out */}
         <button
           onClick={onConfirm}
-          className="h-8 px-3 rounded-xl text-sm font-bold bg-rose-600 text-white cursor-pointer hover:bg-rose-500"
+          className="h-9 px-4 rounded-xl text-sm font-bold bg-rose-600 text-white border border-rose-600 shadow-[0_4px_12px_rgba(225,29,72,0.35)] cursor-pointer transition-colors hover:bg-rose-500 active:bg-rose-700"
         >
           {confirmLabel}
         </button>

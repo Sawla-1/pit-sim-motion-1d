@@ -247,16 +247,11 @@ function App() {
 
       {confirmingReset && (
         <ConfirmDialog
-          title="Reset everything?"
+          title="Reset all settings?"
           message={
             <>
-              <p>This will remove:</p>
-              <ul className="mt-1 list-disc space-y-0.5 rounded-lg border border-rose-100 bg-rose-50 py-2 pl-7 pr-3 marker:text-rose-400">
-                <li>Your {formatNumber(recordedSeconds, 1)} s recording</li>
-                <li>Position, velocity and acceleration (set back to 0)</li>
-                {pin && <li>Your pinned point</li>}
-              </ul>
-              <p className="mt-3 font-semibold text-rose-700">This cannot be undone.</p>
+              Your {formatNumber(recordedSeconds, 1)} s recording will be deleted.{" "}
+              <span className="font-semibold text-rose-700">This cannot be undone.</span>
             </>
           }
           confirmLabel="Reset All"
