@@ -2,6 +2,7 @@ import { useState } from "react";
 import Simulation3D from "./components/Simulation3D";
 import Charts from "./components/Charts";
 import Controls from "./components/Controls";
+import ConfirmDialog from "./components/ConfirmDialog";
 import PhysicsInput from "./components/PhysicsInput";
 import { SERIES_COLORS } from "./styles/seriesColors";
 import { useSimulationLoop } from "./hooks/useSimulationLoop";
@@ -40,6 +41,9 @@ function App() {
     selectedMode: "record", // 'record' or 'playback'
   });
 
+  // Is the "Reset everything?" popup open
+  const [confirmingReset, setConfirmingReset] = useState(false);
+
   // One pinned snapshot { time, position, velocity, acceleration }, or null
   const [pin, setPin] = useState(null);
   const isPinned = pin !== null && Math.abs(pin.time - simulation.time) < PIN_TOLERANCE;
@@ -75,6 +79,12 @@ function App() {
       selectedMode: "record",
     }));
   };
+
+  // How long the recording is, for the Reset popup text
+  const recordedSeconds = data.recordedData[data.recordedData.length - 1].time;
+
+  // Reset All only asks when there is a recording to lose
+  const requestReset = () => (data.recordedData.length > 1 ? setConfirmingReset(true) : reset());
 
   // Toggle play/pause
   const togglePlayPause = () => setPlaying(p => !p);
@@ -230,10 +240,33 @@ function App() {
           onTogglePlayPause={togglePlayPause}
           onNextFrame={handleNextFrame}
           onPrevFrame={handlePrevFrame}
-          onReset={reset}
+          onReset={requestReset}
           onClearRecordedData={clearRecordedData}
         />
       </div>
+
+      {confirmingReset && (
+        <ConfirmDialog
+          title="Reset everything?"
+          message={
+            <>
+              <p>This will remove:</p>
+              <ul className="mt-1 list-disc space-y-0.5 rounded-lg border border-rose-100 bg-rose-50 py-2 pl-7 pr-3 marker:text-rose-400">
+                <li>Your {formatNumber(recordedSeconds, 1)} s recording</li>
+                <li>Position, velocity and acceleration (set back to 0)</li>
+                {pin && <li>Your pinned point</li>}
+              </ul>
+              <p className="mt-3 font-semibold text-rose-700">This cannot be undone.</p>
+            </>
+          }
+          confirmLabel="Reset All"
+          onConfirm={() => {
+            reset();
+            setConfirmingReset(false);
+          }}
+          onCancel={() => setConfirmingReset(false)}
+        />
+      )}
     </div>
   );
 }

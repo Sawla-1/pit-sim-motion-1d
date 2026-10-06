@@ -25,7 +25,7 @@ This is a 1D kinematics physics simulation built with React + Vite. The simulati
 | Utils | `src/utils/formatNumber.js`, `src/utils/niceStep.js` | Shared pure utilities |
 | Styles | `src/styles/buttonStyles.js`, `src/styles/seriesColors.js` | Style constants only (class strings, colors) — no React, no logic |
 | Hooks | `src/hooks/useSimulationLoop.js`, `src/hooks/useChartZoom.js` | Animation loop (framework infrastructure, not simulation-specific); chart zoom/pan state |
-| Components | `src/components/Simulation3D.jsx`, `src/components/Charts.jsx`, `src/components/ChartControls.jsx`, `src/components/PhysicsInput.jsx`, `src/components/Controls.jsx` | Purely presentational — receive props, call callbacks, hold no physics state |
+| Components | `src/components/Simulation3D.jsx`, `src/components/Charts.jsx`, `src/components/ChartControls.jsx`, `src/components/PhysicsInput.jsx`, `src/components/Controls.jsx`, `src/components/ConfirmDialog.jsx` | Purely presentational — receive props, call callbacks, hold no physics state |
 | Shell | `src/App.jsx` | All state and control logic |
 
 ### State lives entirely in `App.jsx`
@@ -42,6 +42,8 @@ This is a 1D kinematics physics simulation built with React + Vite. The simulati
 **`scrubTried` state** — boolean. Turns `true` the first time the user drags a chart in Playback; `Charts` uses it to hide the scrub hint (a pulsing hand + ↔ arrow icon with the text "Drag to move time"). Next/previous frame buttons don't count.
 
 **`pin` state** — `null` or one pinned snapshot `{ time, position, velocity, acceleration }`. Set by the Pin button in `Controls` (playback only); `Charts` draws a dot + always-visible label for it on all 3 charts. Pressing the button at the pinned time (within `PIN_TOLERANCE`, 0.05 s) unpins; anywhere else it moves the pin there. Cleared by Clear Data and Reset All.
+
+**`confirmingReset` state** — boolean. Reset All opens a confirm popup (`ConfirmDialog`) first, unless nothing is recorded; the popup lists what will be lost (recording length, values, pin). Clear Data has no popup.
 
 **`data` state** — recording/playback metadata:
 ```js
@@ -84,6 +86,7 @@ The hook takes `onRecordStep` and `onPlaybackStep` callback props and dispatches
 | `src/components/ChartControls.jsx` | `ChartPanel` (one chart with its show/hide, zoom, pan and reset buttons, and the scrub hint) and `ChartZoomControls` |
 | `src/components/PhysicsInput.jsx` | One parameter input beside its chart: name, number box + unit, vertical slider |
 | `src/components/Controls.jsx` | Bottom bar: Clear, mode radio, icon buttons Pin (toggle) / prev / play / next / Go-to-pin (all except play are playback mode only: hidden but keeping their space in record mode, so Play never moves; prev/next/Go-to-pin disabled while playing), Reset All; the Playback button shows a hint ring until `playbackTried` |
+| `src/components/ConfirmDialog.jsx` | "Are you sure?" popup using the native `<dialog>` (`showModal`): title, message, Cancel / confirm buttons. Props only, reusable |
 
 ### Input pattern
 
