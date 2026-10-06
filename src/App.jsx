@@ -250,8 +250,8 @@ function App() {
           title="Reset all settings?"
           message={
             <>
-              Your {formatNumber(recordedSeconds, 1)} s recording will be deleted.{" "}
-              <span className="font-semibold text-rose-700">This cannot be undone.</span>
+              Your {formatNumber(recordedSeconds, 1)} s recording will be deleted.
+              <span className="block font-semibold text-rose-700">This cannot be undone.</span>
             </>
           }
           confirmLabel="Reset All"

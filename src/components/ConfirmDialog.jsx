@@ -14,8 +14,8 @@ function ConfirmDialog({ title, message, confirmLabel, onConfirm, onCancel }) {
     >
       {/* A red circle with "!" next to the title */}
       <div className="flex items-center gap-3">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-600">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-rose-200 text-rose-600">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" aria-hidden="true">
             <path d="M12 8v5" />
             <path d="M12 17h.01" />
           </svg>
