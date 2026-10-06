@@ -151,13 +151,22 @@ function App() {
       <div className="relative w-full shrink-0 h-[125px] [@media(max-height:600px)]:h-[112px]">
         <Simulation3D position={simulation.position} velocity={simulation.velocity} />
 
-        {/* Time Display */}
+        {/* Time Display (left) */}
         <div
           className="absolute top-2 left-8 font-mono text-3xl font-bold z-10 text-gray-800"
           style={{ textShadow: "1px 1px 2px rgba(255, 255, 255, 0.8)" }}
         >
           {formatNumber(simulation.time, 1)} s
         </div>
+
+        {/* Mode badge (right), only while playing */}
+        {playing && (
+          <span role="status" className={`absolute top-3 right-8 z-10 px-3 py-1 rounded-full text-sm font-bold text-white motion-safe:animate-pulse ${
+            data.selectedMode === "record" ? "bg-red-600" : "bg-blue-600"
+          }`}>
+            {data.selectedMode === "record" ? "● Recording" : "▶ Playing back"}
+          </span>
+        )}
       </div>
 
       {/* Middle: charts take all the space that is left (short screens: less padding) */}
