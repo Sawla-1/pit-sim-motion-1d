@@ -65,7 +65,7 @@ function Controls({
     // Phones: the middle group takes the first row; Clear and Reset share the second.
     // (App.jsx places it; short screens under 600px tall: smaller Play)
     // Fills the page width, up to 1100px, so Clear and Reset sit at the two ends.
-    <div className="w-full max-w-[1100px] flex flex-wrap items-center justify-between gap-x-6 gap-y-2 px-5 py-2 bg-[#1f2437] rounded-2xl shadow-[0_4px_14px_rgba(15,23,42,0.25)]">
+    <div className="w-full max-w-[800px] flex flex-wrap items-center justify-between gap-x-6 gap-y-2 px-5 py-2 bg-[#1f2437] rounded-2xl shadow-[0_4px_14px_rgba(15,23,42,0.25)]">
         <button
           onClick={onClearRecordedData}
           disabled={data.recordedData.length <= 1}
