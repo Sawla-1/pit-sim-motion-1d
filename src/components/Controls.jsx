@@ -14,18 +14,22 @@ const PauseIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="cu
 // Outline double triangles (rewind / forward)
 const PrevIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" aria-hidden="true"><path d="M11 6 4 12l7 6z" /><path d="M20 6l-7 6 7 6z" /></svg>;
 const NextIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" aria-hidden="true"><path d="M13 6l7 6-7 6z" /><path d="M4 6l7 6-7 6z" /></svg>;
-const TrashIcon = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></svg>;
+// Mode icons: red dot = record, small triangle = playback
+const RecordDot = () => <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" aria-hidden="true"><circle cx="5" cy="5" r="5" /></svg>;
+const SmallPlay = () => <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4v16l14-8z" /></svg>;
+const TrashIcon =() => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></svg>;
 const RefreshIcon = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M8 16H3v5" /></svg>;
 
 // One part of the Record / Playback switch. A real radio input (hidden from
 // view) keeps keyboard and screen reader support; the label is what you see.
-// Chosen = solid blue, white text. Not chosen = grey text, white on hover.
-function ModeOption({ value, label, selectedMode, disabled, onModeChange }) {
+// Chosen = solid colour (activeLook), white text. Not chosen = outlined, so it
+// looks clickable; brighter on hover.
+function ModeOption({ value, label, icon, activeLook, selectedMode, disabled, onModeChange }) {
   return (
-    <label className={`px-4 h-8 flex items-center rounded-lg text-sm font-bold transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-blue-400 ${
+    <label className={`px-4 h-8 flex items-center gap-2 rounded-lg text-sm font-bold transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-blue-400 ${
       selectedMode === value
-        ? "bg-blue-600 text-white"
-        : `text-slate-400 ${disabled ? "" : "hover:text-white"}`
+        ? `${activeLook} text-white`
+        : `border border-white/20 text-slate-300 ${disabled ? "" : "hover:text-white hover:border-white/50"}`
     } ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}>
       <input
         type="radio"
@@ -36,6 +40,7 @@ function ModeOption({ value, label, selectedMode, disabled, onModeChange }) {
         onChange={() => onModeChange(value)}
         className="sr-only"
       />
+      {icon}
       {label}
     </label>
   );
@@ -106,8 +111,8 @@ function Controls({
 
           {/* Mode switch: one darker box, two parts */}
           <div className="flex gap-1 p-1 rounded-xl bg-black/25 border border-white/10">
-            <ModeOption value="record" label="Record" selectedMode={data.selectedMode} onModeChange={onModeChange} />
-            <ModeOption value="playback" label="Playback" selectedMode={data.selectedMode} onModeChange={onModeChange} disabled={data.recordedData.length <= 1} />
+            <ModeOption value="record" label="Record" icon={<RecordDot />} activeLook="bg-red-600" selectedMode={data.selectedMode} onModeChange={onModeChange} />
+            <ModeOption value="playback" label="Playback" icon={<SmallPlay />} activeLook="bg-blue-600" selectedMode={data.selectedMode} onModeChange={onModeChange} disabled={data.recordedData.length <= 1} />
           </div>
         </div>
 
