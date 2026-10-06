@@ -41,6 +41,8 @@ This is a 1D kinematics physics simulation built with React + Vite. The simulati
 
 **`scrubTried` state** — boolean. Turns `true` the first time the user drags a chart in Playback; `Charts` uses it to hide the scrub hint (a pulsing hand + ↔ arrow icon with the text "Drag to move time"). Next/previous frame buttons don't count.
 
+**`pin` state** — `null` or one pinned snapshot `{ time, position, velocity, acceleration }`. Set by the Pin button in `Controls` (playback only); `Charts` draws a dot + always-visible label for it on all 3 charts. Pressing the button at the pinned time (within `PIN_TOLERANCE`, 0.05 s) unpins; anywhere else it moves the pin there. Cleared by Clear Data and Reset All.
+
 **`data` state** — recording/playback metadata:
 ```js
 { recordedData, selectedMode }
@@ -78,10 +80,10 @@ The hook takes `onRecordStep` and `onPlaybackStep` callback props and dispatches
 | `src/App.jsx` | State, control logic, wires all components and the loop hook |
 | `src/hooks/useSimulationLoop.js` | RAF animation loop, real per-frame delta (clamped), pause/resume timing |
 | `src/components/Simulation3D.jsx` | R3F canvas, ruler, sprite rendering — receives `position` and `velocity` props (velocity picks walking/standing sprite and facing direction) |
-| `src/components/Charts.jsx` | Chart.js line graphs, timeline drag-scrub, show/hide toggles, scrub hint |
+| `src/components/Charts.jsx` | Chart.js line graphs, timeline drag-scrub, show/hide toggles, scrub hint, pinned point (dot + label) |
 | `src/components/ChartControls.jsx` | `ChartPanel` (one chart with its show/hide, zoom, pan and reset buttons, and the scrub hint) and `ChartZoomControls` |
 | `src/components/PhysicsInput.jsx` | One parameter input beside its chart: name, number box + unit, vertical slider |
-| `src/components/Controls.jsx` | Bottom bar: Clear, mode radio, prev/play/next buttons (prev/next: playback mode only, disabled while playing), Reset All; the Playback button shows a hint ring until `playbackTried` |
+| `src/components/Controls.jsx` | Bottom bar: Clear, mode radio, prev/play/next buttons (prev/next: playback mode only, disabled while playing), Pin / Unpin button (playback mode only), Reset All; the Playback button shows a hint ring until `playbackTried` |
 
 ### Input pattern
 

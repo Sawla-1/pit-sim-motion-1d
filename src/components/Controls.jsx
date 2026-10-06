@@ -57,6 +57,8 @@ function Controls({
   playing,
   data,
   playbackTried,
+  isPinned,
+  onTogglePin,
   onModeChange,
   onTogglePlayPause,
   onNextFrame,
@@ -110,6 +112,14 @@ function Controls({
               className={stepButton}
             >
               <NextIcon />
+            </button>
+            <button
+              onClick={onTogglePin}
+              disabled={data.selectedMode !== "playback"}
+              title={isPinned ? "Remove the pinned tooltip" : "Keep a tooltip at this time"}
+              className={`${wordButton} bg-blue-600 text-white enabled:hover:bg-blue-500`}
+            >
+              {isPinned ? "Unpin" : "Pin"}
             </button>
           </div>
 

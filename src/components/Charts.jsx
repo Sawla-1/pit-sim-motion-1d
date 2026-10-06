@@ -21,7 +21,7 @@ const CHARTS = [
 // Renders the Position/Velocity/Acceleration line charts, each with its own
 // Y-axis zoom/pan and a shared X-axis (time) zoom/pan across all three.
 // `inputs` = the 3 input panels (built in App), one shown beside each chart.
-function Charts({ data, simulation, onSeek, showScrubHint, inputs }) {
+function Charts({ data, simulation, pin, onSeek, showScrubHint, inputs }) {
   // A ref, not state: the moves right after pointer-down must see it at once,
   // without waiting for React to re-render.
   const isDragging = useRef(false);
@@ -217,6 +217,33 @@ function Charts({ data, simulation, onSeek, showScrubHint, inputs }) {
                 ctx.restore();
               },
             },
+            // The pinned point: a dot and an always-visible label
+            // (the label flips toward the middle so it stays inside the plot)
+            ...(pin && {
+              pinDot: {
+                type: "point",
+                xValue: pin.time,
+                yValue: pin[valueKey],
+                radius: 5,
+                backgroundColor: "#fff",
+                borderColor: "#1f2937",
+                borderWidth: 2,
+              },
+              pinLabel: {
+                type: "label",
+                xValue: pin.time,
+                yValue: pin[valueKey],
+                xAdjust: ({ chart }) =>
+                  pin.time > (chart.scales.x.min + chart.scales.x.max) / 2 ? -40 : 40,
+                yAdjust: ({ chart }) =>
+                  pin[valueKey] > (chart.scales.y.min + chart.scales.y.max) / 2 ? 16 : -16,
+                content: `(${formatNumber(pin.time, 2)}, ${formatNumber(pin[valueKey], 2)})`,
+                color: "#fff",
+                backgroundColor: "#1f2937",
+                borderRadius: 6,
+                padding: 6,
+              },
+            }),
           },
         },
       },

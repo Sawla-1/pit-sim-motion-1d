@@ -13,6 +13,7 @@ import {
 import { formatNumber } from "./utils/formatNumber";
 
 const FRAME_STEP = 0.1; // seconds moved by one Next/Previous frame click
+const PIN_TOLERANCE = 0.05; // seconds: "same time" for Unpin (half a frame step)
 
 function App() {
   // ============================================================================
@@ -39,6 +40,10 @@ function App() {
     selectedMode: "record", // 'record' or 'playback'
   });
 
+  // One pinned snapshot { time, position, velocity, acceleration }, or null
+  const [pin, setPin] = useState(null);
+  const isPinned = pin !== null && Math.abs(pin.time - simulation.time) < PIN_TOLERANCE;
+
   useSimulationLoop({
     playing,
     simulation,
@@ -63,6 +68,7 @@ function App() {
       time: 0,
     });
     setPlaying(false);
+    setPin(null);
     setData((prev) => ({
       ...prev,
       recordedData: [{ time: 0, position: 0, velocity: 0, acceleration: 0 }],
@@ -102,6 +108,7 @@ function App() {
 
   // Clear all recorded data
   const clearRecordedData = () => {
+    setPin(null);
     setData((prev) => ({
       ...prev,
       recordedData: [{ time: 0, position: simulation.position, velocity: simulation.velocity, acceleration: simulation.acceleration }],
@@ -109,6 +116,9 @@ function App() {
     }));
     setSimulation((prev) => ({ ...prev, time: 0 }));
   };
+
+  // At the pinned time: unpin. Anywhere else: pin here (replaces the old pin).
+  const togglePin = () => setPin(isPinned ? null : simulation);
 
   // Handle timeline scrubbing from charts
   const handleSeek = (newTime) => {
@@ -195,6 +205,7 @@ function App() {
         <Charts
           data={data}
           simulation={simulation}
+          pin={pin}
           onSeek={handleScrub}
           showScrubHint={data.selectedMode === "playback" && !scrubTried}
           inputs={inputs}
@@ -208,6 +219,8 @@ function App() {
           playing={playing}
           data={data}
           playbackTried={playbackTried}
+          isPinned={isPinned}
+          onTogglePin={togglePin}
           onModeChange={switchMode}
           onTogglePlayPause={togglePlayPause}
           onNextFrame={handleNextFrame}
