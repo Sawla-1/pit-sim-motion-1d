@@ -54,6 +54,8 @@ const ICONS = {
   right: <polyline points="9 6 15 12 9 18" />,
   plus: <><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></>,
   minus: <line x1="5" y1="12" x2="19" y2="12" />,
+  // two bars (A and B) with arrows between them: "zoom to A–B"
+  fit: <><path d="M4 4v16M20 4v16" /><polyline points="9 9 6 12 9 15" /><polyline points="15 9 18 12 15 15" /></>,
   reset: <><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><polyline points="3 3 3 8 8 8" /></>,
 };
 
@@ -165,6 +167,7 @@ export function ChartPanel({
   label, input,
   visible, onShow, onHide,
   showZoomControls, yControlsProps, xControls, isBottom, scrubHint, onReset, resetDisabled,
+  onZoomToPins, zoomToPinsDisabled,
   chartData, chartOptions, chartRef,
 }) {
   if (!visible) {
@@ -230,8 +233,9 @@ export function ChartPanel({
           )}
           {showZoomControls && isBottom && xControls}
           {showZoomControls && isBottom && (
-            <Pill allOff={resetDisabled}>
-              <PillButton wide label="Reset zoom" icon={ICONS.reset} onClick={onReset} disabled={resetDisabled} />
+            <Pill allOff={resetDisabled && zoomToPinsDisabled}>
+              <PillButton label="Reset zoom" icon={ICONS.reset} onClick={onReset} disabled={resetDisabled} />
+              <PillButton label="Zoom to A–B" icon={ICONS.fit} onClick={onZoomToPins} disabled={zoomToPinsDisabled} />
             </Pill>
           )}
         </div>

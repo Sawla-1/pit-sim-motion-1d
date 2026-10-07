@@ -93,9 +93,9 @@ export function useChartZoom(data) {
 
   // ---- Y-axis: 5 round lines, independent per chart ----
 
-  // Default view: the smallest round window that covers all the data.
-  const fitWindow = (valueKey) => {
-    const values = data.recordedData.map((state) => state[valueKey]);
+  // Default view: the smallest round window that covers all the data
+  // (or just the given values, e.g. the two pins).
+  const fitWindow = (valueKey, values = data.recordedData.map((state) => state[valueKey])) => {
     const low = Math.min(...values);
     const high = Math.max(...values);
     const windows = STEPS.map((step) => makeWindow((low + high) / 2, step));
@@ -139,6 +139,25 @@ export function useChartZoom(data) {
     };
   };
 
+  // ---- Zoom to the two pins ----
+
+  // Time: from A to B with some space around (never under MIN_ZOOM_WINDOW).
+  // Value: each chart gets the smallest round window that covers both pins.
+  const zoomToPins = (pins, valueKeys) => {
+    const low = Math.min(pins[0].time, pins[1].time);
+    const high = Math.max(pins[0].time, pins[1].time);
+    const width = Math.max(MIN_ZOOM_WINDOW, (high - low) * 1.5);
+    const start = Math.max(0, Math.min((low + high) / 2 - width / 2, maxTime - width));
+    setXRange(width >= maxTime ? null : { min: start, max: start + width });
+
+    const next = {};
+    valueKeys.forEach((key, index) => {
+      const pinWindow = fitWindow(key, pins.map((p) => p[key]));
+      if (pinWindow.step < fitWindow(key).step) next[index] = pinWindow;
+    });
+    setYRanges(next);
+  };
+
   // ---- Reset ----
 
   // Resets this chart's y-axis zoom/pan. With `withTime` (the bottom chart's
@@ -171,6 +190,7 @@ export function useChartZoom(data) {
     handleYZoom,
     handleYPan,
     getYDisabled,
+    zoomToPins,
     handleReset,
     isResetDisabled,
   };

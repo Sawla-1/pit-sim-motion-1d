@@ -46,6 +46,7 @@ function Charts({ data, simulation, pins, onSeek, showScrubHint, inputs }) {
     handleYZoom,
     handleYPan,
     getYDisabled,
+    zoomToPins,
     handleReset,
     isResetDisabled,
   } = useChartZoom(data);
@@ -135,14 +136,22 @@ function Charts({ data, simulation, pins, onSeek, showScrubHint, inputs }) {
     for (const pin of pins) {
       const text = `(${formatNumber(pin.time, 2)}, ${formatNumber(pin[valueKey], 2)})`;
       const labelW = text.length * 7 + 12; // rough width: about 7px per letter
-      // Which side of the dot has room? (72px kept clear for the hide button)
-      // The tooltip and the big letter both use this answer.
+      // Which side of the dot has room? The tooltip and the big letter both use this.
       const sides = (chart) => {
+        const { chartArea } = chart;
         const dotX = chart.scales.x.getPixelForValue(pin.time);
         const dotY = chart.scales.y.getPixelForValue(pin[valueKey]);
+        // Tooltip: 1 = right / below, -1 = left / above (72px kept clear for the hide button)
+        const x = chartArea.right - 72 - dotX > labelW + GAP ? 1 : -1;
+        const y = dotY - chartArea.top > labelH + GAP ? -1 : 1;
+        // Letter: the opposite side from the tooltip, unless there is no room there
+        const roomX = x === 1 ? dotX - chartArea.left : chartArea.right - dotX;
+        const roomY = y === -1 ? chartArea.bottom - dotY : dotY - chartArea.top;
         return {
-          right: chart.chartArea.right - 72 - dotX > labelW + GAP,
-          above: dotY - chart.chartArea.top > labelH + GAP,
+          x,
+          y,
+          letterX: roomX > 20 ? -x : x,
+          letterY: roomY > 20 ? -y : y,
         };
       };
       pinNotes["dot" + pin.name] = {
@@ -159,21 +168,21 @@ function Charts({ data, simulation, pins, onSeek, showScrubHint, inputs }) {
         xValue: pin.time,
         yValue: pin[valueKey],
         // Right of the dot if there is room, else left. Above if there is room, else below.
-        xAdjust: ({ chart }) => (sides(chart).right ? 1 : -1) * (GAP + labelW / 2),
-        yAdjust: ({ chart }) => (sides(chart).above ? -1 : 1) * (GAP + labelH / 2),
+        xAdjust: ({ chart }) => sides(chart).x * (GAP + labelW / 2),
+        yAdjust: ({ chart }) => sides(chart).y * (GAP + labelH / 2),
         content: text,
         color: "#fff",
         backgroundColor: "#1f2937",
         borderRadius: 6,
         padding: 6,
       };
-      // The big letter (A or B): the opposite corner from the tooltip, so they never overlap
+      // The big letter (A or B): opposite corner from the tooltip, so they don't overlap
       pinNotes["letter" + pin.name] = {
         type: "label",
         xValue: pin.time,
         yValue: pin[valueKey],
-        xAdjust: ({ chart }) => (sides(chart).right ? -1 : 1) * 12,
-        yAdjust: ({ chart }) => (sides(chart).above ? 1 : -1) * 12,
+        xAdjust: ({ chart }) => sides(chart).letterX * 12,
+        yAdjust: ({ chart }) => sides(chart).letterY * 12,
         content: pin.name,
         color: "#1f2937",
         backgroundColor: "transparent",
@@ -332,6 +341,8 @@ function Charts({ data, simulation, pins, onSeek, showScrubHint, inputs }) {
               scrubHint={showScrubHint && index === topIndex}
               onReset={() => handleReset(index, isBottom)}
               resetDisabled={isResetDisabled(index, isBottom)}
+              onZoomToPins={() => zoomToPins(pins, CHARTS.map((c) => c.key))}
+              zoomToPinsDisabled={pins.length < 2}
               input={inputs[index]}
               chartData={buildChartData(key, SERIES_COLORS[key].color)}
               chartOptions={getChartOptions(index, key)}
