@@ -147,11 +147,14 @@ function Charts({ data, simulation, pins, onSeek, showScrubHint, inputs }) {
         // Letter: the opposite side from the tooltip, unless there is no room there
         const roomX = x === 1 ? dotX - chartArea.left : chartArea.right - dotX;
         const roomY = y === -1 ? chartArea.bottom - dotY : dotY - chartArea.top;
+        // Dot near the hide (X) button in the top-right corner? Then the letter goes
+        // to the left of the button, level with the dot.
+        const nearButton = dotX > chartArea.right - 60 && dotY < chartArea.top + 34;
         return {
           x,
           y,
-          letterX: roomX > 20 ? -x : x,
-          letterY: roomY > 20 ? -y : y,
+          letterX: nearButton ? -3 : roomX > 20 ? -x : x,
+          letterY: nearButton ? 0 : roomY > 20 ? -y : y,
         };
       };
       pinNotes["dot" + pin.name] = {
