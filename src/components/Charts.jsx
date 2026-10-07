@@ -21,7 +21,7 @@ const CHARTS = [
 // Renders the Position/Velocity/Acceleration line charts, each with its own
 // Y-axis zoom/pan and a shared X-axis (time) zoom/pan across all three.
 // `inputs` = the 3 input panels (built in App), one shown beside each chart.
-function Charts({ data, simulation, pin, onSeek, showScrubHint, inputs }) {
+function Charts({ data, simulation, pins, onSeek, showScrubHint, inputs }) {
   // A ref, not state: the moves right after pointer-down must see it at once,
   // without waiting for React to re-render.
   const isDragging = useRef(false);
@@ -126,6 +126,48 @@ function Charts({ data, simulation, pin, onSeek, showScrubHint, inputs }) {
   const getChartOptions = (index, valueKey) => {
     // Record mode always shows the default view (it grows with the data).
     const yWindow = isPlayback ? getYWindow(valueKey, index) : fitWindow(valueKey);
+
+    // The pinned points (A and B): each gets a dot and an always-visible label
+    // (the label goes to the side that has room, so it stays inside the plot)
+    const GAP = 14; // clear space between the dot and its label
+    const labelH = 28;
+    const pinNotes = {};
+    for (const pin of pins) {
+      const text = `${pin.name} (${formatNumber(pin.time, 2)}, ${formatNumber(pin[valueKey], 2)})`;
+      const labelW = text.length * 7 + 12; // rough width: about 7px per letter
+      pinNotes["dot" + pin.name] = {
+        type: "point",
+        xValue: pin.time,
+        yValue: pin[valueKey],
+        radius: 5,
+        backgroundColor: "#fff",
+        borderColor: "#1f2937",
+        borderWidth: 2,
+      };
+      pinNotes["label" + pin.name] = {
+        type: "label",
+        xValue: pin.time,
+        yValue: pin[valueKey],
+        // Right of the dot if there is room (72px kept clear for the hide button), else left
+        xAdjust: ({ chart }) => {
+          const dotX = chart.scales.x.getPixelForValue(pin.time);
+          const roomRight = chart.chartArea.right - 72 - dotX;
+          return roomRight > labelW + GAP ? GAP + labelW / 2 : -(GAP + labelW / 2);
+        },
+        // Above the dot if there is room, else below
+        yAdjust: ({ chart }) => {
+          const dotY = chart.scales.y.getPixelForValue(pin[valueKey]);
+          const roomAbove = dotY - chart.chartArea.top;
+          return roomAbove > labelH + GAP ? -(GAP + labelH / 2) : GAP + labelH / 2;
+        },
+        content: text,
+        color: "#fff",
+        backgroundColor: "#1f2937",
+        borderRadius: 6,
+        padding: 6,
+      };
+    }
+
     return {
       responsive: true,
       animation: false,
@@ -217,37 +259,7 @@ function Charts({ data, simulation, pin, onSeek, showScrubHint, inputs }) {
                 ctx.restore();
               },
             },
-            // The pinned point: a dot and an always-visible label
-            // (the label flips toward the middle so it stays inside the plot)
-            ...(pin && {
-              pinDot: {
-                type: "point",
-                xValue: pin.time,
-                yValue: pin[valueKey],
-                radius: 5,
-                backgroundColor: "#fff",
-                borderColor: "#1f2937",
-                borderWidth: 2,
-              },
-              pinLabel: {
-                type: "label",
-                xValue: pin.time,
-                yValue: pin[valueKey],
-                // Right half: label goes left, and stays clear of the hide (X) button in the corner
-                xAdjust: ({ chart }) => {
-                  if (pin.time <= (chart.scales.x.min + chart.scales.x.max) / 2) return 40;
-                  const dotX = chart.scales.x.getPixelForValue(pin.time);
-                  return Math.min(-40, chart.chartArea.right - 72 - dotX);
-                },
-                yAdjust: ({ chart }) =>
-                  pin[valueKey] > (chart.scales.y.min + chart.scales.y.max) / 2 ? 16 : -16,
-                content: `(${formatNumber(pin.time, 2)}, ${formatNumber(pin[valueKey], 2)})`,
-                color: "#fff",
-                backgroundColor: "#1f2937",
-                borderRadius: 6,
-                padding: 6,
-              },
-            }),
+            ...pinNotes,
           },
         },
       },

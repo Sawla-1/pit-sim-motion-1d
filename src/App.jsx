@@ -44,9 +44,10 @@ function App() {
   // Is the "Reset everything?" popup open
   const [confirmingReset, setConfirmingReset] = useState(false);
 
-  // One pinned snapshot { time, position, velocity, acceleration }, or null
-  const [pin, setPin] = useState(null);
-  const isPinned = pin !== null && Math.abs(pin.time - simulation.time) < PIN_TOLERANCE;
+  // Pinned snapshots { name, time, position, velocity, acceleration }: [] / [A] / [A, B]
+  const [pins, setPins] = useState([]);
+  const pinAtNow = pins.find((p) => Math.abs(p.time - simulation.time) < PIN_TOLERANCE);
+  const isPinned = pinAtNow !== undefined;
 
   useSimulationLoop({
     playing,
@@ -72,7 +73,7 @@ function App() {
       time: 0,
     });
     setPlaying(false);
-    setPin(null);
+    setPins([]);
     setData((prev) => ({
       ...prev,
       recordedData: [{ time: 0, position: 0, velocity: 0, acceleration: 0 }],
@@ -118,7 +119,7 @@ function App() {
 
   // Clear all recorded data
   const clearRecordedData = () => {
-    setPin(null);
+    setPins([]);
     setData((prev) => ({
       ...prev,
       recordedData: [{ time: 0, position: simulation.position, velocity: simulation.velocity, acceleration: simulation.acceleration }],
@@ -127,11 +128,22 @@ function App() {
     setSimulation((prev) => ({ ...prev, time: 0 }));
   };
 
-  // At the pinned time: unpin. Anywhere else: pin here (replaces the old pin).
-  const togglePin = () => setPin(isPinned ? null : simulation);
+  // Press 1: pin A. Press 2: pin B. Press 3: clear both.
+  const togglePin = () => {
+    if (pins.length < 2) {
+      setPins([...pins, { ...simulation, name: pins.length === 0 ? "A" : "B" }]);
+    } else {
+      setPins([]);
+    }
+  };
 
-  // Jump the time to the pinned point (same seek as the frame buttons)
-  const goToPin = () => handleSeek(pin.time);
+  // On A: go to B. Anywhere else: go to A (same seek as the frame buttons)
+  const goToPin = () => {
+    const target = pinAtNow === pins[0] && pins[1] ? pins[1] : pins[0];
+    handleSeek(target.time);
+  };
+  // There is some pin that we are not standing on
+  const canGoToPin = pins.some((p) => p !== pinAtNow);
 
   // Handle timeline scrubbing from charts
   const handleSeek = (newTime) => {
@@ -218,7 +230,7 @@ function App() {
         <Charts
           data={data}
           simulation={simulation}
-          pin={pin}
+          pins={pins}
           onSeek={handleScrub}
           showScrubHint={data.selectedMode === "playback" && !scrubTried}
           inputs={inputs}
@@ -233,7 +245,8 @@ function App() {
           data={data}
           playbackTried={playbackTried}
           isPinned={isPinned}
-          hasPin={pin !== null}
+          pinCount={pins.length}
+          canGoToPin={canGoToPin}
           onTogglePin={togglePin}
           onGoToPin={goToPin}
           onModeChange={switchMode}

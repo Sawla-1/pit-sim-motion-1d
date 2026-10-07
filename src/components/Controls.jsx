@@ -20,8 +20,9 @@ const NextIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="non
 // Mode icons: red dot = record, small triangle = playback
 const RecordDot = () => <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" aria-hidden="true"><circle cx="5" cy="5" r="5" /></svg>;
 const SmallPlay = () => <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4v16l14-8z" /></svg>;
-// Map pin: outline = nothing pinned here, filled = pinned here
-const PinIcon = ({ filled }) => <svg width="22" height="22" viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinejoin="round" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z" /><circle cx="12" cy="10" r="2.5" stroke={filled ? "#1f2437" : "currentColor"} /></svg>;
+// Map pin outline: "pin A / pin B". X: "clear both pins"
+const PinIcon = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z" /><circle cx="12" cy="10" r="2.5" /></svg>;
+const ClearPinIcon = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>;
 // Target / crosshair: "go to the pinned point"
 const GoToPinIcon = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="12" r="7" /><circle cx="12" cy="12" r="1.5" fill="currentColor" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3" /></svg>;
 const TrashIcon =() => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></svg>;
@@ -65,7 +66,8 @@ function Controls({
   data,
   playbackTried,
   isPinned,
-  hasPin,
+  pinCount,
+  canGoToPin,
   onTogglePin,
   onGoToPin,
   onModeChange,
@@ -82,6 +84,7 @@ function Controls({
   const canStepFrames = !playing;
   const lastTime = data.recordedData[data.recordedData.length - 1].time;
   const noRecording = data.recordedData.length <= 1;
+  const pinAction = pinCount === 0 ? "Pin A" : pinCount === 1 ? "Pin B" : "Clear pins";
 
   return (
     // The dark rounded toolbar: Clear Data | prev / play / next + mode | Reset All
@@ -103,12 +106,12 @@ function Controls({
           <div className="flex items-center gap-3">
             <button
               onClick={onTogglePin}
-              title={isPinned ? "Remove the pinned tooltip" : "Keep a tooltip at this time"}
-              aria-label={isPinned ? "Unpin" : "Pin"}
-              aria-pressed={isPinned}
+              disabled={isPinned && pinCount < 2}
+              title={pinAction}
+              aria-label={pinAction}
               className={`${iconOnlyButton} ${hideInRecord}`}
             >
-              <PinIcon filled={isPinned} />
+              {pinCount === 2 ? <ClearPinIcon /> : <PinIcon />}
             </button>
             <button
               onClick={onPrevFrame}
@@ -137,7 +140,7 @@ function Controls({
             </button>
             <button
               onClick={onGoToPin}
-              disabled={!hasPin || isPinned || playing}
+              disabled={!canGoToPin || playing}
               title="Go to the pinned point"
               aria-label="Go to the pinned point"
               className={`${iconOnlyButton} ${hideInRecord}`}
