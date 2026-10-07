@@ -24,7 +24,7 @@ This is a 1D kinematics physics simulation built with React + Vite. The simulati
 | Engine | `src/engine/kinematics1d.js`, `src/engine/recordPlayback.js`, `src/engine/evaluateExpression.js` | Pure functions only — no React, no state, no imports from other layers |
 | Utils | `src/utils/formatNumber.js`, `src/utils/niceStep.js` | Shared pure utilities |
 | Styles | `src/styles/buttonStyles.js`, `src/styles/seriesColors.js` | Style constants only (class strings, colors) — no React, no logic |
-| Hooks | `src/hooks/useSimulationLoop.js`, `src/hooks/useChartZoom.js` | Animation loop (framework infrastructure, not simulation-specific); chart zoom/pan state |
+| Hooks | `src/hooks/useSimulationLoop.js`, `src/hooks/useChartZoom.js` | Animation loop (framework infrastructure, not simulation-specific); chart zoom/pan state, including zoom to the two pins |
 | Components | `src/components/Simulation3D.jsx`, `src/components/Charts.jsx`, `src/components/ChartControls.jsx`, `src/components/PhysicsInput.jsx`, `src/components/Controls.jsx`, `src/components/ConfirmDialog.jsx` | Purely presentational — receive props, call callbacks, hold no physics state |
 | Shell | `src/App.jsx` | All state and control logic |
 
@@ -41,7 +41,7 @@ This is a 1D kinematics physics simulation built with React + Vite. The simulati
 
 **`scrubTried` state** — boolean. Turns `true` the first time the user drags a chart in Playback; `Charts` uses it to hide the scrub hint (a pulsing hand + ↔ arrow icon with the text "Drag to move time"). Next/previous frame buttons don't count.
 
-**`pin` state** — `null` or one pinned snapshot `{ time, position, velocity, acceleration }`. Set by the Pin button in `Controls` (playback only); `Charts` draws a dot + always-visible label for it on all 3 charts. Pressing the button at the pinned time (within `PIN_TOLERANCE`, 0.05 s) unpins; anywhere else it moves the pin there. Cleared by Clear Data and Reset All.
+**`pins` state** — array of up to 2 pinned snapshots `{ name, time, position, velocity, acceleration }`: `[]`, `[A]` or `[A, B]`. The Pin button in `Controls` (playback only) works in 3 steps: press 1 pins A, press 2 pins B, press 3 clears both. It is off while the time is within `PIN_TOLERANCE` (0.05 s) of A and only A exists, so a pin can't be placed twice at one time. `Charts` draws a dot, a big letter (A or B) and a tooltip `(time, value)` for each pin on all 3 charts. Go-to-pin jumps to A, then B, then A again. Cleared by Clear Data and Reset All.
 
 **`confirmingReset` state** — boolean. Reset All opens a confirm popup (`ConfirmDialog`) first, unless nothing is recorded; the popup says how long a recording will be deleted. Clear Data has no popup.
 
@@ -82,11 +82,13 @@ The hook takes `onRecordStep` and `onPlaybackStep` callback props and dispatches
 | `src/App.jsx` | State, control logic, wires all components and the loop hook |
 | `src/hooks/useSimulationLoop.js` | RAF animation loop, real per-frame delta (clamped), pause/resume timing |
 | `src/components/Simulation3D.jsx` | R3F canvas, ruler, sprite rendering — receives `position` and `velocity` props (velocity picks walking/standing sprite and facing direction) |
-| `src/components/Charts.jsx` | Chart.js line graphs, timeline drag-scrub, show/hide toggles, scrub hint, pinned point (dot + label) |
-| `src/components/ChartControls.jsx` | `ChartPanel` (one chart with its show/hide, zoom, pan and reset buttons, and the scrub hint) and `ChartZoomControls` |
+| `src/components/Charts.jsx` | Chart.js line graphs, timeline drag-scrub, show/hide toggles, scrub hint, pinned points (dot, big letter, tooltip; they go to the side that has room, so they stay inside the plot) |
+| `src/components/ChartControls.jsx` | `ChartPanel` (one chart with its show/hide, zoom, pan and reset buttons, the scrub hint, and on the bottom chart a Zoom to A–B button next to Reset) and `ChartZoomControls` |
 | `src/components/PhysicsInput.jsx` | One parameter input beside its chart: name, number box + unit, vertical slider |
-| `src/components/Controls.jsx` | Bottom bar: Clear, mode radio, icon buttons Pin (toggle) / prev / play / next / Go-to-pin (all except play are playback mode only: hidden but keeping their space in record mode, so Play never moves; prev/next/Go-to-pin disabled while playing), Reset All; the Playback button shows a hint ring until `playbackTried` |
+| `src/components/Controls.jsx` | Bottom bar: Clear, mode radio, icon buttons Pin (Pin A / Pin B / Clear pins, X icon on the third press) / prev / play / next / Go-to-pin (A, then B) (all except play are playback mode only: hidden but keeping their space in record mode, so Play never moves; prev/next/Go-to-pin disabled while playing), Reset All; the Playback button shows a hint ring until `playbackTried` |
 | `src/components/ConfirmDialog.jsx` | "Are you sure?" popup using the native `<dialog>` (`showModal`): title, message, Cancel / confirm buttons. Props only, reusable |
+
+`useChartZoom.zoomToPins(pins, valueKeys)` sets the shared time window to 1.5 times the gap between A and B (at least `MIN_ZOOM_WINDOW`), and gives each chart the smallest round y-window that covers both pins (`fitWindow` takes an optional list of values for this).
 
 ### Input pattern
 
