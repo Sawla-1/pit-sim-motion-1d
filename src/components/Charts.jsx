@@ -133,8 +133,18 @@ function Charts({ data, simulation, pins, onSeek, showScrubHint, inputs }) {
     const labelH = 28;
     const pinNotes = {};
     for (const pin of pins) {
-      const text = `${pin.name} (${formatNumber(pin.time, 2)}, ${formatNumber(pin[valueKey], 2)})`;
+      const text = `(${formatNumber(pin.time, 2)}, ${formatNumber(pin[valueKey], 2)})`;
       const labelW = text.length * 7 + 12; // rough width: about 7px per letter
+      // Which side of the dot has room? (72px kept clear for the hide button)
+      // The tooltip and the big letter both use this answer.
+      const sides = (chart) => {
+        const dotX = chart.scales.x.getPixelForValue(pin.time);
+        const dotY = chart.scales.y.getPixelForValue(pin[valueKey]);
+        return {
+          right: chart.chartArea.right - 72 - dotX > labelW + GAP,
+          above: dotY - chart.chartArea.top > labelH + GAP,
+        };
+      };
       pinNotes["dot" + pin.name] = {
         type: "point",
         xValue: pin.time,
@@ -148,23 +158,26 @@ function Charts({ data, simulation, pins, onSeek, showScrubHint, inputs }) {
         type: "label",
         xValue: pin.time,
         yValue: pin[valueKey],
-        // Right of the dot if there is room (72px kept clear for the hide button), else left
-        xAdjust: ({ chart }) => {
-          const dotX = chart.scales.x.getPixelForValue(pin.time);
-          const roomRight = chart.chartArea.right - 72 - dotX;
-          return roomRight > labelW + GAP ? GAP + labelW / 2 : -(GAP + labelW / 2);
-        },
-        // Above the dot if there is room, else below
-        yAdjust: ({ chart }) => {
-          const dotY = chart.scales.y.getPixelForValue(pin[valueKey]);
-          const roomAbove = dotY - chart.chartArea.top;
-          return roomAbove > labelH + GAP ? -(GAP + labelH / 2) : GAP + labelH / 2;
-        },
+        // Right of the dot if there is room, else left. Above if there is room, else below.
+        xAdjust: ({ chart }) => (sides(chart).right ? 1 : -1) * (GAP + labelW / 2),
+        yAdjust: ({ chart }) => (sides(chart).above ? -1 : 1) * (GAP + labelH / 2),
         content: text,
         color: "#fff",
         backgroundColor: "#1f2937",
         borderRadius: 6,
         padding: 6,
+      };
+      // The big letter (A or B): the opposite corner from the tooltip, so they never overlap
+      pinNotes["letter" + pin.name] = {
+        type: "label",
+        xValue: pin.time,
+        yValue: pin[valueKey],
+        xAdjust: ({ chart }) => (sides(chart).right ? -1 : 1) * 12,
+        yAdjust: ({ chart }) => (sides(chart).above ? 1 : -1) * 12,
+        content: pin.name,
+        color: "#1f2937",
+        backgroundColor: "transparent",
+        font: { size: 16, weight: "bold" },
       };
     }
 
