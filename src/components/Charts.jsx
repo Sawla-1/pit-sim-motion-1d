@@ -1,41 +1,56 @@
 import { useState, useRef } from "react";
 import { formatNumber } from "../utils/formatNumber";
-import { Line } from "react-chartjs-2";
-import {
-  Chart as ChartJS,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Tooltip,
-  Decimation,
-} from "chart.js";
-import annotationPlugin from "chartjs-plugin-annotation";
-import zoomPlugin from "chartjs-plugin-zoom";
+import { useChartZoom } from "../hooks/useChartZoom";
+import { ChartZoomControls, ChartPanel } from "./ChartControls";
+import { SERIES_COLORS } from "../styles/seriesColors";
 
-// Register Chart.js plugins
-ChartJS.register(
-  LinearScale,
-  PointElement,
-  LineElement,
-  Tooltip,
-  Decimation,
-  annotationPlugin,
-  zoomPlugin
-);
+// Bigger, bolder axis numbers; smaller on phones and on short pages
+// (same ≤600px-tall rule as the CSS), so all 3 charts always match
+const tickFont = (ctx) => ({
+  size: ctx.chart.width < 500 || window.innerHeight <= 600 ? 13 : 16,
+  weight: 600,
+});
 
-/**
- * Charts Component - Simplified graphs with all functionality
- * Combines all chart logic into one simple component
- */
-function Charts({ data, simulation, onSeek }) {
-  // State for drag functionality
-  const [isDragging, setIsDragging] = useState(false);
+// The 3 charts, top to bottom. `key` is the field name in the recorded data.
+const CHARTS = [
+  { key: "position", label: "Position" },
+  { key: "velocity", label: "Velocity" },
+  { key: "acceleration", label: "Acceleration" },
+];
+
+// Renders the Position/Velocity/Acceleration line charts, each with its own
+// Y-axis zoom/pan and a shared X-axis (time) zoom/pan across all three.
+// `inputs` = the 3 input panels (built in App), one shown beside each chart.
+function Charts({ data, simulation, pins, onSeek, showScrubHint, inputs }) {
+  // A ref, not state: the moves right after pointer-down must see it at once,
+  // without waiting for React to re-render.
+  const isDragging = useRef(false);
   const [visibility, setVisibility] = useState({
-    showPosition: true,
-    showVelocity: true,
-    showAcceleration: true,
+    position: true,
+    velocity: true,
+    acceleration: true,
   });
   const chartRefs = useRef([]);
+
+  const {
+    maxTime,
+    xRange,
+    getYWindow,
+    fitWindow,
+    handleXZoom,
+    handleXPan,
+    xZoomInDisabled,
+    xZoomOutDisabled,
+    xPanLeftDisabled,
+    xPanRightDisabled,
+    handleYZoom,
+    handleYPan,
+    getYDisabled,
+    zoomToPins,
+    handleReset,
+    isResetDisabled,
+  } = useChartZoom(data);
+  const isPlayback = data.selectedMode === "playback";
 
   // Build chart data - simplified
   const buildChartData = (valueKey, color) => ({
@@ -51,79 +66,177 @@ function Charts({ data, simulation, onSeek }) {
     ],
   });
 
-  const maxTime = data.recordedData.length > 0
-    ? data.recordedData[data.recordedData.length - 1].time
-    : 0;
+  // ---- Drag-to-scrub (playback mode) ----
+  // Pointer events cover mouse, finger and pen with one set of handlers.
 
-  // Drag handlers for timeline scrubbing
-  const handleMouseDown = (event) => {
-    // Only start dragging if clicking on a canvas and in playback mode
+  const handlePointerDown = (event) => {
+    // Only start dragging if pressing on a canvas and in playback mode
     if (
       event.target.tagName === "CANVAS" &&
-      data.selectedMode === "playback" &&
-      data.recordedData.length > 0
+      data.selectedMode === "playback"
     ) {
-      setIsDragging(true);
+      isDragging.current = true;
+      // Keep sending moves to this canvas even if the finger/mouse slides off it
+      event.target.setPointerCapture(event.pointerId);
       event.preventDefault();
+      // Jump to where the finger/mouse went down, not only once it moves
+      seekToPointer(event);
     }
   };
 
-  const handleMouseMove = (event) => {
-    if (
-      isDragging &&
-      data.selectedMode === "playback" &&
-      data.recordedData.length > 0
-    ) {
-      // Find the chart that was clicked
-      const canvas = event.target;
-      const chart = chartRefs.current.find(
-        (items) => items && items.canvas === canvas
-      );
-      // example data inside chartRefs.current
-      // chartRefs.current = [
-      //   { canvas: positionChartCanvas, chart: positionChart },
-      //   { canvas: velocityChartCanvas, chart: velocityChart },
-      //   { canvas: accelerationChartCanvas, chart: accelerationChart }
-      // ]
+  const handlePointerMove = (event) => {
+    // isDragging can only be true in playback mode (see handlePointerDown)
+    if (isDragging.current) seekToPointer(event);
+  };
 
-      if (chart) {
-        const x = event.clientX - canvas.getBoundingClientRect().left;
-        const timeValue = chart.scales.x.getValueForPixel(x);
-        const clampedTime = Math.max(0, Math.min(maxTime, timeValue));
-        onSeek(clampedTime);
-      }
+  const handlePointerUp = () => {
+    isDragging.current = false;
+  };
+
+  // Seek to the time under the pointer on the chart it is on
+  const seekToPointer = (event) => {
+    const canvas = event.target;
+    // chartRefs.current holds the 3 Chart.js chart objects
+    // (position, velocity, acceleration). Each one has its own
+    // .canvas and .scales, so we can match by canvas here.
+    const chart = chartRefs.current.find(
+      (items) => items && items.canvas === canvas
+    );
+
+    if (chart) {
+      const x = event.clientX - canvas.getBoundingClientRect().left;
+      const timeValue = chart.scales.x.getValueForPixel(x);
+      const clampedTime = Math.max(0, Math.min(maxTime, timeValue));
+      onSeek(clampedTime);
     }
   };
 
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
+  // All charts share one time axis, so (like PhET) only the lowest visible
+  // chart shows the time numbers and time zoom buttons. Before anything is
+  // recorded there are no time numbers, so no chart gets the extra room (-1)
+  // and all three are the same height.
+  const hasRecording = data.recordedData.length > 1;
+  const bottomIndex = hasRecording
+    ? CHARTS.map(({ key }) => visibility[key]).lastIndexOf(true)
+    : -1;
 
-  const isPlayback = data.selectedMode === "playback";
+  // The top visible chart shows the scrub hint
+  const topIndex = CHARTS.findIndex(({ key }) => visibility[key]);
 
   // Simplified chart options
-  const getChartOptions = () => {
+  const getChartOptions = (index, valueKey) => {
+    // Record mode always shows the default view (it grows with the data).
+    const yWindow = isPlayback ? getYWindow(valueKey, index) : fitWindow(valueKey);
+
+    // The pinned points (A and B): each gets a dot and an always-visible label
+    // (the label goes to the side that has room, so it stays inside the plot)
+    const GAP = 14; // clear space between the dot and its label
+    const labelH = 28;
+    const LETTER_W = 18; // room for the big letter between the dot and the tooltip
+    const pinNotes = {};
+    for (const pin of pins) {
+      const text = `(${formatNumber(pin.time, 2)}, ${formatNumber(pin[valueKey], 2)})`;
+      const labelW = text.length * 7 + 12; // rough width: about 7px per letter
+      // Which side of the dot has room? The letter and the tooltip share one row:
+      // dot, letter, tooltip. 1 = right / below, -1 = left / above
+      // (72px kept clear for the hide button)
+      const sides = (chart) => {
+        const { chartArea } = chart;
+        const dotX = chart.scales.x.getPixelForValue(pin.time);
+        const dotY = chart.scales.y.getPixelForValue(pin[valueKey]);
+        return {
+          x: chartArea.right - 72 - dotX > labelW + LETTER_W + GAP ? 1 : -1,
+          y: dotY - chartArea.top > labelH + GAP ? -1 : 1,
+        };
+      };
+      pinNotes["dot" + pin.name] = {
+        type: "point",
+        xValue: pin.time,
+        yValue: pin[valueKey],
+        radius: 5,
+        backgroundColor: "#fff",
+        borderColor: "#1f2937",
+        borderWidth: 2,
+      };
+      pinNotes["label" + pin.name] = {
+        type: "label",
+        xValue: pin.time,
+        yValue: pin[valueKey],
+        // Right of the dot if there is room, else left. Above if there is room, else below.
+        xAdjust: ({ chart }) => sides(chart).x * (GAP + LETTER_W + labelW / 2),
+        yAdjust: ({ chart }) => sides(chart).y * (GAP + labelH / 2),
+        content: text,
+        color: "#fff",
+        backgroundColor: "#1f2937",
+        borderRadius: 6,
+        padding: 6,
+      };
+      // The big letter (A or B): same row as the tooltip, right after the dot
+      pinNotes["letter" + pin.name] = {
+        type: "label",
+        xValue: pin.time,
+        yValue: pin[valueKey],
+        xAdjust: ({ chart }) => sides(chart).x * (GAP + LETTER_W / 2),
+        yAdjust: ({ chart }) => sides(chart).y * (GAP + labelH / 2),
+        content: pin.name,
+        color: "#1f2937",
+        backgroundColor: "transparent",
+        font: { size: 16, weight: "bold" },
+      };
+    }
+
     return {
       responsive: true,
       animation: false,
       maintainAspectRatio: false,
       parsing: false, // required by the decimation plugin, and our data is already {x, y}
+      // Same right padding on every chart, so hiding the time numbers on the
+      // upper charts doesn't make their plots wider than the bottom one.
+      layout: { padding: { right: 16 } },
       scales: {
         x: {
           type: "linear",
-          min: 0,
-          max: maxTime,
+          min: isPlayback ? xRange?.min ?? 0 : 0,
+          max: isPlayback ? xRange?.max ?? maxTime : maxTime,
+          ticks: { includeBounds: false, display: index === bottomIndex, color: "#1f2937", font: tickFont },
+          grid: { color: "#e5e7eb" },
+          border: { dash: [4, 4] }, // dashed grid lines (4px dash, 4px gap)
+          // Fixed height for the time numbers, so the bottom plot doesn't grow
+          // when there are no numbers yet (see ChartPanel's extra 18px).
+          afterFit: (scale) => {
+            if (index === bottomIndex) scale.height = 26;
+          },
         },
         y: {
           type: "linear",
+          min: yWindow.min, // always round (see useChartZoom)
+          max: yWindow.max,
+          ticks: {
+            count: 5, // 5 fixed lines → 5 round, exact labels
+            color: "#1f2937",
+            font: tickFont,
+            // Every line is a multiple of 0.1 (the smallest step), so 1 decimal
+            // is always exact. It also hides float noise like 6.6000000000000005.
+            callback: (value) => value.toLocaleString(undefined, { maximumFractionDigits: 1 }),
+          },
+          // The 0 line is dark and thicker (like PhET); the others are light grey.
+          grid: {
+            color: (ctx) => (ctx.tick.value === 0 ? "#1f2937" : "#e5e7eb"),
+            lineWidth: (ctx) => (ctx.tick.value === 0 ? 2 : 1),
+          },
+          border: { dash: [4, 4] },
+          // Fixed width so all three plots start at the same x pixel and
+          // time 0 lines up vertically across charts. (The chart's name is
+          // in its input panel now, so there's no sideways title here.)
+          // Phones (chart under 500px) get a narrower axis so the plot has more room.
+          afterFit: (scale) => {
+            scale.width = scale.chart.width < 500 ? 56 : 70;
+          },
         },
       },
       plugins: {
         legend: { display: false },
         tooltip: {
-          enabled: true,
-          intersect: true,
-          mode: "index",
           displayColors: false,
           callbacks: {
             title: () => "",
@@ -135,152 +248,106 @@ function Charts({ data, simulation, onSeek }) {
           enabled: true,
           algorithm: "min-max", // preserves spikes/dips in the data instead of smoothing over them
         },
-        zoom: {
-          limits: { x: { min: 0, max: maxTime } },
-          zoom: { wheel: { enabled: isPlayback }, mode: "x" },
-          pan: {
-            enabled: isPlayback,
-            mode: "x",
-            limits: { x: { min: 0, max: maxTime } },
-          },
-        },
         annotation: {
+          clip: true, // cut the "now" line off at the plot edge
           annotations: {
             line1: {
               type: "line",
               xMin: simulation.time,
               xMax: simulation.time,
-              borderColor: "rgba(124, 124, 124, 0.6)",
-              borderWidth: 6,
-              borderDash: [8, 2],
+              // "Now" marker: see-through so the data line stays visible behind it;
+              // orange isn't used by any data line.
+              borderColor: "rgba(245, 158, 11, 0.5)", // same orange, 50% see-through
+              borderWidth: 8,
+              // Dashed left and right edges on the see-through band
+              afterDraw: ({ chart, element }) => {
+                const { ctx, chartArea } = chart;
+                ctx.save();
+                ctx.strokeStyle = "#f59e0b";
+                ctx.lineWidth = 1;
+                ctx.setLineDash([4, 4]); // 4px dash, 4px gap (same as the grid)
+                for (const x of [element.x - 4, element.x + 4]) {
+                  if (x < chartArea.left || x > chartArea.right) continue; // don't draw outside the plot
+                  ctx.beginPath();
+                  ctx.moveTo(x, chartArea.top);
+                  ctx.lineTo(x, chartArea.bottom);
+                  ctx.stroke();
+                }
+                ctx.restore();
+              },
             },
+            ...pinNotes,
           },
         },
       },
     };
   };
 
+  // Identical across all three charts - the x-axis (time) is shared state,
+  // not per-chart - so it's built once here instead of repeated 3x below.
+  const xControls = (
+    <ChartZoomControls
+      axis="x"
+      onZoomIn={() => handleXZoom(1.2)}
+      onZoomOut={() => handleXZoom(0.8)}
+      onPanPositive={() => handleXPan(-1)}
+      onPanNegative={() => handleXPan(1)}
+      zoomInDisabled={xZoomInDisabled}
+      zoomOutDisabled={xZoomOutDisabled}
+      panPositiveDisabled={xPanLeftDisabled}
+      panNegativeDisabled={xPanRightDisabled}
+    />
+  );
+
   return (
-    <>
       <div
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
-        className="flex flex-col gap-1 flex-3 min-w-0 text-white text-right"
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp} // browser took over (e.g. started scrolling)
+        // Playback: a sideways finger drag scrubs, an up/down swipe still scrolls the page
+        className={`flex flex-col gap-1 max-lg:[@media(max-height:600px)]:gap-0.5 lg:gap-0 flex-1 min-h-0 min-w-0 text-gray-700 ${
+          isPlayback ? "touch-pan-y" : ""
+        }`}
       >
-        {/* Position Button */}
-        {!visibility.showPosition && (
-          <div>
-            Position Graph{" "}
-            <button
-              className="cursor-pointer"
-              onClick={() => setVisibility({ ...visibility, showPosition: true })}
-            >
-              ❇️
-            </button>{" "}
-          </div>
-        )}
-        {/* Position Graph */}
-        {visibility.showPosition && (
-          <div className="relative flex-auto bg-gray-100 h-[150px] pt-8 px-8 rounded-md">
-            <span className="absolute top-2 left-8 text-sm text-blue-600 font-semibold">
-              Position
-            </span>
-            <span className="absolute top-2 right-10 text-sm text-blue-600 font-semibold">
-              {formatNumber(simulation.position, 2)} m
-            </span>
-            <button
-              className="absolute top-2 right-2 text-xs text-white font-semibold cursor-pointer bg-red-600 px-1 py-0.5 rounded-sm"
-              onClick={() => setVisibility({ ...visibility, showPosition: false })}
-            >
-              ✖
-            </button>
-            <Line
-              data={buildChartData("position", "#1976d2")}
-              options={getChartOptions()}
-              ref={(ref) => {
-                if (ref) chartRefs.current[0] = ref;
+        {CHARTS.map(({ key, label }, index) => {
+          const yDisabled = getYDisabled(key, index);
+          const isBottom = index === bottomIndex;
+          return (
+            <ChartPanel
+              key={key}
+              label={label}
+              visible={visibility[key]}
+              onShow={() => setVisibility({ ...visibility, [key]: true })}
+              onHide={() => setVisibility({ ...visibility, [key]: false })}
+              yControlsProps={{
+                onZoomIn: () => handleYZoom(key, index, 1.2),
+                onZoomOut: () => handleYZoom(key, index, 0.8),
+                onPanPositive: () => handleYPan(index, 1),
+                onPanNegative: () => handleYPan(index, -1),
+                zoomInDisabled: yDisabled.zoomInDisabled,
+                zoomOutDisabled: yDisabled.zoomOutDisabled,
+                panPositiveDisabled: yDisabled.panUpDisabled,
+                panNegativeDisabled: yDisabled.panDownDisabled,
+              }}
+              showZoomControls={isPlayback}
+              xControls={xControls}
+              isBottom={isBottom}
+              scrubHint={showScrubHint && index === topIndex}
+              onReset={() => handleReset(index, isBottom)}
+              resetDisabled={isResetDisabled(index, isBottom)}
+              onZoomToPins={() => zoomToPins(pins, CHARTS.map((c) => c.key))}
+              zoomToPinsDisabled={pins.length < 2}
+              input={inputs[index]}
+              chartData={buildChartData(key, SERIES_COLORS[key].color)}
+              chartOptions={getChartOptions(index, key)}
+              chartRef={(ref) => {
+                if (ref) chartRefs.current[index] = ref;
               }}
             />
-          </div>
-        )}
-        {/* Velocity Button */}
-        {!visibility.showVelocity && (
-          <div>
-            Velocity Graph{" "}
-            <button
-              className="cursor-pointer"
-              onClick={() => setVisibility({ ...visibility, showVelocity: true })}
-            >
-              ❇️
-            </button>{" "}
-          </div>
-        )}
-
-        {/* Velocity Graph */}
-        {visibility.showVelocity && (
-          <div className="relative flex-auto bg-gray-100 h-[150px] pt-8 px-8 rounded-md">
-            <span className="absolute top-2 left-8 text-sm text-red-600 font-semibold">
-              Velocity
-            </span>
-            <span className="absolute top-2 right-10 text-sm text-red-600 font-semibold">
-              {formatNumber(simulation.velocity, 2)} m/s
-            </span>
-            <button
-              className="absolute top-2 right-2 text-xs text-white font-semibold cursor-pointer bg-red-600 px-1 py-0.5 rounded-sm"
-              onClick={() => setVisibility({ ...visibility, showVelocity: false })}
-            >
-              ✖
-            </button>
-            <Line
-              data={buildChartData("velocity", "#d32f2f")}
-              options={getChartOptions()}
-              ref={(ref) => {
-                if (ref) chartRefs.current[1] = ref;
-              }}
-            />
-          </div>
-        )}
-        {/* Acceleration Button */}
-        {!visibility.showAcceleration && (
-          <div>
-            Acceleration Graph{" "}
-            <button
-              className="cursor-pointer"
-              onClick={() => setVisibility({ ...visibility, showAcceleration: true })}
-            >
-              ❇️
-            </button>{" "}
-          </div>
-        )}
-
-        {/* Acceleration Graph */}
-        {visibility.showAcceleration && (
-          <div className="relative flex-auto bg-gray-100 h-[150px] pt-8 px-8 rounded-md">
-            <span className="absolute top-2 left-8 text-sm text-green-600 font-semibold">
-              Acceleration
-            </span>
-            <span className="absolute top-2 right-10 text-sm text-green-600 font-semibold">
-              {formatNumber(simulation.acceleration, 2)} m/s²
-            </span>
-            <button
-              className="absolute top-2 right-2 text-xs text-white font-semibold cursor-pointer bg-red-600 px-1 py-0.5 rounded-sm"
-              onClick={() => setVisibility({ ...visibility, showAcceleration: false })}
-            >
-              ✖
-            </button>
-            <Line
-              data={buildChartData("acceleration", "#2e7d32")}
-              options={getChartOptions()}
-              ref={(ref) => {
-                if (ref) chartRefs.current[2] = ref;
-              }}
-            />
-          </div>
-        )}
+          );
+        })}
       </div>
-    </>
   );
 }
 

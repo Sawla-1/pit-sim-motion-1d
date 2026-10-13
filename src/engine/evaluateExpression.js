@@ -14,7 +14,7 @@ export function evaluateExpression(expression) {
     const result = new Function('"use strict"; return (' + trimmed + ")")();
 
     // Validate result is a finite number
-    if (typeof result === "number" && !isNaN(result) && isFinite(result)) {
+    if (Number.isFinite(result)) {
       return result;
     }
     return null;

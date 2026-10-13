@@ -51,9 +51,12 @@ export function useSimulationLoop({
         const sim = simulationRef.current;
         const dat = dataRef.current;
 
-        if (dat.selectedMode === "playback" && dat.recordedData.length > 1) {
+        if (dat.selectedMode === "playback") {
           // PLAYBACK MODE: advance through recorded data — no wall-clock refs needed
           const result = onPlaybackStep(sim, dat, frameTime);
+          // Update the ref right away: a slow device can run the next frame
+          // before React re-renders, and it must not start from the old state.
+          simulationRef.current = result.simulation;
           setSimulation(result.simulation);
           if (result.isEndOfPlayback) setPlaying(false);
         } else if (dragSamplesRef && dragSamplesRef.current) {
@@ -69,6 +72,7 @@ export function useSimulationLoop({
           // RECORDING MODE: time accumulates as simulation.time + frameTime,
           // so pausing just stops adding to it — no anchor/pause bookkeeping needed
           const result = onRecordStep(sim, frameTime);
+          simulationRef.current = result.simulation; // same reason as above
           setSimulation(result.simulation);
           setData((prev) => ({
             ...prev,
