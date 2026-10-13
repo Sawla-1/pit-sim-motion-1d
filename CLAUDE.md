@@ -1,7 +1,5 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
 ## Commands
 
 ```bash
@@ -13,98 +11,36 @@ npm run preview  # Preview production build
 
 No test suite is configured.
 
-## Architecture
+## What this is
 
-This is a 1D kinematics physics simulation built with React + Vite. The simulation models constant-acceleration motion with record and playback modes. It is **simulation #1** in a planned multi-simulation educational framework — every architectural decision should be evaluated through the lens of "would this change be required if we added simulation #2?"
+A 1D kinematics simulation (React + Vite) with record and playback modes. It is
+simulation #1 of a planned multi-simulation educational framework. For every
+change, ask: "would this change be required if we added simulation #2?"
 
-### Layer map
+## Layer rules (src/)
 
-| Layer | Files | Rule |
-|---|---|---|
-| Engine | `src/engine/kinematics1d.js`, `src/engine/recordPlayback.js`, `src/engine/evaluateExpression.js` | Pure functions only — no React, no state, no imports from other layers |
-| Utils | `src/utils/formatNumber.js`, `src/utils/niceStep.js` | Shared pure utilities |
-| Styles | `src/styles/buttonStyles.js`, `src/styles/seriesColors.js` | Style constants only (class strings, colors) — no React, no logic |
-| Hooks | `src/hooks/useSimulationLoop.js`, `src/hooks/useChartZoom.js` | Animation loop (framework infrastructure, not simulation-specific); chart zoom/pan state, including zoom to the two pins |
-| Components | `src/components/Simulation3D.jsx`, `src/components/Charts.jsx`, `src/components/ChartControls.jsx`, `src/components/PhysicsInput.jsx`, `src/components/Controls.jsx`, `src/components/ConfirmDialog.jsx` | Purely presentational — receive props, call callbacks, hold no physics state |
-| Shell | `src/App.jsx` | All state and control logic |
-
-### State lives entirely in `App.jsx`
-
-**`simulation` state** — current physics snapshot:
-```js
-{ position, velocity, acceleration, time }
-```
-
-**`playing` state** — boolean, separate from `simulation`.
-
-**`playbackTried` state** — boolean. Turns `true` the first time the user switches to Playback; `Controls` uses it to stop the pulsing hint ring on the Playback button.
-
-**`scrubTried` state** — boolean. Turns `true` the first time the user drags a chart in Playback; `Charts` uses it to hide the scrub hint (a pulsing hand + ↔ arrow icon with the text "Drag to move time"). Next/previous frame buttons don't count.
-
-**`pins` state** — array of up to 2 pinned snapshots `{ name, time, position, velocity, acceleration }`: `[]`, `[A]` or `[A, B]`. The Pin button in `Controls` (playback only) works in 3 steps: press 1 pins A, press 2 pins B, press 3 clears both. It is off while the time is within `PIN_TOLERANCE` (0.05 s) of A and only A exists, so a pin can't be placed twice at one time. `Charts` draws a dot, a big letter (A or B) and a tooltip `(time, value)` for each pin on all 3 charts. Go-to-pin jumps to A, then B, then A again. Cleared by Clear Data and Reset All.
-
-**`confirmingReset` state** — boolean. Reset All opens a confirm popup (`ConfirmDialog`) first, unless nothing is recorded; the popup says how long a recording will be deleted. Clear Data has no popup.
-
-**`data` state** — recording/playback metadata:
-```js
-{ recordedData, selectedMode }
-```
-`selectedMode` is `'record'` or `'playback'` (replaces the old `isPlayback` boolean). Playback position lives in `simulation.time` — there is no separate `playbackTime` field.
-
-### Physics loop — `useSimulationLoop.js`
-
-The animation loop runs via `requestAnimationFrame` inside `useSimulationLoop`. It is a **real per-frame delta loop** (PhET-style), not a fixed timestep: each tick advances physics by the actual wall-clock gap since the last frame (`(now - last.current) / 1000`), clamped to `MAX_FRAME_TIME = 0.1s` so a stalled/backgrounded frame can't inject one huge jump.
-
-There are no `recordRealTimeStart` / `recordPauseStartTime` refs. Recording time is simply `simulation.time + frameTime` each tick — when `playing` is `false` the loop's `if (playing)` guard skips the physics call entirely, so time just stops advancing without needing any wall-clock anchor to resume from.
-
-The hook takes `onRecordStep` and `onPlaybackStep` callback props and dispatches to whichever one applies each tick, based on `data.selectedMode`. `App.jsx` injects `handleRecordingStep` / `handlePlaybackStep` from `engine/recordPlayback.js` as those callbacks — the hook itself has no import from the engine layer, so it stays engine-agnostic and reusable by future simulations. Chart drag-to-scrub calls `handlePlaybackSeek` directly (an absolute-time jump, not a per-tick step), sharing the same `resolvePlaybackState` lookup internally.
-
-### Engine layer
-
-- **`engine/kinematics1d.js`** — `calculatePhysicsStep(simulation, deltaTime)`: pure average-velocity integration. No side effects.
-- **`engine/recordPlayback.js`** — exports `handleRecordingStep`, `handlePlaybackStep`, `handlePlaybackSeek` (internal helpers: `resolvePlaybackState`, `interpolateStateAtTime`): recording/playback state machine. Only `handleRecordingStep` imports from `kinematics1d`; the rest are physics-agnostic and operate purely on the timestamped `recordedData` array.
-- **`engine/evaluateExpression.js`** — `evaluateExpression(expression)`: safely evaluates math expressions typed by users (uses `Function` constructor, strips non-math chars).
-
-### Data flow
-
-1. `useSimulationLoop` fires `requestAnimationFrame` each frame, advancing physics by the real elapsed wall-clock delta (clamped at 0.1s).
-2. Each tick dispatches to:
-   - **Record mode**: `handleRecordingStep` → `calculatePhysicsStep` → appends to `recordedData` via `setData`.
-   - **Playback mode**: `handlePlaybackStep` → `interpolateStateAtTime` over `recordedData` → updates `simulation` via `setSimulation`.
-3. `Charts` reads `data.recordedData` to render position/velocity/acceleration vs. time graphs.
-4. In playback mode, dragging on a chart canvas calls `onSeek`, which scrubs `simulation.time` and seeks the 3D sprite.
-5. In playback mode, the next/previous frame buttons in `Controls` call `handleNextFrame` / `handlePrevFrame` in `App.jsx`, which call the same `handleSeek` at `simulation.time ± FRAME_STEP` (0.1 s; previous is clamped at 0).
-
-### Component responsibilities
-
-| File | Role |
+| Folder | Rule |
 |---|---|
-| `src/App.jsx` | State, control logic, wires all components and the loop hook |
-| `src/hooks/useSimulationLoop.js` | RAF animation loop, real per-frame delta (clamped), pause/resume timing |
-| `src/components/Simulation3D.jsx` | R3F canvas, ruler, sprite rendering — receives `position` and `velocity` props (velocity picks walking/standing sprite and facing direction) |
-| `src/components/Charts.jsx` | Chart.js line graphs, timeline drag-scrub, show/hide toggles, scrub hint, pinned points (dot, big letter, tooltip; they go to the side that has room, so they stay inside the plot) |
-| `src/components/ChartControls.jsx` | `ChartPanel` (one chart with its show/hide, zoom, pan and reset buttons, the scrub hint, and on the bottom chart a Zoom to A–B button next to Reset) and `ChartZoomControls` |
-| `src/components/PhysicsInput.jsx` | One parameter input beside its chart: name, number box + unit, vertical slider |
-| `src/components/Controls.jsx` | Bottom bar: Clear, mode radio, icon buttons Pin (Pin A / Pin B / Clear pins, X icon on the third press) / prev / play / next / Go-to-pin (A, then B) (all except play are playback mode only: hidden but keeping their space in record mode, so Play never moves; prev/next/Go-to-pin disabled while playing), Reset All; the Playback button shows a hint ring until `playbackTried` |
-| `src/components/ConfirmDialog.jsx` | "Are you sure?" popup using the native `<dialog>` (`showModal`): title, message, Cancel / confirm buttons. Props only, reusable |
+| `engine/` | Pure functions only. No React, no state, no imports from other layers |
+| `utils/` | Shared pure helpers |
+| `styles/` | Style constants only (class strings, colors) |
+| `hooks/` | `useSimulationLoop` (animation loop, engine-agnostic), `useChartZoom` (chart zoom/pan state) |
+| `components/` | Presentational: props in, callbacks out, no physics state (small screen-only state, like a typing draft, is fine) |
+| `App.jsx` | All state and control logic |
 
-`useChartZoom.zoomToPins(pins, valueKeys)` sets the shared time window to 1.5 times the gap between A and B (at least `MIN_ZOOM_WINDOW`), and gives each chart the smallest round y-window that covers both pins (`fitWindow` takes an optional list of values for this).
+## Things the code does not tell you
 
-### Input pattern
+- The loop uses the real time between frames (`requestAnimationFrame`), clamped to
+  `MAX_FRAME_TIME` (0.1 s). It is not a fixed timestep. `App.jsx` passes the engine
+  step functions into the hook, so the hook never imports the engine.
+- Playback position is `simulation.time` (there is no `playbackTime`). The mode is
+  `data.selectedMode`: `'record'` or `'playback'`.
+- `PhysicsInput` keeps a draft string only while the user types. It shows the live value
+  otherwise, with no `useEffect` sync (the value changes every frame in playback).
+- Pins A and B live in `App.jsx` state. `Charts` and `Simulation3D` both draw them.
+- Reset All asks first (`ConfirmDialog`) unless nothing is recorded.
 
-`PhysicsInput.jsx` keeps a **draft string** for its input only while the user is typing, so they can enter intermediate values (e.g. `-` or `1+2`). When not typing (`draft === null`), the box shows the live `value` prop directly — no `useEffect` sync, which would set state every frame during playback. On blur/Enter, `evaluateExpression` from `engine/evaluateExpression.js` resolves the value; valid input is sent up via `onChange`, invalid input is dropped, and the draft is cleared so the box falls back to the live value.
+## Keeping this file current
 
-### Utilities
-
-- **`utils/formatNumber.js`** — `formatNumber(n, decimals)`: single shared implementation used by both `App.jsx` (1 decimal) and `Charts.jsx` (2 decimals).
-- **`utils/niceStep.js`** — `niceStep(range, maxCount)`: smallest round step (1, 2, 5, 10, ...) that splits a range into at most `maxCount` pieces. Used by the ruler in `Simulation3D.jsx`.
-
-### Styles
-
-- **`styles/buttonStyles.js`** — shared Tailwind class strings for buttons: `whiteLook` ("on" look), `disabledIcon` ("off" look), `offPill` ("off" look for a wrapper div). Used by the chart buttons; the dark bottom bar keeps its own looks in `Controls.jsx`.
-- **`styles/seriesColors.js`** — `SERIES_COLORS`: one color (plus a lighter slider track color) per quantity: position, velocity, acceleration.
-
-
-## Keeping This File Current
-
-After changing code or adding a feature, check whether anything in this file is now wrong or missing (file list, layer map, state shape, data flow, commands). If so, propose the CLAUDE.md update in the same task and wait for approval before editing. Skip small changes that don't affect the architecture (typos, styling, renames).
+Update it only if the layer rules or the commands change, and ask first. Do not list
+files, state fields or behaviors here. The code shows them.
