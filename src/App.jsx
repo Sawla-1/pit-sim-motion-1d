@@ -119,6 +119,7 @@ function App() {
 
   // Clear all recorded data
   const clearRecordedData = () => {
+    setPlaying(false);
     setPins([]);
     setData((prev) => ({
       ...prev,
