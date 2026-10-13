@@ -12,12 +12,14 @@ const MIN_EDGE_GAP = 0.2; // world units; any closer and the edge stick doubles 
 const PIN_COLOR = "#1f2937"; // same dark color as the pin dots on the charts
 const PIN_POLE_HEIGHT = 1.2; // same as the man, so the pole reaches his head
 const PIN_POLE_WIDTH = 0.04;
-const PIN_LETTER_SIZE = 0.45;
-const PIN_LETTER_GAP = 0.06; // space between the pole and its letter
+const PIN_FLAG_WIDTH = 0.5;
+const PIN_FLAG_HEIGHT = 0.36;
+const PIN_LETTER_SIZE = 0.3; // fits inside the flag
+const PIN_DOT_RADIUS = 0.08; // the dot where the pole meets the ground
 const PIN_DEPTH = -0.1; // behind the man, so he is not hidden when he walks past
 
 const FIT_HALF_WIDTH = 11; // ruler ±10 plus room for the man sprite and the edge label
-const CONTENT_TOP = 1; // just above the man's head
+const CONTENT_TOP = 1.1; // room above the man's head for the pin flags
 const CONTENT_BOTTOM = -1.25; // just below the ruler labels
 
 // CameraRig makes the ruler fit inside the canvas on any screen size
@@ -109,24 +111,36 @@ function Simulation3D({ position, velocity, pins = [] }) {
   );
 }
 
-// A pin on the ground: a thin pole up to the man's head height, with its big
-// letter at the top. The first pin's letter sits left of the pole, the second's
-// right, so they don't cover each other when both pins are at the same spot.
+// A pin on the ground: a dot, a thin pole up to the man's head height, and a
+// flag at the top with the letter inside. The first pin's flag points left, the
+// second's right, so they don't cover each other when both pins are at the same spot.
 function PinMarker({ x, name, isFirst }) {
+  const side = isFirst ? -1 : 1;
+  const flagX = side * (PIN_POLE_WIDTH / 2 + PIN_FLAG_WIDTH / 2);
+  const flagY = PIN_POLE_HEIGHT / 2 + PIN_FLAG_HEIGHT / 2;
+  const dotY = -PIN_POLE_HEIGHT / 2;
+  const inFrontOfGround = -PIN_DEPTH; // the group sits behind the ground, so the dot steps forward
+
   return (
     <group position={[x, 0, PIN_DEPTH]}>
       <sprite scale={[PIN_POLE_WIDTH, PIN_POLE_HEIGHT, 1]}>
         <spriteMaterial color={PIN_COLOR} />
       </sprite>
-      <Text
-        position={[isFirst ? -PIN_LETTER_GAP : PIN_LETTER_GAP, PIN_POLE_HEIGHT / 2, 0]}
-        fontSize={PIN_LETTER_SIZE}
-        color={PIN_COLOR}
-        anchorX={isFirst ? "right" : "left"}
-        anchorY="bottom-baseline"
-      >
+      <sprite position={[flagX, flagY, 0]} scale={[PIN_FLAG_WIDTH, PIN_FLAG_HEIGHT, 1]}>
+        <spriteMaterial color={PIN_COLOR} />
+      </sprite>
+      <Text position={[flagX, flagY, 0.01]} fontSize={PIN_LETTER_SIZE} color="white" anchorX="center" anchorY="middle">
         {name}
       </Text>
+      {/* Dot like the chart's: dark ring, white middle */}
+      <mesh position={[0, dotY, inFrontOfGround + 0.02]}>
+        <circleGeometry args={[PIN_DOT_RADIUS, 24]} />
+        <meshBasicMaterial color={PIN_COLOR} />
+      </mesh>
+      <mesh position={[0, dotY, inFrontOfGround + 0.03]}>
+        <circleGeometry args={[PIN_DOT_RADIUS * 0.6, 24]} />
+        <meshBasicMaterial color="white" />
+      </mesh>
     </group>
   );
 }
