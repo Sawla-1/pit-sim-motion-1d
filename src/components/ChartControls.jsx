@@ -96,7 +96,7 @@ function Pill({ vertical, allOff, children }) {
 // Both axes sit in ChartPanel's right-edge button column.
 // axis="y": pan pill (up/down) on the left, zoom pill (+, -, reset) on the right.
 // The reset cell is only there when onReset is given (not on the bottom chart,
-// which has its own wide reset under both axes, see ChartPanel).
+// which has its own pill under both axes, with Reset zoom and Zoom to A–B, see ChartPanel).
 // axis="x" (time, bottom chart only): zoom pill (-, +) on top, pan pill (left/right) below.
 export function ChartZoomControls({
   axis, onZoomIn, onZoomOut, onPanPositive, onPanNegative, onReset,
@@ -225,8 +225,9 @@ export function ChartPanel({
         </button>
         {scrubHint && <ScrubHint />}
         {/* Right edge: y pan + zoom pills (reset is inside the zoom pill).
-            Bottom chart only: the time pills below, then one wide reset under
-            both axes. One flex column, so the buttons can't overlap. */}
+            Bottom chart only: the time pills below, then one pill under both
+            axes with Reset zoom and Zoom to A–B. One flex column, so the
+            buttons can't overlap. */}
         <div className="absolute top-2 bottom-2 right-1 flex flex-col items-center justify-center gap-1">
           {showZoomControls && (
             <ChartZoomControls axis="y" {...yControlsProps} onReset={isBottom ? undefined : onReset} resetDisabled={resetDisabled} />
