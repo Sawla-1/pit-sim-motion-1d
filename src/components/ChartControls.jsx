@@ -60,9 +60,9 @@ const ICONS = {
 };
 
 // One cell of a pill: 20px square with a thin-line icon (kept at 20px so all
-// buttons fit on short charts). `wide` = 44px, as wide as two pills side by side.
+// buttons fit on short charts). Phones and tablets (under lg): 24px, easier to tap.
 // Hover = light blue cell + blue icon. Off = grey cell + pale icon.
-function PillButton({ label, icon, onClick, disabled, wide }) {
+function PillButton({ label, icon, onClick, disabled }) {
   return (
     <button
       type="button"
@@ -70,7 +70,7 @@ function PillButton({ label, icon, onClick, disabled, wide }) {
       title={label}
       onClick={onClick}
       disabled={disabled}
-      className={`${wide ? "w-11" : "w-5"} h-5 flex items-center justify-center cursor-pointer transition-colors enabled:hover:bg-blue-50 enabled:hover:text-blue-600 enabled:active:bg-blue-100 ${disabledIcon}`}
+      className={`w-5 h-5 max-lg:w-6 max-lg:h-6 flex items-center justify-center cursor-pointer transition-colors enabled:hover:bg-blue-50 enabled:hover:text-blue-600 enabled:active:bg-blue-100 ${disabledIcon}`}
     >
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         {icon}
@@ -205,13 +205,13 @@ export function ChartPanel({
       // Tablets: the row has the fixed height (not just the chart), so the
       // vertical slider has a real height to fill instead of the whole screen.
       isBottom
-        ? "sm:h-[144px] lg:h-auto lg:flex-[1_1_18px] lg:min-h-[106px]"
+        ? "sm:h-[172px] lg:h-auto lg:flex-[1_1_18px] lg:min-h-[106px]"
         : "sm:h-[126px] lg:h-auto lg:flex-1 lg:min-h-[88px]"
     }`}>
       {/* Bottom row: 18px under the input, so its slider ends where the plot ends */}
       <div className={`flex ${isBottom ? "sm:pb-[18px]" : ""}`}>{input}</div>
-      <div className={`relative flex-1 min-w-0 pt-0.5 pb-0.5 pr-12 ${
-        isBottom ? "h-[144px] sm:h-auto" : "h-[126px] sm:h-auto"
+      <div className={`relative flex-1 min-w-0 pt-0.5 pb-0.5 pr-12 max-lg:pr-14 ${
+        isBottom ? "h-[172px] sm:h-auto" : "h-[126px] sm:h-auto"
       }`}>
         {/* Hide button: inside the plot's top-right corner
             (48px button column + 16px chart padding + 4px gap) */}
@@ -219,7 +219,7 @@ export function ChartPanel({
           type="button"
           aria-label={`Hide ${label} chart`}
           onClick={onHide}
-          className="absolute top-[14px] right-[68px] z-10 w-6 h-6 rounded bg-[#E31E24] text-white text-xs font-bold cursor-pointer"
+          className="absolute top-[14px] right-[68px] max-lg:right-[76px] z-10 w-6 h-6 rounded bg-[#E31E24] text-white text-xs font-bold cursor-pointer"
         >
           ✖
         </button>
