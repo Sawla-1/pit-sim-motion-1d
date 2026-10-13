@@ -159,6 +159,7 @@ function Controls({
         <button
           onClick={onReset}
           disabled={
+            noRecording &&
             simulation.position === 0 &&
             simulation.velocity === 0 &&
             simulation.acceleration === 0
