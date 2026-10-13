@@ -25,6 +25,15 @@ export function handleRecordingStep(simulation, deltaTime) {
   };
 }
 
+/**
+ * Start recording from a past moment: throw away every recorded point that
+ * is later than `time`, so new points continue from there and the list stays
+ * in time order. At the end of the recording this removes nothing.
+ */
+export function trimRecordedDataAfter(recordedData, time) {
+  return recordedData.filter((state) => state.time <= time);
+}
+
 // ---------------------------------------------------------------------------
 // Playback
 //

@@ -3,11 +3,14 @@ import * as THREE from "three";
 import { Canvas, useThree } from "@react-three/fiber";
 import { useTexture, Text } from "@react-three/drei";
 import { niceStep } from "../utils/niceStep";
+import { formatNumber } from "../utils/formatNumber";
 
 const EDGE = 10; // half-width of the ruler picture in world units; the picture never changes size
 const MIN_RANGE = 10; // meters shown on each side of 0 while the man is near the middle
 const MAX_LABELS_PER_SIDE = 6;
 const MIN_EDGE_GAP = 0.2; // world units; any closer and the edge stick doubles up with the last stick
+const EDGE_LABEL_GAP = 0.8; // world units; a regular label closer than this to the edge label would overlap it, so it is hidden
+const EDGE_LABEL_COLOR = "#1976d2"; // same blue as the Position chart, so it is not mistaken for a normal ruler number
 
 const FIT_HALF_WIDTH = 11; // ruler ±10 plus room for the man sprite and the edge label
 const CONTENT_TOP = 1; // just above the man's head
@@ -70,7 +73,7 @@ function Simulation3D({ position, velocity, onManDragStart, onManDragSample, onM
               <sprite position={[toX(value), -0.7, 0]} scale={[0.02, labeled ? 0.3 : 0.15, 1]}>
                 <spriteMaterial color={value === 0 ? "#ff4444" : "#2d5016"} />
               </sprite>
-              {labeled && (
+              {labeled && !(showEdge && Math.abs(toX(value)) > EDGE - EDGE_LABEL_GAP) && (
                 <Text
                   position={[toX(value), -0.95, 0]}
                   fontSize={0.25}
@@ -86,9 +89,20 @@ function Simulation3D({ position, velocity, onManDragStart, onManDragSample, onM
 
           {showEdge &&
             [-EDGE, EDGE].map((x) => (
-              <sprite key={`edge-${x}`} position={[x, -0.7, 0]} scale={[0.02, 0.3, 1]}>
-                <spriteMaterial color="#2d5016" />
-              </sprite>
+              <group key={`edge-${x}`}>
+                <sprite position={[x, -0.7, 0]} scale={[0.02, 0.3, 1]}>
+                  <spriteMaterial color={EDGE_LABEL_COLOR} />
+                </sprite>
+                <Text
+                  position={[x, -0.95, 0]}
+                  fontSize={0.25}
+                  color={EDGE_LABEL_COLOR}
+                  anchorX="center"
+                  anchorY="top"
+                >
+                  {formatNumber((x / EDGE) * range, 1)}
+                </Text>
+              </group>
             ))}
         </Suspense>
       </group>

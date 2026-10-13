@@ -27,6 +27,8 @@ export function calculatePhysicsStep(simulation, deltaTime) {
 // instead of trusting the newest one outright, so small timing jitter doesn't
 // turn into huge velocity/acceleration spikes.
 export const NUMBER_MOUSE_POINTS_TO_AVERAGE = 4;
+       const MIN_VELOCITY_SPAN = 0.03; //it is in seconds
+const SMOOTHING = 0.2; // 0..1; each frame moves this fraction of the way to the new value (smaller = smoother but slower)
 
 /**
  * Calculate one step of drag-driven motion, called once per animation frame
@@ -52,8 +54,11 @@ export function calculateDragStep(simulation, deltaTime, samples) {
   const newest = samples[samples.length - 1];
   const span = (newest.t - oldest.t) / 1000;
 
-  const velocity = span > 0 ? (newest.x - oldest.x) / span : simulation.velocity;
-  const acceleration = span > 0 ? (velocity - simulation.velocity) / span : 0;
+  const rawVelocity = span > MIN_VELOCITY_SPAN ? (newest.x - oldest.x) / span : simulation.velocity;
+  const velocity = simulation.velocity + SMOOTHING * (rawVelocity - simulation.velocity);
+
+  const rawAcceleration = span > MIN_VELOCITY_SPAN ? (velocity - simulation.velocity) / span : simulation.acceleration;
+  const acceleration = simulation.acceleration + SMOOTHING * (rawAcceleration - simulation.acceleration);
 
   return { position, velocity, acceleration, time };
 }

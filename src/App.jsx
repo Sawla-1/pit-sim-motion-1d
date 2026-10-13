@@ -7,6 +7,7 @@ import {
   handleRecordingStep,
   handlePlaybackStep,
   handlePlaybackSeek,
+  trimRecordedDataAfter,
 } from "./engine/recordPlayback";
 import { calculateDragStep, NUMBER_MOUSE_POINTS_TO_AVERAGE } from "./engine/kinematics1d";
 import { formatNumber } from "./utils/formatNumber";
@@ -83,8 +84,19 @@ function App() {
     }));
   };
 
+  // Recording from a past time (after scrubbing back) replaces everything after it, like PhET
+  const trimRecordingToNow = () => {
+    setData((prev) => ({
+      ...prev,
+      recordedData: trimRecordedDataAfter(prev.recordedData, simulation.time),
+    }));
+  };
+
   // Toggle play/pause
-  const togglePlayPause = () => setPlaying(p => !p);
+  const togglePlayPause = () => {
+    if (!playing && data.selectedMode === "record") trimRecordingToNow();
+    setPlaying(p => !p);
+  };
 
   // Switch between Record and Playback modes
   const switchMode = (mode) => {
@@ -159,6 +171,7 @@ function App() {
 
   const handleManDragStart = () => {
     dragSamples.current = [];
+    trimRecordingToNow();
     setData((prev) => ({ ...prev, selectedMode: "record" }));
     setPlaying(true);
   };
