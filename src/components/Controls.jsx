@@ -92,7 +92,7 @@ function Controls({
     // (App.jsx places it; short screens under 600px tall: smaller Play)
     // Fills the page width, up to 800px (880px on large screens, to fit the Pin buttons),
     // so Clear and Reset sit at the two ends.
-    <div className="w-full max-w-[800px] lg:max-w-[880px] flex flex-wrap items-center justify-between gap-x-6 gap-y-2 px-5 py-3 bg-[#1f2437] rounded-2xl shadow-[0_4px_14px_rgba(15,23,42,0.25)]">
+    <div className="w-full max-w-[800px] lg:max-w-[880px] flex flex-wrap items-center justify-between gap-x-2 sm:gap-x-6 gap-y-2 px-5 py-3 bg-[#1f2437] rounded-2xl shadow-[0_4px_14px_rgba(15,23,42,0.25)]">
         <button
           onClick={onClearRecordedData}
           disabled={data.recordedData.length <= 1}
