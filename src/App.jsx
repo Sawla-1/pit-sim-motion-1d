@@ -198,7 +198,7 @@ function App() {
     <div className="min-h-screen lg:h-screen w-full flex flex-col box-border bg-[#C9EEEA] text-gray-800 overflow-x-clip">
       {/* Top: 3D scene + time */}
       <div className="relative w-full shrink-0 h-[125px] [@media(max-height:600px)]:h-[112px]">
-        <Simulation3D position={simulation.position} velocity={simulation.velocity} />
+        <Simulation3D position={simulation.position} velocity={simulation.velocity} pins={pins} />
 
         {/* Time Display (left) */}
         <div

@@ -9,6 +9,13 @@ const MIN_RANGE = 10; // meters shown on each side of 0 while the man is near th
 const MAX_LABELS_PER_SIDE = 6;
 const MIN_EDGE_GAP = 0.2; // world units; any closer and the edge stick doubles up with the last stick
 
+const PIN_COLOR = "#1f2937"; // same dark color as the pin dots on the charts
+const PIN_POLE_HEIGHT = 1.2; // same as the man, so the pole reaches his head
+const PIN_POLE_WIDTH = 0.04;
+const PIN_LETTER_SIZE = 0.45;
+const PIN_LETTER_GAP = 0.06; // space between the pole and its letter
+const PIN_DEPTH = -0.1; // behind the man, so he is not hidden when he walks past
+
 const FIT_HALF_WIDTH = 11; // ruler ±10 plus room for the man sprite and the edge label
 const CONTENT_TOP = 1; // just above the man's head
 const CONTENT_BOTTOM = -1.25; // just below the ruler labels
@@ -31,9 +38,10 @@ function CameraRig() {
   return null;
 }
 
-function Simulation3D({ position, velocity }) {
+function Simulation3D({ position, velocity, pins = [] }) {
   // The ruler spans -range..range with 0 in the center, and follows the man both ways.
-  const range = Math.max(MIN_RANGE, Math.abs(position));
+  // Pins count too, so a pin is never off the ruler.
+  const range = Math.max(MIN_RANGE, Math.abs(position), ...pins.map((p) => Math.abs(p.position)));
   const step = niceStep(range, MAX_LABELS_PER_SIDE);
   const halfStep = step / 2;
   const toX = (meters) => (meters / range) * EDGE; // sticks, labels and the man all use this
@@ -87,6 +95,10 @@ function Simulation3D({ position, velocity }) {
                 <spriteMaterial color="#2d5016" />
               </sprite>
             ))}
+
+          {pins.map((pin, index) => (
+            <PinMarker key={pin.name} x={toX(pin.position)} name={pin.name} isFirst={index === 0} />
+          ))}
         </Suspense>
       </group>
 
@@ -94,6 +106,28 @@ function Simulation3D({ position, velocity }) {
         <HumanSprite position={toX(position)} velocity={velocity} />
       </Suspense>
     </Canvas>
+  );
+}
+
+// A pin on the ground: a thin pole up to the man's head height, with its big
+// letter at the top. The first pin's letter sits left of the pole, the second's
+// right, so they don't cover each other when both pins are at the same spot.
+function PinMarker({ x, name, isFirst }) {
+  return (
+    <group position={[x, 0, PIN_DEPTH]}>
+      <sprite scale={[PIN_POLE_WIDTH, PIN_POLE_HEIGHT, 1]}>
+        <spriteMaterial color={PIN_COLOR} />
+      </sprite>
+      <Text
+        position={[isFirst ? -PIN_LETTER_GAP : PIN_LETTER_GAP, PIN_POLE_HEIGHT / 2, 0]}
+        fontSize={PIN_LETTER_SIZE}
+        color={PIN_COLOR}
+        anchorX={isFirst ? "right" : "left"}
+        anchorY="bottom-baseline"
+      >
+        {name}
+      </Text>
+    </group>
   );
 }
 
