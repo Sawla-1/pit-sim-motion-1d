@@ -205,8 +205,8 @@ export function ChartPanel({
       // Tablets: the row has the fixed height (not just the chart), so the
       // vertical slider has a real height to fill instead of the whole screen.
       isBottom
-        ? "sm:h-[172px] lg:h-auto lg:flex-[1_1_18px] lg:min-h-[106px]"
-        : "sm:h-[126px] lg:h-auto lg:flex-1 lg:min-h-[88px]"
+        ? "sm:h-[216px] lg:h-auto lg:flex-[1_1_18px] lg:min-h-[106px]"
+        : "sm:h-[170px] lg:h-auto lg:flex-1 lg:min-h-[88px]"
     }`}>
       {/* Bottom row: 18px under the input, so its slider ends where the plot ends */}
       <div className={`flex ${isBottom ? "sm:pb-[18px]" : ""}`}>{input}</div>

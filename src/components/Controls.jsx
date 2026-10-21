@@ -88,7 +88,7 @@ function Controls({
 
   return (
     // The dark rounded toolbar: Clear Data | prev / play / next + mode | Reset All
-    // Phones: the middle group takes the first row; Clear and Reset share the second.
+    // Phones and small laptops (under 1280px): the middle group takes the first row; Clear and Reset share the second.
     // (App.jsx places it; short screens under 600px tall: smaller Play)
     // Fills the page width, up to 800px (880px on large screens, to fit the Pin buttons),
     // so Clear and Reset sit at the two ends.
@@ -102,7 +102,7 @@ function Controls({
           Clear Data
         </button>
 
-        <div className="order-first w-full sm:order-none sm:w-auto flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+        <div className="order-first w-full xl:order-none xl:w-auto flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
           <div className="flex items-center gap-3">
             <button
               onClick={onTogglePin}
