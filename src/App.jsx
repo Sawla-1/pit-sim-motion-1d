@@ -299,7 +299,7 @@ function App() {
       </div>
 
       {/* Bottom: the toolbar pill, centered, 8px gap under it */}
-      <div className="shrink-0 flex justify-center px-4 lg:pl-[212px] lg:pr-[64px] pb-2">
+      <div className="shrink-0 flex justify-center px-4 lg:pl-[212px] lg:pr-[64px] pb-2 max-lg:sticky max-lg:bottom-0 max-lg:z-20 max-lg:bg-[#C9EEEA]">
         <Controls
           simulation={simulation}
           playing={playing}
