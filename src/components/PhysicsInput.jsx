@@ -2,7 +2,7 @@ import { useState } from "react";
 import { evaluateExpression } from "../engine/evaluateExpression";
 
 // One input panel: name, number box + unit, slider. Charts tab: vertical
-// slider beside its chart. Introduction tab (horizontal): left-right slider.
+// slider beside its chart. Intro tab (horizontal): left-right slider.
 // While the user is typing, the box shows their draft text; otherwise it
 // shows the live value. No effect is needed to keep the two in sync.
 function PhysicsInput({ id, label, unit, value, min, max, color, track, disabled, onChange, horizontal = false }) {

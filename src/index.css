@@ -18,7 +18,7 @@ input[type="range"].vslider {
   border-radius: 3px;
   cursor: pointer;
 }
-/* Horizontal slider (Introduction tab): same handle as the vertical one */
+/* Horizontal slider (Intro tab): same handle as the vertical one */
 input[type="range"].hslider {
   appearance: none;
   width: 100%;

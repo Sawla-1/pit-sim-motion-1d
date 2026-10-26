@@ -82,7 +82,7 @@ function Controls({
   // space (invisible, not removed), so Play and the mode switch never move.
   // Frame stepping also doesn't work while playing.
   const hideInRecord = data.selectedMode === "playback" ? "" : "invisible";
-  // Pin buttons are removed on the Introduction tab (no charts to pin on)
+  // Pin buttons are removed on the Intro tab (no charts to pin on)
   const pinLook = showPins ? hideInRecord : "hidden";
   const canStepFrames = !playing;
   const lastTime = data.recordedData[data.recordedData.length - 1].time;
