@@ -4,6 +4,7 @@ import Charts from "./components/Charts";
 import Controls from "./components/Controls";
 import ConfirmDialog from "./components/ConfirmDialog";
 import PhysicsInput from "./components/PhysicsInput";
+import Tabs from "./components/Tabs";
 import { SERIES_COLORS } from "./styles/seriesColors";
 import { useSimulationLoop } from "./hooks/useSimulationLoop";
 import {
@@ -32,6 +33,9 @@ function App() {
   });
 
   const [playing, setPlaying] = useState(false);
+  // Open tab: "intro" (big scene + sliders) or "charts". Both share the same data, like PhET.
+  const [tab, setTab] = useState("intro");
+  const isCharts = tab === "charts";
   // Turns true the first time the user opens Playback; stops the "try me" hint
   const [playbackTried, setPlaybackTried] = useState(false);
   // Turns true the first time the user drags a chart; stops the scrub hint
@@ -230,7 +234,8 @@ function App() {
   // RENDER - Using refactored components
   // ============================================================================
 
-  // The 3 inputs are shown beside their charts (Charts puts each in its row)
+  // Charts tab: the 3 inputs are beside their charts (Charts puts each in its row).
+  // Introduction tab: they sit in one row under the scene.
   const inputs = [
     { key: "position", label: "Position", unit: "m" },
     { key: "velocity", label: "Velocity", unit: "m/s" },
@@ -241,6 +246,7 @@ function App() {
       value={simulation[key]} min={-10} max={10}
       color={SERIES_COLORS[key].color} track={SERIES_COLORS[key].track}
       disabled={playing}
+      horizontal={!isCharts}
       onChange={(v) => handleSimulationChange({ [key]: v })}
     />
   ));
@@ -248,29 +254,45 @@ function App() {
   const isRecording = data.selectedMode === "record";
 
   return (
-    <div className="min-h-screen lg:h-screen w-full flex flex-col box-border bg-[#C9EEEA] text-gray-800 overflow-x-clip">
-      {/* Top: 3D scene + time */}
-      <div className="relative w-full shrink-0 h-[125px] [@media(max-height:600px)]:h-[112px]">
+    <div className="relative min-h-screen lg:h-screen w-full flex flex-col box-border bg-[#C9EEEA] text-gray-800 overflow-x-clip">
+      {/* Phones/tablets: a row above the scene. Laptops: floats top-left on the scene */}
+      <div className="px-4 pt-2 lg:absolute lg:top-2 lg:left-4 lg:p-0 lg:z-10">
+        <Tabs
+          tabs={[
+            { id: "intro", label: "Introduction" },
+            { id: "charts", label: "Charts" },
+          ]}
+          selected={tab}
+          onSelect={setTab}
+        />
+      </div>
+
+      {/* Top: 3D scene + time. Charts tab: short. Introduction: tall (laptops: fills the space left) */}
+      <div className={`relative w-full shrink-0 ${
+        isCharts
+          ? "h-[125px] [@media(max-height:600px)]:h-[112px]"
+          : "flex-1 min-h-[260px] [@media(max-height:600px)]:min-h-[160px] lg:min-h-0"
+      }`}>
         <Simulation3D
           position={simulation.position}
           velocity={simulation.velocity}
-          pins={pins}
+          pins={isCharts ? pins : []}
           onManDragStart={handleManDragStart}
           onManDragSample={handleManDragSample}
           onManDragEnd={handleManDragEnd}
         />
 
-        {/* Time Display (left) */}
+        {/* Time: phones/tablets left, laptops right (the tabs are on the left there) */}
         <div
-          className="absolute top-2 left-8 font-mono text-3xl font-bold z-10 text-gray-800"
+          className="absolute top-2 left-8 lg:left-auto lg:right-8 font-mono text-3xl font-bold z-10 text-gray-800"
           style={{ textShadow: "1px 1px 2px rgba(255, 255, 255, 0.8)" }}
         >
           {formatNumber(simulation.time, 1)} s
         </div>
 
-        {/* Mode badge (right), only while playing */}
+        {/* Mode badge, only while playing: phones/tablets right, laptops middle */}
         {playing && (
-          <span role="status" className={`absolute top-3 right-8 z-10 flex items-center gap-2 text-sm font-bold uppercase tracking-widest ${
+          <span role="status" className={`absolute top-3 right-8 lg:right-auto lg:left-1/2 lg:-translate-x-1/2 z-10 flex items-center gap-2 text-sm font-bold uppercase tracking-widest ${
             isRecording ? "text-red-600" : "text-blue-600"
           }`}>
             <span className="relative flex h-3 w-3">
@@ -286,17 +308,22 @@ function App() {
         )}
       </div>
 
-      {/* Middle: charts take all the space that is left (short screens: less padding) */}
-      <div className="flex flex-col w-full px-4 pt-4 pb-2 [@media(max-height:600px)]:pt-2.5 max-lg:[@media(max-height:600px)]:pb-1 lg:pb-0 lg:flex-1 lg:min-h-0 lg:overflow-y-auto">
-        <Charts
-          data={data}
-          simulation={simulation}
-          pins={pins}
-          onSeek={handleScrub}
-          showScrubHint={data.selectedMode === "playback" && !scrubTried}
-          inputs={inputs}
-        />
-      </div>
+      {isCharts ? (
+        // Middle: charts take all the space that is left (short screens: less padding)
+        <div className="flex flex-col w-full px-4 pt-4 pb-2 [@media(max-height:600px)]:pt-2.5 max-lg:[@media(max-height:600px)]:pb-1 lg:pb-0 lg:flex-1 lg:min-h-0 lg:overflow-y-auto">
+          <Charts
+            data={data}
+            simulation={simulation}
+            pins={pins}
+            onSeek={handleScrub}
+            showScrubHint={data.selectedMode === "playback" && !scrubTried}
+            inputs={inputs}
+          />
+        </div>
+      ) : (
+        // Middle: the 3 sliders side by side (phones: one under the other)
+        <div className="shrink-0 flex flex-col sm:flex-row gap-2 px-4 py-2">{inputs}</div>
+      )}
 
       {/* Bottom: the toolbar pill, centered, 8px gap under it */}
       <div className="shrink-0 flex justify-center px-4 lg:pl-[212px] lg:pr-[64px] pb-2 max-lg:sticky max-lg:bottom-0 max-lg:z-20 max-lg:bg-[#C9EEEA]">
@@ -316,6 +343,7 @@ function App() {
           onPrevFrame={handlePrevFrame}
           onReset={requestReset}
           onClearRecordedData={clearRecordedData}
+          showPins={isCharts}
         />
       </div>
 

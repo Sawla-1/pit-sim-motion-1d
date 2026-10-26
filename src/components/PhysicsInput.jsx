@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { evaluateExpression } from "../engine/evaluateExpression";
 
-// One input panel beside its chart: name, number box + unit, vertical slider.
+// One input panel: name, number box + unit, slider. Charts tab: vertical
+// slider beside its chart. Introduction tab (horizontal): left-right slider.
 // While the user is typing, the box shows their draft text; otherwise it
 // shows the live value. No effect is needed to keep the two in sync.
-function PhysicsInput({ id, label, unit, value, min, max, color, track, disabled, onChange }) {
+function PhysicsInput({ id, label, unit, value, min, max, color, track, disabled, onChange, horizontal = false }) {
   const [draft, setDraft] = useState(null); // null = not typing right now
   const shown = String(Math.round(value * 100) / 100); // 2 decimals
   const text = draft ?? shown;
@@ -18,34 +19,74 @@ function PhysicsInput({ id, label, unit, value, min, max, color, track, disabled
     setDraft(null);
   };
 
+  const nameLabel = (
+    <label htmlFor={id} className="text-base font-bold" style={{ color }}>
+      {label}
+    </label>
+  );
+
+  const numberBox = (
+    <div className="flex items-center gap-2 whitespace-nowrap">
+      <input
+        id={id}
+        type="text"
+        value={text}
+        disabled={disabled}
+        onFocus={(e) => {
+          setDraft(shown);
+          e.target.select();
+        }}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={(e) => commit(e.target.value)}
+        onKeyDown={(e) => { if (e.key === "Enter") e.target.blur(); }}
+        className="w-[72px] h-8 px-2 border border-gray-400 rounded text-base font-semibold text-right bg-white text-gray-800 shadow-sm focus:outline-none focus:border-gray-700 focus:shadow-[0_0_0_3px_rgba(55,65,81,0.18)] disabled:opacity-50 disabled:cursor-not-allowed"
+      />
+      <span className="w-[34px] text-base font-semibold" style={{ color }}>
+        {unit}
+      </span>
+    </div>
+  );
+
+  const slider = (className) => (
+    <input
+      type="range"
+      min={min}
+      max={max}
+      step={0.1}
+      value={value}
+      disabled={disabled}
+      aria-label={`${label} slider`}
+      onChange={(e) => onChange(Number(e.target.value))}
+      className={`${className} disabled:opacity-50 disabled:cursor-not-allowed`}
+      style={{ color, background: track }}
+    />
+  );
+
+  if (horizontal) {
+    return (
+      // Name + box on one line, slider under it, min / max under its ends
+      <div className="flex-1 min-w-0 flex flex-col gap-2 p-3">
+        <div className="flex items-center justify-between gap-2">
+          {nameLabel}
+          {numberBox}
+        </div>
+        {slider("hslider")}
+        <div className="flex justify-between text-sm leading-none text-gray-600">
+          <span>{min}</span>
+          <span>{max}</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     // Phones: fixed height (the slider needs one). sm and up: fills its row.
     // Short screens (under 600px tall): tighter spacing so 3 rows fit.
     <div className="w-[184px] shrink-0 flex gap-2.5 py-3 [@media(max-height:600px)]:py-1.5 h-24 sm:h-auto">
       {/* flex-1 + min-w-0: same width in every row, so all 3 sliders line up */}
       <div className="flex-1 min-w-0 flex flex-col items-start gap-2 [@media(max-height:600px)]:gap-1.5">
-        <label htmlFor={id} className="text-base font-bold" style={{ color }}>
-          {label}
-        </label>
-        <div className="self-end flex items-center gap-2 whitespace-nowrap">
-          <input
-            id={id}
-            type="text"
-            value={text}
-            disabled={disabled}
-            onFocus={(e) => {
-              setDraft(shown);
-              e.target.select();
-            }}
-            onChange={(e) => setDraft(e.target.value)}
-            onBlur={(e) => commit(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter") e.target.blur(); }}
-            className="w-[72px] h-8 px-2 border border-gray-400 rounded text-base font-semibold text-right bg-white text-gray-800 shadow-sm focus:outline-none focus:border-gray-700 focus:shadow-[0_0_0_3px_rgba(55,65,81,0.18)] disabled:opacity-50 disabled:cursor-not-allowed"
-          />
-          <span className="w-[34px] text-base font-semibold" style={{ color }}>
-            {unit}
-          </span>
-        </div>
+        {nameLabel}
+        <div className="self-end">{numberBox}</div>
       </div>
       {/* The slider starts and ends where the plot does: 13px from the row edge
           (panel padding 12 + 1, or on short screens 6 + 7) */}
@@ -54,18 +95,7 @@ function PhysicsInput({ id, label, unit, value, min, max, color, track, disabled
           <span>{max}</span>
           <span>{min}</span>
         </div>
-        <input
-          type="range"
-          min={min}
-          max={max}
-          step={0.1}
-          value={value}
-          disabled={disabled}
-          aria-label={`${label} slider`}
-          onChange={(e) => onChange(Number(e.target.value))}
-          className="vslider disabled:opacity-50 disabled:cursor-not-allowed"
-          style={{ color, background: track }}
-        />
+        {slider("vslider")}
       </div>
     </div>
   );

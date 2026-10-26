@@ -76,11 +76,14 @@ function Controls({
   onPrevFrame,
   onReset,
   onClearRecordedData,
+  showPins,
 }) {
   // Prev / next / Pin / Go-to-pin are hidden in record mode. They keep their
   // space (invisible, not removed), so Play and the mode switch never move.
   // Frame stepping also doesn't work while playing.
   const hideInRecord = data.selectedMode === "playback" ? "" : "invisible";
+  // Pin buttons are removed on the Introduction tab (no charts to pin on)
+  const pinLook = showPins ? hideInRecord : "hidden";
   const canStepFrames = !playing;
   const lastTime = data.recordedData[data.recordedData.length - 1].time;
   const noRecording = data.recordedData.length <= 1;
@@ -109,7 +112,7 @@ function Controls({
               disabled={isPinned && pinCount < 2}
               title={pinAction}
               aria-label={pinAction}
-              className={`${iconOnlyButton} ${hideInRecord}`}
+              className={`${iconOnlyButton} ${pinLook}`}
             >
               {pinCount === 2 ? <ClearPinIcon /> : <PinIcon />}
             </button>
@@ -143,7 +146,7 @@ function Controls({
               disabled={!canGoToPin || playing}
               title="Go to the pinned point"
               aria-label="Go to the pinned point"
-              className={`${iconOnlyButton} ${hideInRecord}`}
+              className={`${iconOnlyButton} ${pinLook}`}
             >
               <GoToPinIcon />
             </button>

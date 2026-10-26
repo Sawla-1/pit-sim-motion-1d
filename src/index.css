@@ -18,7 +18,16 @@ input[type="range"].vslider {
   border-radius: 3px;
   cursor: pointer;
 }
-input[type="range"].vslider::-webkit-slider-thumb {
+/* Horizontal slider (Introduction tab): same handle as the vertical one */
+input[type="range"].hslider {
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+input[type="range"].vslider::-webkit-slider-thumb,
+input[type="range"].hslider::-webkit-slider-thumb {
   appearance: none;
   width: 20px;
   height: 20px;
@@ -27,7 +36,8 @@ input[type="range"].vslider::-webkit-slider-thumb {
   border: 3px solid #fff;
   box-shadow: 0 1px 4px rgba(31, 41, 55, 0.3);
 }
-input[type="range"].vslider::-moz-range-thumb {
+input[type="range"].vslider::-moz-range-thumb,
+input[type="range"].hslider::-moz-range-thumb {
   width: 14px;
   height: 14px;
   border-radius: 50%;
