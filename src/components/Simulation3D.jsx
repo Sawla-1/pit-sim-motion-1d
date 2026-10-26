@@ -63,7 +63,7 @@ function Simulation3D({ position, velocity, pins = [], onManDragStart, onManDrag
     <Canvas
       orthographic
       camera={{ position: [0, 0, 10], zoom: 60 }}
-      className="w-full h-full bg-blue-50 rounded-lg" // height comes from the parent (App)
+      className="w-full h-full bg-blue-50 rounded-[inherit]" // height comes from the parent (App)
     >
       <CameraRig />
       {/* Ground with ruler markings */}

@@ -255,24 +255,29 @@ function App() {
 
   return (
     <div className="min-h-screen lg:h-screen w-full flex flex-col box-border bg-[#C9EEEA] text-gray-800 overflow-x-clip">
-      {/* Top: tabs + 3D scene + time. Charts tab: short. Intro: tall (laptops: fills the space left).
-          Phones/tablets: a 40px sky strip on top holds the tabs (box-content adds it on top of the height,
-          so the 3D part keeps its size) */}
-      <div className={`relative w-full shrink-0 max-lg:box-content max-lg:pt-10 max-lg:bg-blue-50 max-lg:rounded-lg ${
+      {/* Top: tab row, then the 3D scene (with the time). Charts tab: short scene. Intro: tall
+          (laptops: fills the space left). Phones/tablets: the tab row is above the scene, so its top-left corner
+          is square. Laptops: the tabs float on the scene's corner. */}
+      <div className={`w-full flex flex-col lg:relative ${
         isCharts
-          ? "h-[125px] [@media(max-height:600px)]:h-[112px]"
+          ? "shrink-0"
           : "flex-1 min-h-[260px] [@media(max-height:600px)]:min-h-[160px] lg:min-h-0"
       }`}>
         <Tabs
           tabs={[
-            { id: "intro", label: "Intro" },
+            { id: "intro", label: "Introduction" },
             { id: "charts", label: "Charts" },
           ]}
           selected={tab}
           onSelect={setTab}
         />
-        {/* Fills the scene box (phones/tablets: under the 40px tab strip), so the canvas always gets a real height */}
-        <div className="absolute inset-x-0 bottom-0 top-0 max-lg:top-10">
+        <div className={`relative w-full bg-blue-50 rounded-b-lg rounded-tr-lg lg:rounded-lg ${
+          isCharts
+            ? "h-[125px] [@media(max-height:600px)]:h-[112px]"
+            : "flex-1 min-h-0"
+        }`}>
+        {/* Fills the scene box, so the canvas always gets a real height */}
+        <div className="absolute inset-0 rounded-[inherit]">
           <Simulation3D
             position={simulation.position}
             velocity={simulation.velocity}
@@ -283,17 +288,17 @@ function App() {
           />
         </div>
 
-        {/* Time: phones/tablets left under the tab strip, laptops top-right */}
+        {/* Time: phones/tablets top-left, laptops top-right */}
         <div
-          className="absolute top-12 left-8 lg:top-2 lg:left-auto lg:right-8 font-mono text-3xl font-bold z-10 text-gray-800"
+          className="absolute top-2 left-8 lg:left-auto lg:right-8 font-mono text-3xl font-bold z-10 text-gray-800"
           style={{ textShadow: "1px 1px 2px rgba(255, 255, 255, 0.8)" }}
         >
           {formatNumber(simulation.time, 1)} s
         </div>
 
-        {/* Mode badge, only while playing: phones/tablets right under the tab strip, laptops middle */}
+        {/* Mode badge, only while playing: phones/tablets top-right, laptops middle */}
         {playing && (
-          <span role="status" className={`absolute top-[52px] right-8 lg:top-3 lg:right-auto lg:left-1/2 lg:-translate-x-1/2 z-10 flex items-center gap-2 text-sm font-bold uppercase tracking-widest ${
+          <span role="status" className={`absolute top-3 right-8 lg:right-auto lg:left-1/2 lg:-translate-x-1/2 z-10 flex items-center gap-2 text-sm font-bold uppercase tracking-widest ${
             isRecording ? "text-red-600" : "text-blue-600"
           }`}>
             <span className="relative flex h-3 w-3">
@@ -307,6 +312,7 @@ function App() {
             {isRecording ? "Recording" : "Playing back"}
           </span>
         )}
+        </div>
       </div>
 
       {isCharts ? (

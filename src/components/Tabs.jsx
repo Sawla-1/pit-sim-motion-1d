@@ -1,37 +1,30 @@
-// Small curves where the mint "bite" meets the scene: mint outside a 14px circle
-const curve = "absolute w-3.5 h-3.5";
-const curveRight = `${curve} top-0 -right-3.5 bg-[radial-gradient(circle_at_100%_100%,transparent_13.5px,#C9EEEA_14px)]`;
-const curveBelow = `${curve} top-full left-0 bg-[radial-gradient(circle_at_100%_100%,transparent_13.5px,#C9EEEA_14px)]`;
-
-// Tab row in the scene's top-left corner, above everything in the scene.
-// All tabs sit in one mint bite cut out of the scene's top edge, a bit see-through
-// so the man shows behind it. The open tab is a light pill, the others are dark buttons.
+// Tab row above the scene, like folder tabs. The open tab is orange and the other tabs are
+// light orange (the logo colours). They touch the scene.
+// Each tab is as big as its text plus a little padding.
+// Phones/tablets: a row above the scene. Laptops: the tabs float on the scene's top-left
+// corner, so they use no height.
 function Tabs({ tabs, selected, onSelect }) {
   return (
-    <div className="absolute top-0 left-0 z-20">
-      <div className="relative flex gap-1.5 pt-1 pl-1 pr-1.5 pb-1.5 bg-[#C9EEEA] opacity-80 rounded-br-[14px]">
-        <span aria-hidden="true" className={curveBelow} />
-        {tabs.map(({ id, label }) =>
-          id === selected ? (
-            <span
-              key={id}
-              aria-current="page"
-              className="h-7 px-3.5 flex items-center rounded-[10px] bg-blue-50 text-sm font-bold text-blue-900 cursor-default select-none"
-            >
-              {label}
-            </span>
-          ) : (
-            <button
-              key={id}
-              onClick={() => onSelect(id)}
-              className="h-7 px-3.5 rounded-[10px] bg-[#1f2437] text-sm font-bold text-slate-300 cursor-pointer transition-colors hover:text-white"
-            >
-              {label}
-            </button>
-          )
-        )}
-        <span aria-hidden="true" className={curveRight} />
-      </div>
+    <div className="flex items-end lg:absolute lg:top-0 lg:left-0 lg:z-20">
+      {tabs.map(({ id, label }) =>
+        id === selected ? (
+          <span
+            key={id}
+            aria-current="page"
+            className="px-2 py-1 rounded-t bg-[#F4844B] text-sm font-bold text-[#3b0d12] cursor-default select-none"
+          >
+            {label}
+          </span>
+        ) : (
+          <button
+            key={id}
+            onClick={() => onSelect(id)}
+            className="px-2 py-1 rounded-t bg-[#FDDDCB] text-sm font-bold text-[#7A1520] cursor-pointer transition-colors hover:bg-[#FBCBB0]"
+          >
+            {label}
+          </button>
+        )
+      )}
     </div>
   );
 }
