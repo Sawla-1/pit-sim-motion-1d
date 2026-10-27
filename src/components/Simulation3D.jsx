@@ -12,8 +12,12 @@ const MIN_EDGE_GAP = 0.2; // world units; any closer and the edge stick doubles 
 const EDGE_LABEL_GAP = 0.8; // world units; a regular label closer than this to the edge label would overlap it, so it is hidden
 const EDGE_LABEL_COLOR = "#1976d2"; // same blue as the Position chart, so it is not mistaken for a normal ruler number
 
+const GROUND_Y = -0.6; // height of the ground line; the man's and the pins' feet stand on it
+const MAN_HEIGHT_TALL = 2.4; // Introduction: about 12% of the ruler's width, like the mockup
+const MAN_HEIGHT_SHORT = 1.2; // Charts: the scene is short, so he is smaller
+const MAN_ASPECT = 30 / 44; // the boy art is 30 wide and 44 tall
+
 const PIN_COLOR = "#1f2937"; // same dark color as the pin dots on the charts
-const PIN_POLE_HEIGHT = 1.2; // same as the man, so the pole reaches his head
 const PIN_POLE_WIDTH = 0.04;
 const PIN_FLAG_WIDTH = 0.5;
 const PIN_FLAG_HEIGHT = 0.36;
@@ -22,30 +26,31 @@ const PIN_DOT_RADIUS = 0.08; // the dot where the pole meets the ground
 const PIN_DEPTH = -0.1; // behind the man, so he is not hidden when he walks past
 
 const FIT_HALF_WIDTH = 11; // ruler ±10 plus room for the man sprite and the edge label
-const CONTENT_TOP = 1.1; // room above the man's head for the pin flags
 const CONTENT_BOTTOM = -1.25; // just below the ruler labels
 
 // CameraRig makes the ruler fit inside the canvas on any screen size
-function CameraRig() {
+function CameraRig({ manHeight }) {
   const { camera, size } = useThree();
 
   useLayoutEffect(() => {
     if (size.width === 0 || size.height === 0) return;
+    const contentTop = GROUND_Y + manHeight + PIN_FLAG_HEIGHT; // top of the pin flags (the pole is as tall as the man)
     // Center on the content (it sits below y=0) so the fit doesn't waste height.
-    camera.position.y = (CONTENT_TOP + CONTENT_BOTTOM) / 2;
+    camera.position.y = (contentTop + CONTENT_BOTTOM) / 2;
     camera.zoom = Math.min(
       size.width / (2 * FIT_HALF_WIDTH),
-      size.height / (CONTENT_TOP - CONTENT_BOTTOM)
+      size.height / (contentTop - CONTENT_BOTTOM)
     );
     camera.updateProjectionMatrix();
-  }, [size.width, size.height, camera]);
+  }, [size.width, size.height, camera, manHeight]);
 
   return null;
 }
 
-function Simulation3D({ position, velocity, pins = [], onManDragStart, onManDragSample, onManDragEnd }) {
+function Simulation3D({ position, velocity, pins = [], tall = false, onManDragStart, onManDragSample, onManDragEnd }) {
   // The ruler spans -range..range with 0 in the center, and follows the man both ways.
   // Pins count too, so a pin is never off the ruler.
+  const manHeight = tall ? MAN_HEIGHT_TALL : MAN_HEIGHT_SHORT;
   const range = Math.max(MIN_RANGE, Math.abs(position), ...pins.map((p) => Math.abs(p.position)));
   const step = niceStep(range, MAX_LABELS_PER_SIDE);
   const halfStep = step / 2;
@@ -65,11 +70,11 @@ function Simulation3D({ position, velocity, pins = [], onManDragStart, onManDrag
       camera={{ position: [0, 0, 10], zoom: 60 }}
       className="w-full h-full bg-blue-50 rounded-[inherit]" // height comes from the parent (App)
     >
-      <CameraRig />
+      <CameraRig manHeight={manHeight} />
       {/* Ground with ruler markings */}
       <group>
         {/* Main ground */}
-        <mesh position={[0, -0.6, 0]}>
+        <mesh position={[0, GROUND_Y, 0]}>
           <planeGeometry args={[50, 0.1]} />
           <meshBasicMaterial color="skyblue" />
         </mesh>
@@ -114,13 +119,14 @@ function Simulation3D({ position, velocity, pins = [], onManDragStart, onManDrag
             ))}
 
           {pins.map((pin, index) => (
-            <PinMarker key={pin.name} x={toX(pin.position)} name={pin.name} isFirst={index === 0} />
+            <PinMarker key={pin.name} x={toX(pin.position)} name={pin.name} isFirst={index === 0} poleHeight={manHeight} />
           ))}
         </Suspense>
       </group>
 
       <Suspense fallback={null}>
         <HumanSprite  position={toX(position)}
+                      height={manHeight}
                       velocity={velocity}
                       onDragStart={onManDragStart}
                       onDragSample={(worldX) => onManDragSample(fromX(worldX))}
@@ -133,16 +139,16 @@ function Simulation3D({ position, velocity, pins = [], onManDragStart, onManDrag
 // A pin on the ground: a dot, a thin pole up to the man's head height, and a
 // flag at the top with the letter inside. The first pin's flag points left, the
 // second's right, so they don't cover each other when both pins are at the same spot.
-function PinMarker({ x, name, isFirst }) {
+function PinMarker({ x, name, isFirst, poleHeight }) {
   const side = isFirst ? -1 : 1;
   const flagX = side * (PIN_POLE_WIDTH / 2 + PIN_FLAG_WIDTH / 2);
-  const flagY = PIN_POLE_HEIGHT / 2 + PIN_FLAG_HEIGHT / 2;
-  const dotY = -PIN_POLE_HEIGHT / 2;
+  const flagY = poleHeight / 2 + PIN_FLAG_HEIGHT / 2;
+  const dotY = -poleHeight / 2;
   const inFrontOfGround = -PIN_DEPTH; // the group sits behind the ground, so the dot steps forward
 
   return (
-    <group position={[x, 0, PIN_DEPTH]}>
-      <sprite scale={[PIN_POLE_WIDTH, PIN_POLE_HEIGHT, 1]}>
+    <group position={[x, GROUND_Y + poleHeight / 2, PIN_DEPTH]}>
+      <sprite scale={[PIN_POLE_WIDTH, poleHeight, 1]}>
         <spriteMaterial color={PIN_COLOR} />
       </sprite>
       <sprite position={[flagX, flagY, 0]} scale={[PIN_FLAG_WIDTH, PIN_FLAG_HEIGHT, 1]}>
@@ -166,10 +172,13 @@ function PinMarker({ x, name, isFirst }) {
 
 const MOVING_THRESHOLD = 0.1;
 
-function HumanSprite({ position, velocity, onDragStart, onDragSample, onDragEnd }) {
+function HumanSprite({ position, height, velocity, onDragStart, onDragSample, onDragEnd }) {
   const { camera, gl } = useThree();
-  const walkingTexture = useTexture("/walking-man.svg");
-  const standingTexture = useTexture("/star.png");
+  // Mark both pictures as sRGB as soon as they load, so walking and standing get the same colors
+  const [walkingTexture, standingTexture] = useTexture(
+    ["/karen-intro-svgs/boy-side-walking.svg", "/karen-intro-svgs/boy-standing.svg"],
+    (textures) => textures.forEach((t) => { t.colorSpace = THREE.SRGBColorSpace; })
+  );
 
   const isStanding = Math.abs(velocity) <= MOVING_THRESHOLD;
   const texture = isStanding ? standingTexture : walkingTexture;
@@ -204,14 +213,14 @@ function HumanSprite({ position, velocity, onDragStart, onDragSample, onDragEnd 
   };
 
   //flipping image left to right
-  const facing = velocity > 0 ? -1 : 1;          // -1 = mirrored (facing right), 1 = normal (facing left)
+  const facing = velocity > 0 ? 1 : -1;          // 1 = normal (facing right), -1 = mirrored (facing left)
   walkingTexture.wrapS = THREE.RepeatWrapping;
   walkingTexture.repeat.x = facing;
 
   return (
     <sprite
-      position={[position, 0, 0]}
-      scale={[1.2, 1.2, 1]}
+      position={[position, GROUND_Y + height / 2, 0]}
+      scale={[height * MAN_ASPECT, height, 1]}
       onPointerDown={handlePointerDown}
     >
       <spriteMaterial map={texture} transparent />
