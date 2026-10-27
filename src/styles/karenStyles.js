@@ -21,7 +21,7 @@ export const KAREN_TAB = {
 };
 
 // The hanging title sign: its ropes start at the top edge of the scene, centered (Introduction only; hidden on phones)
-export const KAREN_BANNER = "absolute top-0 left-1/2 -translate-x-1/2 hidden sm:block w-[300px] h-[88px] pointer-events-none";
+export const KAREN_BANNER = "absolute top-0 left-1/2 -translate-x-1/2 hidden sm:block w-[300px] h-[88px] [@media(max-height:600px)]:w-[200px] [@media(max-height:600px)]:h-[59px] pointer-events-none";
 
 // The page behind everything under the scene: light cream, with the rice-field strip along the bottom
 export const KAREN_PAGE = {
@@ -46,7 +46,7 @@ export const KAREN_BAR = {
 
 // The time box: a woven mat in the scene's top corner, with dark text
 export const KAREN_TIME = {
-  box: "absolute top-0 left-0 lg:left-auto lg:right-0 z-10 h-[56px] min-w-[132px]",
+  box: "absolute top-1.5 lg:top-0 left-0 lg:left-auto lg:right-0 z-10 h-[56px] min-w-[132px]",
   mat: "absolute inset-0 h-full w-full max-w-none -scale-x-100 lg:scale-x-100 pointer-events-none",
   text: "relative h-[51px] flex items-center justify-center px-4 font-mono text-2xl font-bold text-[#2A1608]",
 };
