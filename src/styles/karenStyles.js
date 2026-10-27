@@ -6,6 +6,8 @@ export const KAREN_ART = {
   bambooLeft: `${ART}/bamboo-left.svg`,
   bambooRight: `${ART}/bamboo-right.svg`,
   timeBackground: `${ART}/time-background.svg`,
+  barBackground: `${ART}/bar-background-tall.svg`, // a copy of bar-background.svg whose height stretches (one or two rows of buttons)
+  drum: `${ART}/drum-horns-empty.svg`, // the drum without its ▶: our Play/Pause icon goes on top
   tabBackground: `${ART}/tab-background-short.svg`, // a shorter copy of tab-background.svg (37px tall, the strip is 32px)
 };
 
@@ -14,6 +16,20 @@ export const KAREN_TAB = {
   base: "relative h-[32px] px-4 flex items-center text-sm font-bold last:rounded-br-xl",
   open: "bg-[#B4262D] text-white cursor-default select-none",
   closed: "text-[#4A2A12] cursor-pointer transition-colors hover:bg-white/30 focus-visible:outline-2 focus-visible:outline-[#B4262D]",
+};
+
+// The bottom bar: a woven mat behind white buttons with a brown ring (Reset All: red ring)
+export const KAREN_BAR = {
+  box: "relative w-full max-w-[800px] lg:max-w-[880px] xl:max-w-[1000px] flex flex-wrap items-center justify-between gap-x-2 sm:gap-x-6 gap-y-2 px-9 py-[18px]",
+  mat: "absolute inset-0 h-full w-full max-w-none pointer-events-none",
+  word: "h-10 px-4 rounded-full flex items-center gap-2 text-sm font-bold cursor-pointer transition-colors disabled:opacity-40 disabled:cursor-not-allowed",
+  clear: "border-[3px] border-[#8A6A2F] bg-white text-[#3B2A14] enabled:hover:bg-[#F6EBD2]",
+  reset: "border-2 border-[#B4262D] bg-white text-[#B4262D] enabled:hover:bg-[#FBE9EA]",
+  round: "w-10 h-10 rounded-full flex items-center justify-center cursor-pointer border-[3px] border-[#8A6A2F] bg-white text-[#3B2A14] transition-colors enabled:hover:bg-[#F6EBD2] enabled:active:bg-[#EADBB5] disabled:opacity-40 disabled:cursor-not-allowed",
+  modeBox: "flex gap-1 p-1 rounded-full border-[3px] border-[#8A6A2F] bg-white",
+  modeOn: "bg-[#B4262D] text-white",
+  modeOff: "text-[#3B2A14]",
+  drum: "relative w-[108px] h-[82px] -my-[17px] shrink-0 cursor-pointer transition hover:brightness-110 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B4262D]",
 };
 
 // The time box: a woven mat in the scene's top corner, with dark text

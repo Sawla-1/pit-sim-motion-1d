@@ -1,15 +1,4 @@
-// Dark bar buttons. "Off" on the dark bar = faded (a grey box would glow here).
-const offLook = "disabled:opacity-40 disabled:cursor-not-allowed";
-
-// Small icon buttons (pin, prev, next, go to pin): on = solid blue, white icon
-// (lighter on hover, darker while pressed). Off = dark square, pale icon.
-const stepButton = `w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer bg-blue-600 border border-blue-500 text-white transition-colors enabled:hover:bg-blue-500 enabled:active:bg-blue-700 disabled:bg-white/5 disabled:border-white/10 disabled:text-slate-400 disabled:cursor-not-allowed`;
-
-// Pin / go to pin: just a blue icon, no box (lighter blue and a soft glow on hover)
-const iconOnlyButton = `w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer text-blue-400 transition-colors enabled:hover:text-blue-300 enabled:hover:bg-white/15 enabled:active:bg-white/5 disabled:text-slate-500 disabled:cursor-not-allowed`;
-
-// Clear Data / Reset All: icon + words
-const wordButton = `h-9 px-4 rounded-xl flex items-center gap-2 text-sm font-bold cursor-pointer transition-colors ${offLook}`;
+import { KAREN_ART, KAREN_BAR } from "../styles/karenStyles";
 
 // Small SVG icons, same shapes as the mockup
 const PlayIcon = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.14v13.72a1 1 0 0 0 1.52.85l11-6.86a1 1 0 0 0 0-1.7l-11-6.86A1 1 0 0 0 8 5.14z" /></svg>;
@@ -30,14 +19,13 @@ const RefreshIcon = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="
 
 // One part of the Record / Playback switch. A real radio input (hidden from
 // view) keeps keyboard and screen reader support; the label is what you see.
-// Chosen = solid colour (activeLook), white text. Not chosen = outlined, so it
-// looks clickable; brighter on hover.
-function ModeOption({ value, label, icon, activeLook, title, hint, selectedMode, disabled, onModeChange }) {
+// Chosen = solid red, white text. Not chosen = plain text on white; a soft cream on hover.
+function ModeOption({ value, label, icon, iconOff = "", title, hint, selectedMode, disabled, onModeChange }) {
   return (
-    <label title={title} className={`relative px-4 h-8 flex items-center gap-2 rounded-lg text-sm font-bold transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-blue-400 ${
+    <label title={title} className={`relative px-4 h-8 flex items-center gap-2 rounded-full text-sm font-bold transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[#3B2A14] ${
       selectedMode === value
-        ? `${activeLook} text-white`
-        : `border border-white/20 text-slate-300 ${disabled ? "" : "hover:text-white hover:border-white/70 hover:bg-white/20"}`
+        ? KAREN_BAR.modeOn
+        : `${KAREN_BAR.modeOff} ${disabled ? "" : "hover:bg-[#F6EBD2]"}`
     } ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}>
       <input
         type="radio"
@@ -48,10 +36,10 @@ function ModeOption({ value, label, icon, activeLook, title, hint, selectedMode,
         onChange={() => onModeChange(value)}
         className="sr-only"
       />
-      {icon}
+      <span className={`flex ${selectedMode === value ? "" : iconOff}`}>{icon}</span>
       {label}
       {/* Hint: a soft ring that grows and fades, to say "try me" */}
-      {hint && <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-lg ring-2 ring-blue-400 motion-safe:animate-ping" />}
+      {hint && <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-full ring-2 ring-[#B4262D] motion-safe:animate-ping" />}
     </label>
   );
 }
@@ -90,29 +78,30 @@ function Controls({
   const pinAction = pinCount === 0 ? "Pin A" : pinCount === 1 ? "Pin B" : "Clear pins";
 
   return (
-    // The dark rounded toolbar: Clear Data | prev / play / next + mode | Reset All
+    // The woven toolbar: Clear Data | prev / play / next + mode | Reset All
     // Phones and small laptops (under 1280px): the middle group takes the first row; Clear and Reset share the second.
-    // (App.jsx places it; short screens under 600px tall: smaller Play)
+    // The mat behind stretches to any number of rows. (App.jsx places it)
     // Fills the page width, up to 800px (880px on large screens, to fit the Pin buttons),
     // so Clear and Reset sit at the two ends.
-    <div className="w-full max-w-[800px] lg:max-w-[880px] flex flex-wrap items-center justify-between gap-x-2 sm:gap-x-6 gap-y-2 px-5 py-3 bg-[#1f2437] rounded-2xl shadow-[0_4px_14px_rgba(15,23,42,0.25)]">
+    <div className={KAREN_BAR.box}>
+        <img src={KAREN_ART.barBackground} alt="" aria-hidden="true" className={KAREN_BAR.mat} />
         <button
           onClick={onClearRecordedData}
           disabled={data.recordedData.length <= 1}
-          className={`${wordButton} bg-white text-slate-800 enabled:hover:bg-slate-200`}
+          className={`relative ${KAREN_BAR.word} ${KAREN_BAR.clear}`}
         >
           <TrashIcon />
           Clear Data
         </button>
 
-        <div className="order-first w-full xl:order-none xl:w-auto flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+        <div className="relative order-first w-full xl:order-none xl:w-auto flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
           <div className="flex items-center gap-3">
             <button
               onClick={onTogglePin}
               disabled={isPinned && pinCount < 2}
               title={pinAction}
               aria-label={pinAction}
-              className={`${iconOnlyButton} ${pinLook}`}
+              className={`${KAREN_BAR.round} ${pinLook}`}
             >
               {pinCount === 2 ? <ClearPinIcon /> : <PinIcon />}
             </button>
@@ -121,23 +110,27 @@ function Controls({
               disabled={!canStepFrames || simulation.time <= 0}
               title="Previous frame"
               aria-label="Previous frame"
-              className={`${stepButton} ${hideInRecord}`}
+              className={`${KAREN_BAR.round} ${hideInRecord}`}
             >
               <PrevIcon />
             </button>
+            {/* The drum: its red centre is empty in the art, so our Play / Pause icon sits on it */}
             <button
               onClick={onTogglePlayPause}
               aria-label={playing ? "Pause" : "Play"}
-              className="w-12 h-12 [@media(max-height:600px)]:w-11 [@media(max-height:600px)]:h-11 rounded-full flex items-center justify-center text-white cursor-pointer bg-linear-to-br from-blue-500 to-indigo-600 shadow-[0_6px_16px_rgba(59,91,219,0.45)] transition hover:brightness-110 active:scale-95"
+              className={KAREN_BAR.drum}
             >
-              {playing ? <PauseIcon /> : <PlayIcon />}
+              <img src={KAREN_ART.drum} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full pointer-events-none" />
+              <span className="absolute left-1/2 top-[40px] -translate-x-1/2 -translate-y-1/2 text-white">
+                {playing ? <PauseIcon /> : <PlayIcon />}
+              </span>
             </button>
             <button
               onClick={onNextFrame}
               disabled={!canStepFrames || simulation.time >= lastTime}
               title="Next frame"
               aria-label="Next frame"
-              className={`${stepButton} ${hideInRecord}`}
+              className={`${KAREN_BAR.round} ${hideInRecord}`}
             >
               <NextIcon />
             </button>
@@ -146,16 +139,16 @@ function Controls({
               disabled={!canGoToPin || playing}
               title="Go to the pinned point"
               aria-label="Go to the pinned point"
-              className={`${iconOnlyButton} ${pinLook}`}
+              className={`${KAREN_BAR.round} ${pinLook}`}
             >
               <GoToPinIcon />
             </button>
           </div>
 
-          {/* Mode switch: one darker box, two parts */}
-          <div className="flex gap-1 p-1 rounded-xl bg-black/25 border border-white/10">
-            <ModeOption value="record" label="Record" icon={<RecordDot />} activeLook="bg-red-600" title="Make new data" selectedMode={data.selectedMode} onModeChange={onModeChange} />
-            <ModeOption value="playback" label="Playback" icon={<SmallPlay />} activeLook="bg-blue-600" title={noRecording ? "Record something first" : "Replay what you recorded"} hint={data.selectedMode === "record" && !noRecording && !playing && !playbackTried} selectedMode={data.selectedMode} onModeChange={onModeChange} disabled={noRecording} />
+          {/* Mode switch: one white pill, two parts */}
+          <div className={KAREN_BAR.modeBox}>
+            <ModeOption value="record" label="Record" icon={<RecordDot />} iconOff="text-[#B4262D]" title="Make new data" selectedMode={data.selectedMode} onModeChange={onModeChange} />
+            <ModeOption value="playback" label="Playback" icon={<SmallPlay />} title={noRecording ? "Record something first" : "Replay what you recorded"} hint={data.selectedMode === "record" && !noRecording && !playing && !playbackTried} selectedMode={data.selectedMode} onModeChange={onModeChange} disabled={noRecording} />
           </div>
         </div>
 
@@ -167,7 +160,7 @@ function Controls({
             simulation.velocity === 0 &&
             simulation.acceleration === 0
           }
-          className={`${wordButton} bg-rose-600 text-white shadow-[0_4px_14px_rgba(225,29,72,0.45)] enabled:hover:bg-rose-500 disabled:shadow-none`}
+          className={`relative ${KAREN_BAR.word} ${KAREN_BAR.reset}`}
         >
           <RefreshIcon />
           Reset All

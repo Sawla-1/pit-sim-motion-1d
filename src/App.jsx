@@ -344,8 +344,9 @@ function App() {
         <div className="shrink-0 flex flex-col sm:flex-row gap-2 px-4 sm:px-[72px] py-2">{inputs}</div>
       )}
 
-      {/* Bottom: the toolbar pill, centered, 8px gap under it */}
-      <div className="shrink-0 flex justify-center px-4 lg:pl-[212px] lg:pr-[64px] pb-2 max-lg:sticky max-lg:bottom-0 max-lg:z-20 max-lg:bg-[#C9EEEA]">
+      {/* Bottom: the toolbar pill, 8px gap under it. Charts: centered under the charts (laptops).
+          Introduction: centered on the page. */}
+      <div className={`shrink-0 flex justify-center px-4 ${isCharts ? "lg:pl-[212px] lg:pr-[64px]" : ""} pb-2 max-lg:sticky max-lg:bottom-0 max-lg:z-20 max-lg:bg-[#C9EEEA]`}>
         <Controls
           simulation={simulation}
           playing={playing}
