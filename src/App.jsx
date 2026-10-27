@@ -6,6 +6,7 @@ import ConfirmDialog from "./components/ConfirmDialog";
 import PhysicsInput from "./components/PhysicsInput";
 import Tabs from "./components/Tabs";
 import { SERIES_COLORS } from "./styles/seriesColors";
+import { KAREN_ART, KAREN_RULER } from "./styles/karenStyles";
 import { useSimulationLoop } from "./hooks/useSimulationLoop";
 import {
   handleRecordingStep,
@@ -254,7 +255,14 @@ function App() {
   const isRecording = data.selectedMode === "record";
 
   return (
-    <div className="min-h-screen lg:h-screen w-full flex flex-col box-border bg-[#C9EEEA] text-gray-800 overflow-x-clip">
+    <div className="relative min-h-screen lg:h-screen w-full flex flex-col box-border bg-[#C9EEEA] text-gray-800 overflow-x-clip">
+      {/* Introduction only: bamboo down both sides of the whole page (hidden on phones: no room) */}
+      {!isCharts && (
+        <>
+          <img src={KAREN_ART.bambooLeft} alt="" aria-hidden="true" className="hidden sm:block absolute left-[-12px] top-0 w-[84px] h-full z-[5] pointer-events-none" />
+          <img src={KAREN_ART.bambooRight} alt="" aria-hidden="true" className="hidden sm:block absolute right-[-12px] top-0 w-[84px] h-full z-[5] pointer-events-none" />
+        </>
+      )}
       {/* Top: tab row, then the 3D scene (with the time). Charts tab: short scene. Intro: tall
           (laptops: fills the space left). Phones/tablets: the tab row is above the scene, so its top-left corner
           is square. Laptops: the tabs float on the scene's corner. */}
@@ -276,13 +284,18 @@ function App() {
             ? "h-[125px] [@media(max-height:600px)]:h-[112px]"
             : "flex-1 min-h-0"
         }`}>
-        {/* Fills the scene box, so the canvas always gets a real height */}
-        <div className="absolute inset-0 rounded-[inherit]">
+        {/* Introduction only: the scene picture */}
+        {!isCharts && (
+          <img src={KAREN_ART.scene} alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover object-bottom rounded-[inherit]" />
+        )}
+        {/* Fills the scene box, so the canvas always gets a real height (Introduction: side room for the bamboo) */}
+        <div className={`absolute rounded-[inherit] ${isCharts ? "inset-0" : "inset-x-6 sm:inset-x-[72px] top-[50%] bottom-[2%]"}`}>
           <Simulation3D
             position={simulation.position}
             velocity={simulation.velocity}
             pins={isCharts ? pins : []}
             tall={!isCharts}
+            look={isCharts ? undefined : KAREN_RULER}
             onManDragStart={handleManDragStart}
             onManDragSample={handleManDragSample}
             onManDragEnd={handleManDragEnd}
@@ -330,7 +343,7 @@ function App() {
         </div>
       ) : (
         // Middle: the 3 sliders side by side (phones: one under the other)
-        <div className="shrink-0 flex flex-col sm:flex-row gap-2 px-4 py-2">{inputs}</div>
+        <div className="shrink-0 flex flex-col sm:flex-row gap-2 px-4 sm:px-[72px] py-2">{inputs}</div>
       )}
 
       {/* Bottom: the toolbar pill, centered, 8px gap under it */}

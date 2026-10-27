@@ -1,4 +1,4 @@
-import { Suspense, useLayoutEffect} from "react";
+import { Suspense, useLayoutEffect, useMemo } from "react";
 import * as THREE from "three";
 import { Canvas, useThree } from "@react-three/fiber";
 import { useTexture, Text } from "@react-three/drei";
@@ -10,10 +10,18 @@ const MIN_RANGE = 10; // meters shown on each side of 0 while the man is near th
 const MAX_LABELS_PER_SIDE = 6;
 const MIN_EDGE_GAP = 0.2; // world units; any closer and the edge stick doubles up with the last stick
 const EDGE_LABEL_GAP = 0.8; // world units; a regular label closer than this to the edge label would overlap it, so it is hidden
-const EDGE_LABEL_COLOR = "#1976d2"; // same blue as the Position chart, so it is not mistaken for a normal ruler number
+const RULER_FONT = "/fonts/Roboto-Bold.woff"; // bold numbers; a font file, because CSS can't style the 3D text
+
+// The ruler look when no `look` is given (the Charts tab): same as before
+const DEFAULT_RULER = {
+  ground: "skyblue", groundWidth: 50, groundHeight: 0.1, gradient: null, edge: null,
+  tick: "#2d5016", tickWidth: 0.02, tickDrop: 0.1, tickHeight: 0.15, tickLabeledHeight: 0.3, labelDrop: 0.3,
+  zero: "#ff4444", zeroTick: "#ff4444", label: "#2d5016", outline: null,
+  edgeMark: "#1976d2", // the end marks when the ruler grows past 10 m: same blue as the Position chart, so it is not mistaken for a normal ruler number
+};
 
 const GROUND_Y = -0.6; // height of the ground line; the man's and the pins' feet stand on it
-const MAN_HEIGHT_TALL = 2.4; // Introduction: about 12% of the ruler's width, like the mockup
+const MAN_HEIGHT_TALL = 1.7; // Introduction: about 8.5% of the ruler's width, like the mockup
 const MAN_HEIGHT_SHORT = 1.2; // Charts: the scene is short, so he is smaller
 const MAN_ASPECT = 30 / 44; // the boy art is 30 wide and 44 tall
 
@@ -27,6 +35,24 @@ const PIN_DEPTH = -0.1; // behind the man, so he is not hidden when he walks pas
 
 const FIT_HALF_WIDTH = 11; // ruler ±10 plus room for the man sprite and the edge label
 const CONTENT_BOTTOM = -1.25; // just below the ruler labels
+
+// A top-to-bottom colour change as a picture, so a flat bar can look round (like bamboo)
+function useGradientTexture(colors) {
+  return useMemo(() => {
+    if (!colors) return null;
+    const canvas = document.createElement("canvas");
+    canvas.width = 1;
+    canvas.height = 64;
+    const ctx = canvas.getContext("2d");
+    const gradient = ctx.createLinearGradient(0, 0, 0, 64);
+    colors.forEach((color, i) => gradient.addColorStop(i / (colors.length - 1), color));
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 1, 64);
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    return texture;
+  }, [colors]);
+}
 
 // CameraRig makes the ruler fit inside the canvas on any screen size
 function CameraRig({ manHeight }) {
@@ -47,10 +73,11 @@ function CameraRig({ manHeight }) {
   return null;
 }
 
-function Simulation3D({ position, velocity, pins = [], tall = false, onManDragStart, onManDragSample, onManDragEnd }) {
+function Simulation3D({ position, velocity, pins = [], tall = false, look = DEFAULT_RULER, onManDragStart, onManDragSample, onManDragEnd }) {
   // The ruler spans -range..range with 0 in the center, and follows the man both ways.
   // Pins count too, so a pin is never off the ruler.
   const manHeight = tall ? MAN_HEIGHT_TALL : MAN_HEIGHT_SHORT;
+  const barTexture = useGradientTexture(look.gradient);
   const range = Math.max(MIN_RANGE, Math.abs(position), ...pins.map((p) => Math.abs(p.position)));
   const step = niceStep(range, MAX_LABELS_PER_SIDE);
   const halfStep = step / 2;
@@ -68,29 +95,40 @@ function Simulation3D({ position, velocity, pins = [], tall = false, onManDragSt
     <Canvas
       orthographic
       camera={{ position: [0, 0, 10], zoom: 60 }}
-      className="w-full h-full bg-blue-50 rounded-[inherit]" // height comes from the parent (App)
+      className="w-full h-full rounded-[inherit]" // height comes from the parent (App)
     >
       <CameraRig manHeight={manHeight} />
       {/* Ground with ruler markings */}
       <group>
-        {/* Main ground */}
-        <mesh position={[0, GROUND_Y, 0]}>
-          <planeGeometry args={[50, 0.1]} />
-          <meshBasicMaterial color="skyblue" />
+        {/* Thin dark edge: a slightly bigger bar behind the main one */}
+        {look.edge && (
+          <mesh position={[0, GROUND_Y, -0.03]}>
+            <planeGeometry args={[look.groundWidth + 0.06, look.groundHeight + 0.05]} />
+            <meshBasicMaterial color={look.edge} />
+          </mesh>
+        )}
+        {/* Main ground (the joints are in front of it, the edge behind it) */}
+        <mesh position={[0, GROUND_Y, -0.02]}>
+          <planeGeometry args={[look.groundWidth, look.groundHeight]} />
+          <meshBasicMaterial color={barTexture ? "white" : look.ground} map={barTexture} toneMapped={!barTexture} />
         </mesh>
 
         {/* Ruler sticks + number labels - one loop, so they can never drift apart */}
         <Suspense fallback={null}>
           {ticks.map(({ value, labeled }) => (
             <group key={`tick-${value}`}>
-              <sprite position={[toX(value), -0.7, 0]} scale={[0.02, labeled ? 0.3 : 0.15, 1]}>
-                <spriteMaterial color={value === 0 ? "#ff4444" : "#2d5016"} />
+              <sprite position={[toX(value), GROUND_Y - look.tickDrop, 0]} scale={[look.tickWidth, labeled ? look.tickLabeledHeight : look.tickHeight, 1]}>
+                <spriteMaterial color={value === 0 ? look.zeroTick : look.tick} />
               </sprite>
               {labeled && !(showEdge && Math.abs(toX(value)) > EDGE - EDGE_LABEL_GAP) && (
                 <Text
-                  position={[toX(value), -0.9, 0]}
+                  position={[toX(value), GROUND_Y - look.labelDrop, 0]}
+                  font={RULER_FONT}
                   fontSize={0.25}
-                  color={value === 0 ? "#ff4444" : "#2d5016"}
+                  color={value === 0 ? look.zero : look.label}
+                  outlineWidth={look.outline ? 0.03 : 0}
+                  outlineBlur={look.outline ? 0.005 : 0}
+                  outlineColor={look.outline ?? "black"}
                   anchorX="center"
                   anchorY="top"
                 >
@@ -103,13 +141,17 @@ function Simulation3D({ position, velocity, pins = [], tall = false, onManDragSt
           {showEdge &&
             [-EDGE, EDGE].map((x) => (
               <group key={`edge-${x}`}>
-                <sprite position={[x, -0.7, 0]} scale={[0.02, 0.3, 1]}>
-                  <spriteMaterial color={EDGE_LABEL_COLOR} />
+                <sprite position={[x, GROUND_Y - look.tickDrop, 0]} scale={[look.tickWidth, look.tickLabeledHeight, 1]}>
+                  <spriteMaterial color={look.edgeMark} />
                 </sprite>
                 <Text
-                  position={[x, -0.95, 0]}
+                  position={[x, GROUND_Y - look.labelDrop - 0.05, 0]}
+                  font={RULER_FONT}
                   fontSize={0.25}
-                  color={EDGE_LABEL_COLOR}
+                  color={look.edgeMark}
+                  outlineWidth={look.outline ? 0.03 : 0}
+                  outlineBlur={look.outline ? 0.005 : 0}
+                  outlineColor={look.outline ?? "black"}
                   anchorX="center"
                   anchorY="top"
                 >
