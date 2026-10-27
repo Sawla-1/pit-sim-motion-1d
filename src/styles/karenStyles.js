@@ -6,6 +6,7 @@ export const KAREN_ART = {
   bambooLeft: `${ART}/bamboo-left.svg`,
   bambooRight: `${ART}/bamboo-right.svg`,
   timeBackground: `${ART}/time-background.svg`,
+  titleBanner: `${ART}/title-banner.svg`,
   bottomStrip: `${ART}/bottom-background.svg`,
   barBackground: `${ART}/bar-background-tall.svg`, // a copy of bar-background.svg whose height stretches (one or two rows of buttons)
   drum: `${ART}/drum-horns-empty.svg`, // the drum without its ▶: our Play/Pause icon goes on top
@@ -18,6 +19,9 @@ export const KAREN_TAB = {
   open: "bg-[#B4262D] text-white cursor-default select-none",
   closed: "text-[#4A2A12] cursor-pointer transition-colors hover:bg-white/30 focus-visible:outline-2 focus-visible:outline-[#B4262D]",
 };
+
+// The hanging title sign: its ropes start at the top edge of the scene, centered (Introduction only; hidden on phones)
+export const KAREN_BANNER = "absolute top-0 left-1/2 -translate-x-1/2 hidden sm:block w-[300px] h-[88px] pointer-events-none";
 
 // The page behind everything under the scene: light cream, with the rice-field strip along the bottom
 export const KAREN_PAGE = {

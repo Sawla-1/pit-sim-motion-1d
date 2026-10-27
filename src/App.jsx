@@ -6,7 +6,7 @@ import ConfirmDialog from "./components/ConfirmDialog";
 import PhysicsInput from "./components/PhysicsInput";
 import Tabs from "./components/Tabs";
 import { SERIES_COLORS } from "./styles/seriesColors";
-import { KAREN_ART, KAREN_PAGE, KAREN_RULER, KAREN_TIME } from "./styles/karenStyles";
+import { KAREN_ART, KAREN_BANNER, KAREN_PAGE, KAREN_RULER, KAREN_TIME } from "./styles/karenStyles";
 import { useSimulationLoop } from "./hooks/useSimulationLoop";
 import {
   handleRecordingStep,
@@ -284,9 +284,12 @@ function App() {
             ? "h-[125px] [@media(max-height:600px)]:h-[112px]"
             : "flex-1 min-h-0"
         }`}>
-        {/* Introduction only: the scene picture */}
+        {/* Introduction only: the scene picture, and the hanging title sign at the top (behind the boy) */}
         {!isCharts && (
-          <img src={KAREN_ART.scene} alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover object-bottom rounded-[inherit]" />
+          <>
+            <img src={KAREN_ART.scene} alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover object-bottom rounded-[inherit]" />
+            <img src={KAREN_ART.titleBanner} alt="Karen" className={KAREN_BANNER} />
+          </>
         )}
         {/* Fills the scene box, so the canvas always gets a real height (Introduction: side room for the bamboo) */}
         <div className={`absolute rounded-[inherit] ${isCharts ? "inset-0" : "inset-x-6 sm:inset-x-[72px] top-[50%] bottom-[2%]"}`}>
