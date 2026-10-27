@@ -282,6 +282,7 @@ function App() {
             position={simulation.position}
             velocity={simulation.velocity}
             pins={isCharts ? pins : []}
+            tall={!isCharts}
             onManDragStart={handleManDragStart}
             onManDragSample={handleManDragSample}
             onManDragEnd={handleManDragEnd}
