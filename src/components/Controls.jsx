@@ -95,7 +95,7 @@ function Controls({
         </button>
 
         <div className="order-first w-full xl:order-none xl:w-auto flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1 sm:gap-3">
             <button
               onClick={onTogglePin}
               disabled={isPinned && pinCount < 2}

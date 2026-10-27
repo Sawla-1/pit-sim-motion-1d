@@ -292,7 +292,7 @@ function App() {
           </>
         )}
         {/* Fills the scene box, so the canvas always gets a real height (Introduction: side room for the bamboo) */}
-        <div className={`absolute rounded-[inherit] ${isCharts ? "inset-0" : "inset-x-6 sm:inset-x-[72px] top-[50%] bottom-[2%]"}`}>
+        <div className={`absolute rounded-[inherit] ${isCharts ? "inset-0" : "inset-x-6 sm:inset-x-[72px] top-[50%] [@media(max-height:600px)]:top-[25%] bottom-[2%]"}`}>
           <Simulation3D
             position={simulation.position}
             velocity={simulation.velocity}
@@ -349,7 +349,7 @@ function App() {
 
       {/* Bottom: the toolbar pill, 8px gap under it. Charts: centered under the charts (laptops).
           Introduction: centered on the page. */}
-      <div className={`relative z-[6] shrink-0 flex justify-center px-4 ${isCharts ? "lg:pl-[212px] lg:pr-[64px]" : ""} pb-2 [@media(min-height:700px)]:pb-8 max-lg:mt-auto max-lg:sticky max-lg:bottom-0 max-lg:z-20 ${KAREN_PAGE.stickyBg}`}>
+      <div className={`relative z-[6] shrink-0 flex justify-center px-2 sm:px-4 ${isCharts ? "lg:pl-[212px] lg:pr-[64px]" : ""} pb-2 [@media(min-height:700px)]:pb-8 max-lg:mt-auto max-lg:sticky max-lg:bottom-0 max-lg:z-20 ${KAREN_PAGE.stickyBg}`}>
         {/* The rice-field strip behind the bar (it sticks with the bar on phones) */}
         <img src={KAREN_ART.bottomStrip} alt="" aria-hidden="true" className={KAREN_PAGE.strip} />
         <Controls

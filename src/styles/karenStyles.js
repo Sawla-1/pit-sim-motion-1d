@@ -32,12 +32,12 @@ export const KAREN_PAGE = {
 
 // The bottom bar: a woven mat behind white buttons with a brown ring (Reset All: red ring)
 export const KAREN_BAR = {
-  box: "relative isolate w-full max-w-[800px] lg:max-w-[880px] xl:max-w-[1000px] flex flex-wrap items-center justify-between gap-x-2 sm:gap-x-6 gap-y-2 px-5 sm:px-9 py-[18px] [@media(max-height:600px)]:py-[10px]",
+  box: "relative isolate w-full max-w-[800px] lg:max-w-[880px] xl:max-w-[1000px] flex flex-wrap items-center justify-between gap-x-2 sm:gap-x-6 gap-y-2 px-3 sm:px-9 py-[18px] [@media(max-height:600px)]:py-[10px]",
   mat: "absolute inset-0 -z-10 h-full w-full max-w-none pointer-events-none", // behind the buttons, whatever their order
-  word: "h-10 px-3 sm:px-4 rounded-full flex items-center gap-2 text-sm font-bold cursor-pointer transition-colors disabled:opacity-40 disabled:cursor-not-allowed",
+  word: "my-1 h-10 px-3 sm:px-4 rounded-full flex items-center gap-2 text-sm font-bold cursor-pointer transition-colors disabled:opacity-40 disabled:cursor-not-allowed",
   clear: "border-[3px] border-[#8A6A2F] bg-white text-[#3B2A14] enabled:hover:bg-[#F6EBD2]",
   reset: "border-2 border-[#B4262D] bg-white text-[#B4262D] enabled:hover:bg-[#FBE9EA]",
-  round: "w-10 h-10 rounded-full flex items-center justify-center cursor-pointer border-[3px] border-[#8A6A2F] bg-white text-[#3B2A14] transition-colors enabled:hover:bg-[#F6EBD2] enabled:active:bg-[#EADBB5] disabled:opacity-40 disabled:cursor-not-allowed",
+  round: "w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center cursor-pointer border-[3px] border-[#8A6A2F] bg-white text-[#3B2A14] transition-colors enabled:hover:bg-[#F6EBD2] enabled:active:bg-[#EADBB5] disabled:opacity-40 disabled:cursor-not-allowed",
   modeBox: "flex gap-1 p-1 rounded-full border-[3px] border-[#8A6A2F] bg-white",
   modeOn: "bg-[#B4262D] text-white",
   modeOff: "text-[#3B2A14]",
