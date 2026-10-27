@@ -5,6 +5,7 @@ export const KAREN_ART = {
   scene: `${ART}/scene-intro.svg`,
   bambooLeft: `${ART}/bamboo-left.svg`,
   bambooRight: `${ART}/bamboo-right.svg`,
+  timeBackground: `${ART}/time-background.svg`,
   tabBackground: `${ART}/tab-background-short.svg`, // a shorter copy of tab-background.svg (37px tall, the strip is 32px)
 };
 
@@ -13,6 +14,13 @@ export const KAREN_TAB = {
   base: "relative h-[32px] px-4 flex items-center text-sm font-bold last:rounded-br-xl",
   open: "bg-[#B4262D] text-white cursor-default select-none",
   closed: "text-[#4A2A12] cursor-pointer transition-colors hover:bg-white/30 focus-visible:outline-2 focus-visible:outline-[#B4262D]",
+};
+
+// The time box: a woven mat in the scene's top corner, with dark text
+export const KAREN_TIME = {
+  box: "absolute top-0 left-0 lg:left-auto lg:right-0 z-10 h-[56px] min-w-[132px]",
+  mat: "absolute inset-0 h-full w-full max-w-none -scale-x-100 lg:scale-x-100 pointer-events-none",
+  text: "relative h-[51px] flex items-center justify-center px-4 font-mono text-2xl font-bold text-[#2A1608]",
 };
 
 export const KAREN_RULER = {

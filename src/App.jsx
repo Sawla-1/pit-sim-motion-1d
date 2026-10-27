@@ -6,7 +6,7 @@ import ConfirmDialog from "./components/ConfirmDialog";
 import PhysicsInput from "./components/PhysicsInput";
 import Tabs from "./components/Tabs";
 import { SERIES_COLORS } from "./styles/seriesColors";
-import { KAREN_ART, KAREN_RULER } from "./styles/karenStyles";
+import { KAREN_ART, KAREN_RULER, KAREN_TIME } from "./styles/karenStyles";
 import { useSimulationLoop } from "./hooks/useSimulationLoop";
 import {
   handleRecordingStep,
@@ -302,12 +302,10 @@ function App() {
           />
         </div>
 
-        {/* Time: phones/tablets top-left, laptops top-right */}
-        <div
-          className="absolute top-2 left-8 lg:left-auto lg:right-8 font-mono text-3xl font-bold z-10 text-gray-800"
-          style={{ textShadow: "1px 1px 2px rgba(255, 255, 255, 0.8)" }}
-        >
-          {formatNumber(simulation.time, 1)} s
+        {/* Time on a woven mat in the scene's top corner: phones/tablets top-left (mat flipped), laptops top-right */}
+        <div className={KAREN_TIME.box}>
+          <img src={KAREN_ART.timeBackground} alt="" aria-hidden="true" className={KAREN_TIME.mat} />
+          <div className={KAREN_TIME.text}>{formatNumber(simulation.time, 1)} s</div>
         </div>
 
         {/* Mode badge, only while playing: phones/tablets top-right, laptops middle */}
