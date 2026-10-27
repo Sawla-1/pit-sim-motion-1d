@@ -88,13 +88,13 @@ function Controls({
         <button
           onClick={onClearRecordedData}
           disabled={data.recordedData.length <= 1}
-          className={`relative ${KAREN_BAR.word} ${KAREN_BAR.clear}`}
+          className={`${KAREN_BAR.word} ${KAREN_BAR.clear}`}
         >
           <TrashIcon />
           Clear Data
         </button>
 
-        <div className="relative order-first w-full xl:order-none xl:w-auto flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+        <div className="order-first w-full xl:order-none xl:w-auto flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
           <div className="flex items-center gap-3">
             <button
               onClick={onTogglePin}
@@ -160,7 +160,7 @@ function Controls({
             simulation.velocity === 0 &&
             simulation.acceleration === 0
           }
-          className={`relative ${KAREN_BAR.word} ${KAREN_BAR.reset}`}
+          className={`${KAREN_BAR.word} ${KAREN_BAR.reset}`}
         >
           <RefreshIcon />
           Reset All

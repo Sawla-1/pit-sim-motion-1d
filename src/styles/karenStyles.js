@@ -20,8 +20,8 @@ export const KAREN_TAB = {
 
 // The bottom bar: a woven mat behind white buttons with a brown ring (Reset All: red ring)
 export const KAREN_BAR = {
-  box: "relative w-full max-w-[800px] lg:max-w-[880px] xl:max-w-[1000px] flex flex-wrap items-center justify-between gap-x-2 sm:gap-x-6 gap-y-2 px-9 py-[18px] [@media(max-height:600px)]:py-[10px]",
-  mat: "absolute inset-0 h-full w-full max-w-none pointer-events-none",
+  box: "relative isolate w-full max-w-[800px] lg:max-w-[880px] xl:max-w-[1000px] flex flex-wrap items-center justify-between gap-x-2 sm:gap-x-6 gap-y-2 px-9 py-[18px] [@media(max-height:600px)]:py-[10px]",
+  mat: "absolute inset-0 -z-10 h-full w-full max-w-none pointer-events-none", // behind the buttons, whatever their order
   word: "h-10 px-4 rounded-full flex items-center gap-2 text-sm font-bold cursor-pointer transition-colors disabled:opacity-40 disabled:cursor-not-allowed",
   clear: "border-[3px] border-[#8A6A2F] bg-white text-[#3B2A14] enabled:hover:bg-[#F6EBD2]",
   reset: "border-2 border-[#B4262D] bg-white text-[#B4262D] enabled:hover:bg-[#FBE9EA]",
