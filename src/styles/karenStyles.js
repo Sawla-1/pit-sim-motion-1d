@@ -5,6 +5,14 @@ export const KAREN_ART = {
   scene: `${ART}/scene-intro.svg`,
   bambooLeft: `${ART}/bamboo-left.svg`,
   bambooRight: `${ART}/bamboo-right.svg`,
+  tabBackground: `${ART}/tab-background-short.svg`, // a shorter copy of tab-background.svg (37px tall, the strip is 32px)
+};
+
+// The two view tabs: a woven mat behind them; the open tab is red
+export const KAREN_TAB = {
+  base: "relative h-[32px] px-4 flex items-center text-sm font-bold last:rounded-br-xl",
+  open: "bg-[#B4262D] text-white cursor-default select-none",
+  closed: "text-[#4A2A12] cursor-pointer transition-colors hover:bg-white/30 focus-visible:outline-2 focus-visible:outline-[#B4262D]",
 };
 
 export const KAREN_RULER = {
