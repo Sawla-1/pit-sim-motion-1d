@@ -6,7 +6,7 @@ import ConfirmDialog from "./components/ConfirmDialog";
 import PhysicsInput from "./components/PhysicsInput";
 import Tabs from "./components/Tabs";
 import { SERIES_COLORS } from "./styles/seriesColors";
-import { KAREN_ART, KAREN_RULER, KAREN_TIME } from "./styles/karenStyles";
+import { KAREN_ART, KAREN_PAGE, KAREN_RULER, KAREN_TIME } from "./styles/karenStyles";
 import { useSimulationLoop } from "./hooks/useSimulationLoop";
 import {
   handleRecordingStep,
@@ -255,7 +255,7 @@ function App() {
   const isRecording = data.selectedMode === "record";
 
   return (
-    <div className="relative min-h-screen lg:h-screen w-full flex flex-col box-border bg-[#C9EEEA] text-gray-800 overflow-x-clip">
+    <div className={`relative min-h-screen lg:h-screen w-full flex flex-col box-border ${KAREN_PAGE.bg} text-gray-800 overflow-x-clip`}>
       {/* Introduction only: bamboo down both sides of the whole page (hidden on phones: no room) */}
       {!isCharts && (
         <>
@@ -346,7 +346,9 @@ function App() {
 
       {/* Bottom: the toolbar pill, 8px gap under it. Charts: centered under the charts (laptops).
           Introduction: centered on the page. */}
-      <div className={`shrink-0 flex justify-center px-4 ${isCharts ? "lg:pl-[212px] lg:pr-[64px]" : ""} pb-2 max-lg:mt-auto max-lg:sticky max-lg:bottom-0 max-lg:z-20 max-lg:bg-[#C9EEEA]`}>
+      <div className={`relative z-[6] shrink-0 flex justify-center px-4 ${isCharts ? "lg:pl-[212px] lg:pr-[64px]" : ""} pb-2 [@media(min-height:700px)]:pb-8 max-lg:mt-auto max-lg:sticky max-lg:bottom-0 max-lg:z-20 ${KAREN_PAGE.stickyBg}`}>
+        {/* The rice-field strip behind the bar (it sticks with the bar on phones) */}
+        <img src={KAREN_ART.bottomStrip} alt="" aria-hidden="true" className={KAREN_PAGE.strip} />
         <Controls
           simulation={simulation}
           playing={playing}

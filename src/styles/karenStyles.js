@@ -6,6 +6,7 @@ export const KAREN_ART = {
   bambooLeft: `${ART}/bamboo-left.svg`,
   bambooRight: `${ART}/bamboo-right.svg`,
   timeBackground: `${ART}/time-background.svg`,
+  bottomStrip: `${ART}/bottom-background.svg`,
   barBackground: `${ART}/bar-background-tall.svg`, // a copy of bar-background.svg whose height stretches (one or two rows of buttons)
   drum: `${ART}/drum-horns-empty.svg`, // the drum without its ▶: our Play/Pause icon goes on top
   tabBackground: `${ART}/tab-background-short.svg`, // a shorter copy of tab-background.svg (37px tall, the strip is 32px)
@@ -16,6 +17,13 @@ export const KAREN_TAB = {
   base: "relative h-[32px] px-4 flex items-center text-sm font-bold last:rounded-br-xl",
   open: "bg-[#B4262D] text-white cursor-default select-none",
   closed: "text-[#4A2A12] cursor-pointer transition-colors hover:bg-white/30 focus-visible:outline-2 focus-visible:outline-[#B4262D]",
+};
+
+// The page behind everything under the scene: light cream, with the rice-field strip along the bottom
+export const KAREN_PAGE = {
+  bg: "bg-[#F5F9F3]",
+  stickyBg: "max-lg:bg-[#F5F9F3]",
+  strip: "absolute inset-x-0 bottom-0 -z-10 h-[112px] w-full max-w-none pointer-events-none",
 };
 
 // The bottom bar: a woven mat behind white buttons with a brown ring (Reset All: red ring)
