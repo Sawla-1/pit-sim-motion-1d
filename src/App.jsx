@@ -346,7 +346,7 @@ function App() {
 
       {/* Bottom: the toolbar pill, 8px gap under it. Charts: centered under the charts (laptops).
           Introduction: centered on the page. */}
-      <div className={`shrink-0 flex justify-center px-4 ${isCharts ? "lg:pl-[212px] lg:pr-[64px]" : ""} pb-2 max-lg:sticky max-lg:bottom-0 max-lg:z-20 max-lg:bg-[#C9EEEA]`}>
+      <div className={`shrink-0 flex justify-center px-4 ${isCharts ? "lg:pl-[212px] lg:pr-[64px]" : ""} pb-2 max-lg:mt-auto max-lg:sticky max-lg:bottom-0 max-lg:z-20 max-lg:bg-[#C9EEEA]`}>
         <Controls
           simulation={simulation}
           playing={playing}
