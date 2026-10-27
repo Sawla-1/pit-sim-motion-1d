@@ -34,7 +34,17 @@ const PIN_DOT_RADIUS = 0.08; // the dot where the pole meets the ground
 const PIN_DEPTH = -0.1; // behind the man, so he is not hidden when he walks past
 
 const FIT_HALF_WIDTH = 11; // ruler ±10 plus room for the man sprite and the edge label
-const CONTENT_BOTTOM = -1.25; // just below the ruler labels
+const CONTENT_BOTTOM = -1.25; // just below the ruler labels (when they are LABEL_REFERENCE tall)
+
+const LABEL_BASE = 0.3; // world units: the ruler number size on big screens
+const LABEL_MIN_PX = 13; // the ruler numbers are never smaller than this on screen
+const LABEL_REFERENCE = 0.25; // the number size that CONTENT_BOTTOM was made for
+
+// How tall a ruler number is, in world units, for a canvas this wide
+function labelFontSize(canvasWidth) {
+  const pixelsPerUnit = canvasWidth / (2 * FIT_HALF_WIDTH);
+  return Math.max(LABEL_BASE, LABEL_MIN_PX / pixelsPerUnit);
+}
 
 // A top-to-bottom colour change as a picture, so a flat bar can look round (like bamboo)
 function useGradientTexture(colors) {
@@ -61,16 +71,29 @@ function CameraRig({ manHeight }) {
   useLayoutEffect(() => {
     if (size.width === 0 || size.height === 0) return;
     const contentTop = GROUND_Y + manHeight + PIN_FLAG_HEIGHT; // top of the pin flags (the pole is as tall as the man)
+    const contentBottom = CONTENT_BOTTOM - (labelFontSize(size.width) - LABEL_REFERENCE); // room for taller numbers
     // Center on the content (it sits below y=0) so the fit doesn't waste height.
-    camera.position.y = (contentTop + CONTENT_BOTTOM) / 2;
+    camera.position.y = (contentTop + contentBottom) / 2;
     camera.zoom = Math.min(
       size.width / (2 * FIT_HALF_WIDTH),
-      size.height / (contentTop - CONTENT_BOTTOM)
+      size.height / (contentTop - contentBottom)
     );
     camera.updateProjectionMatrix();
   }, [size.width, size.height, camera, manHeight]);
 
   return null;
+}
+
+// A ruler number. It reads the canvas width to get its size. On narrow screens
+// "0 meters" becomes "0", so it can't run into its neighbours.
+function RulerLabel({ text, ...props }) {
+  const width = useThree((state) => state.size.width);
+  const fontSize = labelFontSize(width);
+  return (
+    <Text fontSize={fontSize} {...props}>
+      {text === "0 meters" && fontSize > LABEL_BASE * 1.5 ? "0" : text}
+    </Text>
+  );
 }
 
 function Simulation3D({ position, velocity, pins = [], tall = false, look = DEFAULT_RULER, onManDragStart, onManDragSample, onManDragEnd }) {
@@ -121,19 +144,17 @@ function Simulation3D({ position, velocity, pins = [], tall = false, look = DEFA
                 <spriteMaterial color={value === 0 ? look.zeroTick : look.tick} />
               </sprite>
               {labeled && !(showEdge && Math.abs(toX(value)) > EDGE - EDGE_LABEL_GAP) && (
-                <Text
+                <RulerLabel
+                  text={value === 0 ? "0 meters" : String(value)}
                   position={[toX(value), GROUND_Y - look.labelDrop, 0]}
                   font={RULER_FONT}
-                  fontSize={0.25}
                   color={value === 0 ? look.zero : look.label}
                   outlineWidth={look.outline ? 0.03 : 0}
                   outlineBlur={look.outline ? 0.005 : 0}
                   outlineColor={look.outline ?? "black"}
                   anchorX="center"
                   anchorY="top"
-                >
-                  {value === 0 ? "0 meters" : value}
-                </Text>
+                />
               )}
             </group>
           ))}
@@ -144,19 +165,17 @@ function Simulation3D({ position, velocity, pins = [], tall = false, look = DEFA
                 <sprite position={[x, GROUND_Y - look.tickDrop, 0]} scale={[look.tickWidth, look.tickLabeledHeight, 1]}>
                   <spriteMaterial color={look.edgeMark} />
                 </sprite>
-                <Text
+                <RulerLabel
+                  text={formatNumber((x / EDGE) * range, 1)}
                   position={[x, GROUND_Y - look.labelDrop - 0.05, 0]}
                   font={RULER_FONT}
-                  fontSize={0.25}
                   color={look.edgeMark}
                   outlineWidth={look.outline ? 0.03 : 0}
                   outlineBlur={look.outline ? 0.005 : 0}
                   outlineColor={look.outline ?? "black"}
                   anchorX="center"
                   anchorY="top"
-                >
-                  {formatNumber((x / EDGE) * range, 1)}
-                </Text>
+                />
               </group>
             ))}
 
