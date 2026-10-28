@@ -83,10 +83,10 @@ function Controls({
 
   return (
     // The woven toolbar: Clear Data | prev / play / next + mode | Reset All
-    // Phones and small laptops (under 1280px): the middle group takes the first row; Clear and Reset share the second.
+    // Phones and tablets (under 1024px): the middle group takes the first row; Clear and Reset share the second.
     // The mat behind stretches to any number of rows. (App.jsx places it)
-    // Fills the page width, up to 800px (880px on large screens, to fit the Pin buttons),
-    // so Clear and Reset sit at the two ends.
+    // Fills the page width, up to 800px (1000px on laptops, 1150px on large screens, to fit the Formula
+    // and Pin buttons), so Clear and Reset sit at the two ends.
     <div className={KAREN_BAR.box}>
         <img src={KAREN_ART.barBackground} alt="" aria-hidden="true" className={KAREN_BAR.mat} />
         {/* Left group: Clear Data + Formula (one block, so the bar keeps its 3 parts) */}
@@ -111,7 +111,7 @@ function Controls({
           </button>
         </div>
 
-        <div className="order-first w-full xl:order-none xl:w-auto flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+        <div className="order-first w-full lg:order-none lg:w-auto flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
           <div className="flex items-center gap-1 sm:gap-3">
             <button
               onClick={onTogglePin}
