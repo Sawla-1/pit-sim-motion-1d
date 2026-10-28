@@ -5,6 +5,7 @@ import Controls from "./components/Controls";
 import ConfirmDialog from "./components/ConfirmDialog";
 import PhysicsInput from "./components/PhysicsInput";
 import Tabs from "./components/Tabs";
+import FormulaPanel from "./components/FormulaPanel";
 import { SERIES_COLORS } from "./styles/seriesColors";
 import { KAREN_ART, KAREN_BANNER, KAREN_PAGE, KAREN_RULER, KAREN_TIME } from "./styles/karenStyles";
 import { useSimulationLoop } from "./hooks/useSimulationLoop";
@@ -15,10 +16,13 @@ import {
   trimRecordedDataAfter,
 } from "./engine/recordPlayback";
 import { calculateDragStep, NUMBER_MOUSE_POINTS_TO_AVERAGE } from "./engine/kinematics1d";
+import { compileFormula } from "./engine/evaluateFormula";
+import { calculateFormulaStep } from "./engine/formulaMotion";
 import { formatNumber } from "./utils/formatNumber";
 
 const FRAME_STEP = 0.1; // seconds moved by one Next/Previous frame click
 const PIN_TOLERANCE = 0.05; // seconds: "same time" for Unpin (half a frame step)
+const FORMULA_TOOK_OVER = "Formula stopped. You took control.";
 
 function App() {
   // ============================================================================
@@ -67,6 +71,57 @@ function App() {
   // Is the "Reset everything?" popup open
   const [confirmingReset, setConfirmingReset] = useState(false);
 
+  // The formula panel: open or closed (it stays open in every mode until the user
+  // closes it), and the typed text (kept here so it is still there after closing)
+  const [formulaPanelOpen, setFormulaPanelOpen] = useState(false);
+  const [formulaText, setFormulaText] = useState("");
+  // The formula that drives the motion right now: null, or { text, evaluate }.
+  // Closing the panel does not stop it. Taking control (drag, typing a value) does.
+  const [activeFormula, setActiveFormula] = useState(null);
+  const [formulaError, setFormulaError] = useState(null); // why Run did not start
+  const [formulaNotice, setFormulaNotice] = useState(null); // why a formula stopped
+
+  const stopFormula = (notice = null) => {
+    setActiveFormula(null);
+    setFormulaNotice(notice);
+    setFormulaError(null);
+  };
+
+  // Run: the formula takes over from the current time (the man jumps to where the
+  // formula says he is at this time), and the simulation plays.
+  const handleFormulaRun = () => {
+    const compiled = compileFormula(formulaText);
+    if (!compiled.ok) {
+      setFormulaError(compiled.error);
+      return;
+    }
+    if (!Number.isFinite(compiled.evaluate(simulation.time))) {
+      setFormulaError(`This formula gives no number at t = ${formatNumber(simulation.time, 1)} s.`);
+      return;
+    }
+    setFormulaError(null);
+    setFormulaNotice(null);
+    trimRecordingToNow();
+    setActiveFormula({ text: formulaText.trim(), evaluate: compiled.evaluate });
+    setPlaying(true);
+  };
+
+  // Stop: the formula ends and the simulation pauses where it is (the recording stays)
+  const handleFormulaStop = () => {
+    stopFormula("Formula stopped.");
+    setPlaying(false);
+  };
+
+  // One frame of formula motion. null = the formula gave no number, so it stops.
+  const onFormulaStep = (sim, frameTime) => {
+    const next = calculateFormulaStep(activeFormula.evaluate, sim, frameTime);
+    if (!next) {
+      stopFormula(`Formula stopped: it gave no number at t = ${formatNumber(sim.time, 1)} s.`);
+      return null;
+    }
+    return { simulation: next, recordedState: next };
+  };
+
   // Pinned snapshots { name, time, position, velocity, acceleration }: [] / [A] / [A, B]
   const [pins, setPins] = useState([]);
   const pinAtNow = pins.find((p) => Math.abs(p.time - simulation.time) < PIN_TOLERANCE);
@@ -83,6 +138,8 @@ function App() {
     onPlaybackStep: handlePlaybackStep,
     onDragStep,
     dragSamplesRef: dragSamples,
+    formulaActive: activeFormula !== null,
+    onFormulaStep,
   });
 
   // ============================================================================
@@ -91,6 +148,7 @@ function App() {
 
   // Reset everything to initial state
   const reset = () => {
+    stopFormula();
     setSimulation({
       position: 0,
       velocity: 0,
@@ -128,6 +186,7 @@ function App() {
 
   // Switch between Record and Playback modes
   const switchMode = (mode) => {
+    stopFormula();
     setData((prev) => ({ ...prev, selectedMode: mode }));
 
     if (mode === "playback") {
@@ -155,6 +214,7 @@ function App() {
 
   // Clear all recorded data
   const clearRecordedData = () => {
+    stopFormula();
     setPlaying(false);
     setPins([]);
     setData((prev) => ({
@@ -200,6 +260,7 @@ function App() {
 
   // Handler for simulation parameter changes
   const handleSimulationChange = (changes) => {
+    if (activeFormula) stopFormula(FORMULA_TOOK_OVER);
     setSimulation((prev) => ({ ...prev, ...changes }));
     if (simulation.time === 0 && data.selectedMode === 'record') {
       setData((prev) => ({
@@ -210,6 +271,7 @@ function App() {
   };
 
   const handleManDragStart = () => {
+    if (activeFormula) stopFormula(FORMULA_TOOK_OVER);
     dragSamples.current = [];
     trimRecordingToNow();
     setData((prev) => ({ ...prev, selectedMode: "record" }));
@@ -253,6 +315,15 @@ function App() {
   ));
 
   const isRecording = data.selectedMode === "record";
+
+  // The panel's message line (an error, if any, is shown first by the panel)
+  const formulaStatus = activeFormula
+    ? { text: playing ? `Running: x(t) = ${activeFormula.text}` : "Paused. Press Play to continue.", running: playing }
+    : !isRecording
+      ? { text: "Switch to Record to run a formula.", running: false }
+      : formulaNotice
+        ? { text: formulaNotice, running: false }
+        : null;
 
   return (
     <div className={`relative min-h-screen lg:h-screen w-full flex flex-col box-border ${KAREN_PAGE.bg} text-gray-800 overflow-x-clip`}>
@@ -357,6 +428,7 @@ function App() {
           playing={playing}
           data={data}
           playbackTried={playbackTried}
+          formulaOpen={formulaPanelOpen}
           isPinned={isPinned}
           pinCount={pins.length}
           canGoToPin={canGoToPin}
@@ -369,8 +441,29 @@ function App() {
           onReset={requestReset}
           onClearRecordedData={clearRecordedData}
           showPins={isCharts}
+          onFormulaClick={() => setFormulaPanelOpen((open) => !open)}
         />
       </div>
+
+      {formulaPanelOpen && (
+        <FormulaPanel
+          title="Position Formula"
+          label="x(t) ="
+          example="7 * sin(t) + 2"
+          text={formulaText}
+          error={formulaError}
+          status={formulaStatus}
+          running={activeFormula !== null}
+          runDisabled={!isRecording}
+          onTextChange={(value) => {
+            setFormulaText(value);
+            setFormulaError(null);
+          }}
+          onRun={handleFormulaRun}
+          onStop={handleFormulaStop}
+          onClose={() => setFormulaPanelOpen(false)}
+        />
+      )}
 
       {confirmingReset && (
         <ConfirmDialog

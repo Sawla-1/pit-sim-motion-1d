@@ -11,6 +11,8 @@ export function useSimulationLoop({
   onPlaybackStep,
   onDragStep,
   dragSamplesRef,
+  formulaActive,
+  onFormulaStep,
 }) {
   const last = useRef(performance.now());
 
@@ -68,6 +70,21 @@ export function useSimulationLoop({
             ...prev,
             recordedData: [...prev.recordedData, result.recordedState],
           }));
+        } else if (formulaActive) {
+          // FORMULA: same recording pipeline, but position comes from the typed
+          // formula. null = the formula gave no number, so it cannot go on.
+          const result = onFormulaStep(sim, frameTime);
+          if (result) {
+            simulationRef.current = result.simulation;
+            setSimulation(result.simulation);
+            setData((prev) => ({
+              ...prev,
+              recordedData: [...prev.recordedData, result.recordedState],
+            }));
+            if (result.simulation.time >= MAX_RECORD_TIME) setPlaying(false);
+          } else {
+            setPlaying(false);
+          }
         } else {
           // RECORDING MODE: time accumulates as simulation.time + frameTime,
           // so pausing just stops adding to it — no anchor/pause bookkeeping needed
@@ -87,5 +104,5 @@ export function useSimulationLoop({
     }
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
-  }, [playing, setSimulation, setData, setPlaying, onRecordStep, onPlaybackStep, onDragStep, dragSamplesRef]); // setters are stable React refs; listed to satisfy exhaustive-deps
+  }, [playing, setSimulation, setData, setPlaying, onRecordStep, onPlaybackStep, onDragStep, dragSamplesRef, formulaActive, onFormulaStep]); // setters are stable React refs; listed to satisfy exhaustive-deps
 }
