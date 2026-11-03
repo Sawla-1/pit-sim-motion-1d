@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
-import { makeSceneView, makeRulerTicks, labelFontSize, GROUND_Y, EDGE, MIN_RANGE, EDGE_LABEL_GAP, LABEL_BASE } from "../utils/sceneMath";
+import { makeSceneView, makeRulerTicks, labelFontSize, GROUND_Y, EDGE, MIN_RANGE, EDGE_LABEL_GAP, LABEL_BASE, PIN_FLAG_HEIGHT } from "../utils/sceneMath";
 import { formatNumber } from "../utils/formatNumber";
 
 const MAN_HEIGHT_TALL = 1.7; // Introduction: about 8.5% of the ruler's width, like the mockup
@@ -20,12 +20,18 @@ const EDGE_EXTRA_HEIGHT = 0.05;
 const RULER_FONT = '"Ruler Roboto", Roboto, sans-serif'; // bold numbers; the font file is loaded in index.css
 const OUTLINE_WIDTH = 0.03; // world units; the dark outline round the numbers (when `look.outline` is set)
 
+const PIN_COLOR = "#1f2937"; // same dark color as the pin dots on the charts
+const PIN_POLE_WIDTH = 0.04;
+const PIN_FLAG_WIDTH = 0.5;
+const PIN_LETTER_SIZE = 0.3; // fits inside the flag
+const PIN_DOT_RADIUS = 0.08; // the dot where the pole meets the ground
+
 // The scene (ruler, pins and the man) drawn with SVG. It replaces Simulation3D,
 // so it takes the same props:
 // position, velocity = the man (meters, meters per second)
 // pins = [{ name, position }], tall = Introduction size, look = the ruler colours
 // onManDragStart / onManDragSample(meters) / onManDragEnd = the man being dragged
-// STEP 5 (ruler numbers): the bar, its sticks and their numbers. The parts come in step by step.
+// STEP 6 (pins): the bar, its sticks and numbers, and the pins. The parts come in step by step.
 function SimulationScene(props) {
   const ref = useRef(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
@@ -84,6 +90,14 @@ function SimulationScene(props) {
   // On narrow screens "0 meters" becomes "0", so it can't run into its neighbours
   const zeroText = labelSize > LABEL_BASE * 1.5 ? "0" : "0 meters";
 
+  // Where a pin stands (world units). The first pin's flag points left, the second's
+  // right, so they don't cover each other when both pins are at the same spot.
+  const pinSpot = (pin, index) => {
+    const x = toWorldX(pin.position);
+    const side = index === 0 ? -1 : 1;
+    return { x, flagX: x + side * (PIN_POLE_WIDTH / 2 + PIN_FLAG_WIDTH / 2) };
+  };
+
   return (
     <svg ref={ref} width="100%" height="100%" className="block rounded-[inherit]">
       {view && (
@@ -98,6 +112,34 @@ function SimulationScene(props) {
               </linearGradient>
             </defs>
           )}
+          {/* Pins, behind the bar (so the pole's foot is hidden by it): a pole up to the man's
+              head height, and a flag on top of it. The dots come later. */}
+          {pins.map((pin, index) => {
+            const { x, flagX } = pinSpot(pin, index);
+            const poleTop = GROUND_Y + manHeight;
+            return (
+              <g key={pin.name}>
+                <rect x={view.toX(x - PIN_POLE_WIDTH / 2)} y={view.toY(poleTop)} width={PIN_POLE_WIDTH * view.zoom} height={manHeight * view.zoom} fill={PIN_COLOR} />
+                <rect x={view.toX(flagX - PIN_FLAG_WIDTH / 2)} y={view.toY(poleTop + PIN_FLAG_HEIGHT)} width={PIN_FLAG_WIDTH * view.zoom} height={PIN_FLAG_HEIGHT * view.zoom} fill={PIN_COLOR} />
+              </g>
+            );
+          })}
+          {/* The letters come after ALL the flags, so when two pins are close a flag
+              never covers the other pin's letter (same as the old scene) */}
+          {pins.map((pin, index) => (
+            <text
+              key={`letter-${pin.name}`}
+              x={view.toX(pinSpot(pin, index).flagX)}
+              y={view.toY(GROUND_Y + manHeight + PIN_FLAG_HEIGHT / 2)}
+              fontSize={PIN_LETTER_SIZE * view.zoom}
+              fill="white"
+              textAnchor="middle"
+              dominantBaseline="central"
+            >
+              {pin.name}
+            </text>
+          ))}
+
           {/* Thin dark edge: a slightly bigger bar behind the main one */}
           {look.edge && (
             <rect
@@ -144,6 +186,18 @@ function SimulationScene(props) {
                 rulerText(`edge-label-${x}`, x, look.labelDrop + 0.05, formatNumber((x / EDGE) * range, 1), look.edgeMark)
               )}
           </g>
+
+          {/* The pins' dots on the ground, in front of the bar: dark ring, white middle (like the chart's) */}
+          {pins.map((pin) => {
+            const cx = view.toX(toWorldX(pin.position));
+            const cy = view.toY(GROUND_Y);
+            return (
+              <g key={`dot-${pin.name}`}>
+                <circle cx={cx} cy={cy} r={PIN_DOT_RADIUS * view.zoom} fill={PIN_COLOR} />
+                <circle cx={cx} cy={cy} r={PIN_DOT_RADIUS * 0.6 * view.zoom} fill="white" />
+              </g>
+            );
+          })}
         </g>
       )}
     </svg>
