@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from "react";
-import { makeSceneView, makeRulerTicks, GROUND_Y, EDGE, MIN_RANGE } from "../utils/sceneMath";
+import { makeSceneView, makeRulerTicks, labelFontSize, GROUND_Y, EDGE, MIN_RANGE, EDGE_LABEL_GAP, LABEL_BASE } from "../utils/sceneMath";
+import { formatNumber } from "../utils/formatNumber";
 
 const MAN_HEIGHT_TALL = 1.7; // Introduction: about 8.5% of the ruler's width, like the mockup
 const MAN_HEIGHT_SHORT = 1.2; // Charts: the scene is short, so he is smaller
@@ -16,12 +17,15 @@ const DEFAULT_RULER = {
 const EDGE_EXTRA_WIDTH = 0.06;
 const EDGE_EXTRA_HEIGHT = 0.05;
 
+const RULER_FONT = '"Ruler Roboto", Roboto, sans-serif'; // bold numbers; the font file is loaded in index.css
+const OUTLINE_WIDTH = 0.03; // world units; the dark outline round the numbers (when `look.outline` is set)
+
 // The scene (ruler, pins and the man) drawn with SVG. It replaces Simulation3D,
 // so it takes the same props:
 // position, velocity = the man (meters, meters per second)
 // pins = [{ name, position }], tall = Introduction size, look = the ruler colours
 // onManDragStart / onManDragSample(meters) / onManDragEnd = the man being dragged
-// STEP 4 (ruler sticks): the bar and its sticks. The parts come in step by step.
+// STEP 5 (ruler numbers): the bar, its sticks and their numbers. The parts come in step by step.
 function SimulationScene(props) {
   const ref = useRef(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
@@ -55,6 +59,30 @@ function SimulationScene(props) {
     width: look.tickWidth * view.zoom,
     height: height * view.zoom,
   });
+
+  // A ruler number hanging from `drop` below the ground line. The size is in world units,
+  // so on narrow screens it grows to stay readable (see labelFontSize).
+  // paint-order draws the outline first, so only its outer half shows.
+  const labelSize = labelFontSize(size.width);
+  const rulerText = (key, worldX, drop, text, color) => (
+    <text
+      key={key}
+      x={view.toX(worldX)}
+      y={view.toY(GROUND_Y - drop)}
+      fontSize={labelSize * view.zoom}
+      fill={color}
+      stroke={look.outline ?? "none"}
+      strokeWidth={look.outline ? 2 * OUTLINE_WIDTH * view.zoom : 0}
+      strokeLinejoin="round"
+      paintOrder="stroke"
+      textAnchor="middle"
+      dominantBaseline="hanging"
+    >
+      {text}
+    </text>
+  );
+  // On narrow screens "0 meters" becomes "0", so it can't run into its neighbours
+  const zeroText = labelSize > LABEL_BASE * 1.5 ? "0" : "0 meters";
 
   return (
     <svg ref={ref} width="100%" height="100%" className="block rounded-[inherit]">
@@ -103,6 +131,19 @@ function SimulationScene(props) {
             [-EDGE, EDGE].map((x) => (
               <rect key={`edge-${x}`} {...stickRect(x, look.tickLabeledHeight)} fill={look.edgeMark} />
             ))}
+
+          {/* Ruler numbers: under the long sticks. A number too close to an end mark is hidden. */}
+          <g fontFamily={RULER_FONT} fontWeight="700">
+            {ticks.map(({ value, labeled }) =>
+              labeled && !(showEdge && Math.abs(toWorldX(value)) > EDGE - EDGE_LABEL_GAP)
+                ? rulerText(`label-${value}`, toWorldX(value), look.labelDrop, value === 0 ? zeroText : String(value), value === 0 ? look.zero : look.label)
+                : null
+            )}
+            {showEdge &&
+              [-EDGE, EDGE].map((x) =>
+                rulerText(`edge-label-${x}`, x, look.labelDrop + 0.05, formatNumber((x / EDGE) * range, 1), look.edgeMark)
+              )}
+          </g>
         </g>
       )}
     </svg>
