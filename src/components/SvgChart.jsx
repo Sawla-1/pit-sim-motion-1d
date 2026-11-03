@@ -96,7 +96,7 @@ function SvgChart({ points, color, xMin, xMax, yMin, yMax, showXNumbers, label, 
 
   return (
     <svg
-      ref={ref} role="img" aria-label={label} className="block w-full h-full"
+      ref={ref} role="img" aria-label={label} className="block w-full h-full select-none"
       style={{ touchAction: onScrub ? "pan-y" : undefined }} // sideways finger drag scrubs; up/down still scrolls
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
