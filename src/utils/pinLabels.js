@@ -1,14 +1,18 @@
 const GAP = 14; // space between the dot and its label
 const LETTER_W = 18; // room for the big letter (A / B)
-const LABEL_H = 28;
+const LABEL_H = 26; // same as the chip's height
 
 // Rough width of the label box (about 7px per character, same as before)
 const labelWidth = (text) => text.length * 7 + 12;
 
-// The rectangle that the letter + label fill. sx: 1 = right of the dot, -1 = left.
-function labelRect(pin, sx, top) {
+// The rectangle that the letter + label fill.
+// sx: 1 = right of the dot, -1 = left, 0 = centered on the dot (kept inside the plot).
+function labelRect(pin, sx, top, plot) {
   const width = LETTER_W + labelWidth(pin.text);
-  const left = sx > 0 ? pin.x + GAP : pin.x - GAP - width;
+  let left;
+  if (sx > 0) left = pin.x + GAP;
+  else if (sx < 0) left = pin.x - GAP - width;
+  else left = Math.max(plot.left, Math.min(pin.x - width / 2, plot.right - width));
   return { left, top, right: left + width, bottom: top + LABEL_H };
 }
 
@@ -32,13 +36,14 @@ function spotsFor(pin, plot) {
     ? [above, below, beside, plot.top, lowest]
     : [below, above, beside, lowest, plot.top])];
 
-  const rightFirst = fitsAcross(labelRect(pin, 1, plot.top), plot);
-  const sides = rightFirst ? [1, -1] : [-1, 1];
+  const rightFirst = fitsAcross(labelRect(pin, 1, plot.top, plot), plot);
+  // Beside the dot first; centered above/below it only when the sides do not fit
+  const sides = rightFirst ? [1, -1, 0] : [-1, 1, 0];
   const spots = sides
-    .flatMap((sx) => tops.map((top) => ({ sx, rect: labelRect(pin, sx, top) })))
+    .flatMap((sx) => tops.map((top) => ({ sx, rect: labelRect(pin, sx, top, plot) })))
     .filter((spot) => fitsAcross(spot.rect, plot));
   // Plot narrower than the label: nothing fits, use the first choice anyway
-  return spots.length ? spots : [{ sx: sides[0], rect: labelRect(pin, sides[0], tops[0]) }];
+  return spots.length ? spots : [{ sx: sides[0], rect: labelRect(pin, sides[0], tops[0], plot) }];
 }
 
 // pins = [{ name, x, y, text }] in pixels; plot = { left, right, top, bottom }.
@@ -76,8 +81,8 @@ export function placePinLabels(pins, plot, keepClear = []) {
     return {
       name: pin.name,
       text: pin.text,
-      letterX: sx > 0 ? rect.left + LETTER_W / 2 : rect.right - LETTER_W / 2,
-      boxLeft: sx > 0 ? rect.left + LETTER_W : rect.left,
+      letterX: sx >= 0 ? rect.left + LETTER_W / 2 : rect.right - LETTER_W / 2,
+      boxLeft: sx >= 0 ? rect.left + LETTER_W : rect.left,
       boxWidth: rect.right - rect.left - LETTER_W,
       centerY: (rect.top + rect.bottom) / 2,
     };
