@@ -418,9 +418,8 @@ function App() {
         <div className="shrink-0 flex flex-col sm:flex-row gap-2 px-4 sm:px-[72px] py-2">{inputs}</div>
       )}
 
-      {/* Bottom: the toolbar pill, 8px gap under it. Charts: centered under the charts (laptops).
-          Introduction: centered on the page. */}
-      <div className={`relative z-[6] shrink-0 flex justify-center px-2 sm:px-4 ${isCharts ? "lg:pl-[212px] lg:pr-[64px]" : ""} pb-2 [@media(min-height:700px)]:pb-8 max-lg:mt-auto max-lg:sticky max-lg:bottom-0 max-lg:z-20 ${KAREN_PAGE.stickyBg}`}>
+      {/* Bottom: the toolbar pill, 8px gap under it. Centered on the page on both tabs (laptops: one row). */}
+      <div className={`relative z-[6] shrink-0 flex justify-center px-2 sm:px-4 pb-2[@media(min-height:700px)]:pb-8 max-lg:mt-auto max-lg:sticky max-lg:bottom-0 max-lg:z-20 ${KAREN_PAGE.stickyBg}`}>
         {/* The rice-field strip behind the bar (it sticks with the bar on phones) */}
         <img src={KAREN_ART.bottomStrip} alt="" aria-hidden="true" className={KAREN_PAGE.strip} />
         <Controls
@@ -441,6 +440,7 @@ function App() {
           onReset={requestReset}
           onClearRecordedData={clearRecordedData}
           showPins={isCharts}
+          compact={isCharts}
           onFormulaClick={() => setFormulaPanelOpen((open) => !open)}
         />
       </div>

@@ -68,6 +68,7 @@ function Controls({
   onReset,
   onClearRecordedData,
   showPins,
+  compact,
   onFormulaClick,
 }) {
   // Prev / next / Pin / Go-to-pin are hidden in record mode. They keep their
@@ -87,7 +88,7 @@ function Controls({
     // The mat behind stretches to any number of rows. (App.jsx places it)
     // Fills the page width, up to 800px (1000px on laptops, 1150px on large screens, to fit the Formula
     // and Pin buttons), so Clear and Reset sit at the two ends.
-    <div className={KAREN_BAR.box}>
+    <div className={`${KAREN_BAR.box} ${compact ? KAREN_BAR.compact : ""}`}>
         <img src={KAREN_ART.barBackground} alt="" aria-hidden="true" className={KAREN_BAR.mat} />
         {/* Left group: Clear Data + Formula (one block, so the bar keeps its 3 parts) */}
         <div className="flex items-center gap-2">
