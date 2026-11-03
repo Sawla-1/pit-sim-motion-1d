@@ -1,0 +1,109 @@
+import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { makeScale, makeTicks, evenTicks, decimateMinMax, toPath } from "../utils/chartMath";
+
+// Space around the plot (px). The bottom is 26 when this chart shows the
+// time numbers, else 8 (just the little tick marks), same as before.
+const TOP = 8; // room for half of the top y number
+const RIGHT = 16;
+const TICK = 6; // length of a tick mark
+
+// A line chart drawn with SVG. Props in only; it knows nothing about
+// "position" or "velocity" (so simulation #2 can use it too).
+// points = [{ x, y }, ...] sorted by x.
+function SvgChart({ points, color, xMin, xMax, yMin, yMax, showXNumbers, label }) {
+  const ref = useRef(null);
+  const [size, setSize] = useState({ width: 0, height: 0 });
+  const clipId = useId(); // each chart needs its own clip id
+
+  // Keep `size` equal to the real size on screen (needed to turn values into pixels)
+  useEffect(() => {
+    const observer = new ResizeObserver(([entry]) => {
+      setSize({ width: entry.contentRect.width, height: entry.contentRect.height });
+    });
+    observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, []);
+
+  // Layout: the plot rectangle is left..right, top..bottom
+  const narrow = size.width < 500;
+  const left = narrow ? 56 : 70; // y numbers; a fixed width so all 3 plots line up
+  const right = size.width - RIGHT;
+  const top = TOP;
+  const bottom = size.height - (showXNumbers ? 26 : 8);
+  const fontSize = narrow || window.innerHeight <= 600 ? 13 : 16;
+  const ready = right > left && bottom > top;
+
+  // Before anything is recorded xMax equals xMin; show a 1 s window then
+  const xEnd = xMax > xMin ? xMax : xMin + 1;
+
+  const toX = useMemo(() => makeScale(xMin, xEnd, left, right), [xMin, xEnd, left, right]);
+  const toY = useMemo(() => makeScale(yMin, yMax, bottom, top), [yMin, yMax, bottom, top]);
+
+  // Only rebuilt when the data or the view changes, not on every frame
+  const path = useMemo(() => {
+    if (!ready) return "";
+    const kept = decimateMinMax(points, xMin, xEnd, right - left);
+    return toPath(kept.map((p) => ({ x: toX(p.x), y: toY(p.y) })));
+  }, [ready, points, xMin, xEnd, left, right, toX, toY]);
+
+  const xTicks = ready ? makeTicks(xMin, xEnd, Math.max(1, Math.floor((right - left) / 50))) : [];
+  const yTicks = evenTicks(yMin, yMax, 5);
+  const isZero = (t) => Math.abs(t) < 1e-9;
+
+  return (
+    <svg ref={ref} role="img" aria-label={label} className="block w-full h-full">
+      {ready && (
+        <>
+          {/* white plot area */}
+          <rect x={left} y={top} width={right - left} height={bottom - top} fill="#fff" />
+
+          {/* grid: dashed light grey; the 0 line is dark and thicker */}
+          {xTicks.map((t) => (
+            <line key={`gx${t}`} x1={toX(t)} x2={toX(t)} y1={top} y2={bottom}
+              stroke="#e5e7eb" strokeDasharray="4 4" />
+          ))}
+          {yTicks.map((t) => (
+            <line key={`gy${t}`} x1={left} x2={right} y1={toY(t)} y2={toY(t)}
+              stroke={isZero(t) ? "#1f2937" : "#e5e7eb"} strokeWidth={isZero(t) ? 2 : 1}
+              strokeDasharray="4 4" />
+          ))}
+
+          {/* dark frame, under the data line */}
+          <rect x={left} y={top} width={right - left} height={bottom - top}
+            fill="none" stroke="#6b7280" strokeWidth="2" />
+
+          {/* the data line, cut off at the plot edge */}
+          <clipPath id={clipId}>
+            <rect x={left} y={top} width={right - left} height={bottom - top} />
+          </clipPath>
+          <path d={path} fill="none" stroke={color} strokeWidth="3"
+            strokeLinejoin="round" clipPath={`url(#${clipId})`} />
+
+          {/* tick marks (every chart) and numbers */}
+          <g fill="#1f2937" fontSize={fontSize} fontWeight="600">
+            {yTicks.map((t) => (
+              <g key={`ty${t}`}>
+                <line x1={left - TICK} x2={left} y1={toY(t)} y2={toY(t)} stroke="#6b7280" strokeWidth="2" />
+                <text x={left - TICK - 4} y={toY(t)} textAnchor="end" dominantBaseline="middle">
+                  {t.toLocaleString(undefined, { maximumFractionDigits: 1 })}
+                </text>
+              </g>
+            ))}
+            {xTicks.map((t) => (
+              <g key={`tx${t}`}>
+                <line x1={toX(t)} x2={toX(t)} y1={bottom} y2={bottom + TICK} stroke="#6b7280" strokeWidth="2" />
+                {showXNumbers && (
+                  <text x={toX(t)} y={bottom + TICK + 2} textAnchor="middle" dominantBaseline="hanging">
+                    {t.toLocaleString()}
+                  </text>
+                )}
+              </g>
+            ))}
+          </g>
+        </>
+      )}
+    </svg>
+  );
+}
+
+export default SvgChart;

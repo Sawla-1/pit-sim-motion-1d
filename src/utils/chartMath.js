@@ -13,16 +13,16 @@ export function makeScale(domainMin, domainMax, pixelMin, pixelMax) {
 // invertScale(0, 500, 0, 10)(250) → 5
 export const invertScale = makeScale;
 
-// Round tick values for the time axis. Bounds are left out
-// (like Chart.js `includeBounds: false`).
-// makeTicks(0, 10, 5) → [2, 4, 6, 8]
+// Round tick values for the time axis. A tick that lands exactly on min or
+// max is kept (like Chart.js).
+// makeTicks(0, 10, 5) → [0, 2, 4, 6, 8, 10]
 export function makeTicks(min, max, maxCount) {
   if (!(max > min)) return [];
   const step = niceStep(max - min, maxCount);
   const ticks = [];
-  for (let i = Math.ceil(min / step); i * step < max; i++) {
-    const value = Number((i * step).toFixed(10)); // hides 0.30000000000000004
-    if (value > min) ticks.push(value);
+  // the 1e-9 slack absorbs float noise at the two edges
+  for (let i = Math.ceil(min / step - 1e-9); i * step <= max + step * 1e-9; i++) {
+    ticks.push(Number((i * step).toFixed(10))); // hides 0.30000000000000004
   }
   return ticks;
 }
