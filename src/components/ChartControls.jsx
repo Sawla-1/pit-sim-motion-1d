@@ -1,50 +1,4 @@
-import { Line } from "react-chartjs-2";
-import {
-  Chart as ChartJS,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Tooltip,
-  Decimation,
-} from "chart.js";
-import annotationPlugin from "chartjs-plugin-annotation";
 import { whiteLook, disabledIcon, offPill } from "../styles/buttonStyles";
-
-// PhET-style plot area: white inside, dark frame around it. Chart.js has no
-// built-in full frame (only the left/bottom axis lines), so this small
-// plugin draws it.
-const plotFrame = {
-  id: "plotFrame",
-  beforeDraw(chart) {
-    // Before the grid and lines: white background.
-    const { ctx, chartArea: { left, top, width, height } } = chart;
-    ctx.save();
-    ctx.fillStyle = "#fff";
-    ctx.fillRect(left, top, width, height);
-    ctx.restore();
-  },
-  beforeDatasetsDraw(chart) {
-    // Dark frame, drawn before the data lines and the "now" marker so they
-    // stay visible on top of it (e.g. the marker at time 0 or at the end).
-    const { ctx, chartArea: { left, top, width, height } } = chart;
-    ctx.save();
-    ctx.strokeStyle = "#6b7280"; // grey, 2px, like the mockup
-    ctx.lineWidth = 2;
-    ctx.strokeRect(left, top, width, height);
-    ctx.restore();
-  },
-};
-
-// Register Chart.js plugins
-ChartJS.register(
-  LinearScale,
-  PointElement,
-  LineElement,
-  Tooltip,
-  Decimation,
-  annotationPlugin,
-  plotFrame
-);
 
 // Thin-line icons (drawn inside a 24x24 box), one per pill button
 const ICONS = {
@@ -159,7 +113,7 @@ function ScrubHint() {
 }
 
 // One chart's full row: its input panel, the hide button, the zoom/pan/reset
-// pills, and the Line chart. When hidden, it shows one slim line with the
+// pills, and the chart (passed in as children). When hidden, it shows one slim line with the
 // chart's name and a "show" button. Takes values/callbacks already bound to
 // a specific chart from the call site (same pattern as PhysicsInput in
 // App.jsx), so it has no idea which chart it's rendering.
@@ -168,7 +122,7 @@ export function ChartPanel({
   visible, onShow, onHide,
   showZoomControls, yControlsProps, xControls, isBottom, scrubHint, onReset, resetDisabled,
   onZoomToPins, zoomToPinsDisabled,
-  chartData, chartOptions, chartRef,
+  children, // the chart itself (a SvgChart)
 }) {
   if (!visible) {
     return (
@@ -240,7 +194,7 @@ export function ChartPanel({
             </Pill>
           )}
         </div>
-        <Line data={chartData} options={chartOptions} ref={chartRef} />
+        {children}
       </div>
     </div>
   );
