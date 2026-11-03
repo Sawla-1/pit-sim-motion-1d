@@ -1,5 +1,5 @@
 import { useState,useRef } from "react";
-import Simulation3D from "./components/Simulation3D";
+import SimulationScene from "./components/SimulationScene";
 import Charts from "./components/Charts";
 import Controls from "./components/Controls";
 import ConfirmDialog from "./components/ConfirmDialog";
@@ -364,7 +364,7 @@ function App() {
         )}
         {/* Fills the scene box, so the canvas always gets a real height (Introduction: side room for the bamboo) */}
         <div className={`absolute rounded-[inherit] ${isCharts ? "inset-0" : "inset-x-6 sm:inset-x-[72px] top-[50%] [@media(max-height:600px)]:top-[25%] bottom-[2%]"}`}>
-          <Simulation3D
+          <SimulationScene
             position={simulation.position}
             velocity={simulation.velocity}
             pins={isCharts ? pins : []}
