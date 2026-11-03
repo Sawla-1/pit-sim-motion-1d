@@ -77,6 +77,43 @@ export function decimateMinMax(points, xMin, xMax, pixelWidth) {
   return result;
 }
 
+// First index whose x is >= the given x (points are sorted by x)
+function lowerBound(points, x) {
+  let low = 0;
+  let high = points.length;
+  while (low < high) {
+    const mid = (low + high) >> 1;
+    if (points[mid].x < x) low = mid + 1;
+    else high = mid;
+  }
+  return low;
+}
+
+// The data point closest to the pointer, if it is within `radius` pixels.
+// `scales` = { toX, toY, fromX } (value → pixel, and pixel → value for x).
+// Returns the point ({ x, y } in data units) or null.
+export function findNearestPoint(points, scales, pixelX, pixelY, radius) {
+  const { toX, toY, fromX } = scales;
+  const start = lowerBound(points, fromX(pixelX));
+  let best = null;
+  let bestDistance = radius * radius;
+
+  const look = (i) => {
+    const dx = toX(points[i].x) - pixelX;
+    const dy = toY(points[i].y) - pixelY;
+    const distance = dx * dx + dy * dy;
+    if (distance <= bestDistance) {
+      best = points[i];
+      bestDistance = distance;
+    }
+    return Math.abs(dx) <= radius; // false = too far sideways, stop looking
+  };
+
+  for (let i = start; i < points.length && look(i); i++); // to the right
+  for (let i = start - 1; i >= 0 && look(i); i--); // to the left
+  return best;
+}
+
 // Pixel points → the text an SVG <path d="..."> needs.
 // toPath([{ x: 0, y: 0 }, { x: 5, y: 3 }]) → "M0.0 0.0L5.0 3.0"
 export function toPath(pixelPoints) {
