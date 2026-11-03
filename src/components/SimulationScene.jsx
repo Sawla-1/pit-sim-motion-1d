@@ -31,12 +31,10 @@ const MAN_WALKING = "/karen-intro-svgs/boy-side-walking.svg"; // the art faces r
 const MAN_ASPECT = 30 / 44; // the boy art is 30 wide and 44 tall
 const MOVING_THRESHOLD = 0.1; // m/s; at or below this he stands
 
-// The scene (ruler, pins and the man) drawn with SVG. It replaces Simulation3D,
-// so it takes the same props:
+// The scene (ruler, pins and the man) drawn with SVG. Props:
 // position, velocity = the man (meters, meters per second)
 // pins = [{ name, position }], tall = Introduction size, look = the ruler colours
 // onManDragStart / onManDragSample(meters) / onManDragEnd = the man being dragged
-// STEP 8 (dragging): the whole scene. Next: compare it with Simulation3D, then delete the old file.
 function SimulationScene(props) {
   const ref = useRef(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
@@ -215,7 +213,7 @@ function SimulationScene(props) {
             fill={look.gradient ? `url(#${gradientId})` : look.ground}
           />
 
-          {/* Ruler sticks: the 0 stick is red; the long ones will get a number (step 5) */}
+          {/* Ruler sticks: the 0 stick is red; the long ones have a number under them */}
           {ticks.map(({ value, labeled }) => (
             <rect
               key={`tick-${value}`}
