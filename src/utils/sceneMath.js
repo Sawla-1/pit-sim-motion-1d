@@ -1,5 +1,11 @@
+import { niceStep } from "./niceStep";
+
 // Turns the scene's "world units" into pixels. The numbers are the ones the old
 // 3D scene used (the ruler is 20 units wide), so the picture looks the same.
+export const EDGE = 10; // half-width of the ruler picture in world units; the picture never changes size
+export const MIN_RANGE = 10; // meters shown on each side of 0 while the man is near the middle
+const MAX_LABELS_PER_SIDE = 6;
+const MIN_EDGE_GAP = 0.2; // world units; any closer and the edge stick doubles up with the last stick
 export const GROUND_Y = -0.6; // height of the ground line; the man's and the pins' feet stand on it
 export const FIT_HALF_WIDTH = 11; // ruler ±10 plus room for the man sprite and the edge label
 export const PIN_FLAG_HEIGHT = 0.36;
@@ -13,6 +19,21 @@ const LABEL_REFERENCE = 0.25; // the number size that CONTENT_BOTTOM was made fo
 export function labelFontSize(sceneWidth) {
   const pixelsPerUnit = sceneWidth / (2 * FIT_HALF_WIDTH);
   return Math.max(LABEL_BASE, LABEL_MIN_PX / pixelsPerUnit);
+}
+
+// The ruler sticks for a ruler that shows -range..range meters.
+// ticks = [{ value (meters), labeled }]: a long stick with a number every `step`,
+// and a short stick halfway between. showEdge = the ruler's last stick falls short
+// of the picture's edge, so draw an extra end mark there.
+export function makeRulerTicks(range) {
+  const halfStep = niceStep(range, MAX_LABELS_PER_SIDE) / 2;
+  const halfSteps = Math.floor(range / halfStep); // how many halfSteps fit from 0 to the edge
+  const ticks = Array.from({ length: halfSteps * 2 + 1 }, (_, i) => {
+    const n = i - halfSteps;
+    return { value: n * halfStep, labeled: n % 2 === 0 };
+  });
+  const showEdge = ((range - halfSteps * halfStep) / range) * EDGE > MIN_EDGE_GAP;
+  return { ticks, showEdge };
 }
 
 // Makes the ruler, the pins and the man fit inside the scene on any screen size.

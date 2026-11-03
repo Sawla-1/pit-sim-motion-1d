@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
-import { makeSceneView, GROUND_Y } from "../utils/sceneMath";
+import { makeSceneView, makeRulerTicks, GROUND_Y, EDGE, MIN_RANGE } from "../utils/sceneMath";
 
 const MAN_HEIGHT_TALL = 1.7; // Introduction: about 8.5% of the ruler's width, like the mockup
 const MAN_HEIGHT_SHORT = 1.2; // Charts: the scene is short, so he is smaller
@@ -21,7 +21,7 @@ const EDGE_EXTRA_HEIGHT = 0.05;
 // position, velocity = the man (meters, meters per second)
 // pins = [{ name, position }], tall = Introduction size, look = the ruler colours
 // onManDragStart / onManDragSample(meters) / onManDragEnd = the man being dragged
-// STEP 3 (ground bar): only the bar. The parts come in step by step.
+// STEP 4 (ruler sticks): the bar and its sticks. The parts come in step by step.
 function SimulationScene(props) {
   const ref = useRef(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
@@ -40,6 +40,21 @@ function SimulationScene(props) {
   const manHeight = props.tall ? MAN_HEIGHT_TALL : MAN_HEIGHT_SHORT;
   const ready = size.width > 0 && size.height > 0;
   const view = ready ? makeSceneView(size.width, size.height, manHeight) : null;
+
+  // The ruler spans -range..range with 0 in the center, and follows the man both ways.
+  // Pins count too, so a pin is never off the ruler.
+  const pins = props.pins ?? [];
+  const range = Math.max(MIN_RANGE, Math.abs(props.position), ...pins.map((p) => Math.abs(p.position)));
+  const { ticks, showEdge } = makeRulerTicks(range);
+  const toWorldX = (meters) => (meters / range) * EDGE; // sticks (and later the labels and the man) use this
+
+  // A stick, centred on its spot just below the ground line (world units → pixels)
+  const stickRect = (worldX, height) => ({
+    x: view.toX(worldX) - (look.tickWidth * view.zoom) / 2,
+    y: view.toY(GROUND_Y - look.tickDrop) - (height * view.zoom) / 2,
+    width: look.tickWidth * view.zoom,
+    height: height * view.zoom,
+  });
 
   return (
     <svg ref={ref} width="100%" height="100%" className="block rounded-[inherit]">
@@ -73,6 +88,21 @@ function SimulationScene(props) {
             height={look.groundHeight * view.zoom}
             fill={look.gradient ? `url(#${gradientId})` : look.ground}
           />
+
+          {/* Ruler sticks: the 0 stick is red; the long ones will get a number (step 5) */}
+          {ticks.map(({ value, labeled }) => (
+            <rect
+              key={`tick-${value}`}
+              {...stickRect(toWorldX(value), labeled ? look.tickLabeledHeight : look.tickHeight)}
+              fill={value === 0 ? look.zeroTick : look.tick}
+            />
+          ))}
+
+          {/* End marks when the ruler grows past 10 m */}
+          {showEdge &&
+            [-EDGE, EDGE].map((x) => (
+              <rect key={`edge-${x}`} {...stickRect(x, look.tickLabeledHeight)} fill={look.edgeMark} />
+            ))}
         </g>
       )}
     </svg>
