@@ -5,14 +5,10 @@ const LABEL_H = 28;
 // Rough width of the label box (about 7px per character, same as before)
 const labelWidth = (text) => text.length * 7 + 12;
 
-// The rectangle that the letter + label fill.
-// sx: 1 = right of the dot, -1 = left.  sy: -1 = above, 1 = below.
-// On a short plot it is pushed back inside, so it never hangs out of the plot.
-function labelRect(pin, sx, sy, plot) {
+// The rectangle that the letter + label fill. sx: 1 = right of the dot, -1 = left.
+function labelRect(pin, sx, top) {
   const width = LETTER_W + labelWidth(pin.text);
   const left = sx > 0 ? pin.x + GAP : pin.x - GAP - width;
-  const wantedTop = pin.y + sy * (GAP + LABEL_H / 2) - LABEL_H / 2;
-  const top = Math.max(plot.top, Math.min(wantedTop, plot.bottom - LABEL_H));
   return { left, top, right: left + width, bottom: top + LABEL_H };
 }
 
@@ -22,36 +18,66 @@ const overlaps = (a, b) =>
 // Must stay inside the plot sideways
 const fitsAcross = (rect, plot) => rect.left >= plot.left && rect.right <= plot.right;
 
+// Every spot this pin's label could go, best first: the preferred side first,
+// then the other side. On each side: above the dot, below it, beside it, then
+// the very top and the very bottom of the plot. Spots are kept inside the plot.
+function spotsFor(pin, plot) {
+  const lowest = plot.bottom - LABEL_H;
+  const inside = (top) => Math.max(plot.top, Math.min(top, lowest));
+  const above = inside(pin.y - GAP - LABEL_H);
+  const below = inside(pin.y + GAP);
+  const beside = inside(pin.y - LABEL_H / 2);
+  const roomAbove = pin.y - plot.top > LABEL_H + GAP;
+  const tops = [...new Set(roomAbove
+    ? [above, below, beside, plot.top, lowest]
+    : [below, above, beside, lowest, plot.top])];
+
+  const rightFirst = fitsAcross(labelRect(pin, 1, plot.top), plot);
+  const sides = rightFirst ? [1, -1] : [-1, 1];
+  const spots = sides
+    .flatMap((sx) => tops.map((top) => ({ sx, rect: labelRect(pin, sx, top) })))
+    .filter((spot) => fitsAcross(spot.rect, plot));
+  // Plot narrower than the label: nothing fits, use the first choice anyway
+  return spots.length ? spots : [{ sx: sides[0], rect: labelRect(pin, sides[0], tops[0]) }];
+}
+
 // pins = [{ name, x, y, text }] in pixels; plot = { left, right, top, bottom }.
 // keepClear = rectangles that labels must not cover (e.g. the hide button).
 // Gives each pin a spot for its letter and label so that nothing overlaps.
 export function placePinLabels(pins, plot, keepClear = []) {
   // Dots count as obstacles too, so a label never covers a dot
-  const taken = [
+  const fixed = [
     ...keepClear,
     ...pins.map((p) => ({ left: p.x - 7, right: p.x + 7, top: p.y - 7, bottom: p.y + 7 })),
   ];
+  const options = pins.map((pin) => spotsFor(pin, plot));
 
-  return pins.map((pin) => {
-    // Preferred spot: right if there is room, else left; above if there is room, else below
-    const sx = fitsAcross(labelRect(pin, 1, -1, plot), plot) ? 1 : -1;
-    const sy = pin.y - plot.top > LABEL_H + GAP ? -1 : 1;
+  // Try the combinations (a few pins, a few spots each) and keep the one with
+  // no overlaps that is closest to everyone's first choice.
+  let best = null;
+  const search = (i, picked, cost) => {
+    if (best && cost >= best.cost) return;
+    if (i === pins.length) {
+      best = { cost, picked };
+      return;
+    }
+    options[i].forEach((spot, rank) => {
+      const clash = [...fixed, ...picked.map((p) => p.rect)].some((t) => overlaps(spot.rect, t));
+      if (!clash) search(i + 1, [...picked, spot], cost + rank);
+    });
+  };
+  search(0, [], 0);
 
-    // Try the preferred spot first, then flip up/down, then left/right, then both.
-    // Take the first one that fits and overlaps nothing placed so far.
-    const options = [[sx, sy], [sx, -sy], [-sx, sy], [-sx, -sy]];
-    const [cx, cy] = options.find(([a, b]) => {
-      const rect = labelRect(pin, a, b, plot);
-      return fitsAcross(rect, plot) && !taken.some((t) => overlaps(rect, t));
-    }) ?? options[0];
+  // Nothing without overlaps: fall back to everyone's first choice
+  const chosen = best ? best.picked : options.map((spots) => spots[0]);
 
-    const rect = labelRect(pin, cx, cy, plot);
-    taken.push(rect);
+  return pins.map((pin, i) => {
+    const { sx, rect } = chosen[i];
     return {
       name: pin.name,
       text: pin.text,
-      letterX: cx > 0 ? rect.left + LETTER_W / 2 : rect.right - LETTER_W / 2,
-      boxLeft: cx > 0 ? rect.left + LETTER_W : rect.left,
+      letterX: sx > 0 ? rect.left + LETTER_W / 2 : rect.right - LETTER_W / 2,
+      boxLeft: sx > 0 ? rect.left + LETTER_W : rect.left,
       boxWidth: rect.right - rect.left - LETTER_W,
       centerY: (rect.top + rect.bottom) / 2,
     };
