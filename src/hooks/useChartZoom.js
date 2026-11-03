@@ -74,7 +74,7 @@ export function useChartZoom(data) {
   };
 
   // X-axis (time) is shared React state across all three charts - not a
-  // native Chart.js scale - so panning moves the xRange window instead,
+  // scale owned by one chart - so panning moves the xRange window instead,
   // the same way handleXZoom resizes it. Clamped to [0, maxTime].
   const handleXPan = (direction) => {
     if (maxTime === 0) return;
