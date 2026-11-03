@@ -25,7 +25,7 @@ const fitsAcross = (rect, plot) => rect.left >= plot.left && rect.right <= plot.
 // Every spot this pin's label could go, best first: the preferred side first,
 // then the other side. On each side: above the dot, below it, beside it, then
 // the very top and the very bottom of the plot. Spots are kept inside the plot.
-function spotsFor(pin, plot) {
+function spotsFor(pin, plot, keepClear) {
   const lowest = plot.bottom - LABEL_H;
   const inside = (top) => Math.max(plot.top, Math.min(top, lowest));
   const above = inside(pin.y - GAP - LABEL_H);
@@ -39,9 +39,16 @@ function spotsFor(pin, plot) {
   const rightFirst = fitsAcross(labelRect(pin, 1, plot.top, plot), plot);
   // Beside the dot first; centered above/below it only when the sides do not fit
   const sides = rightFirst ? [1, -1, 0] : [-1, 1, 0];
-  const spots = sides
-    .flatMap((sx) => tops.map((top) => ({ sx, rect: labelRect(pin, sx, top, plot) })))
-    .filter((spot) => fitsAcross(spot.rect, plot));
+  const all = sides.flatMap((sx) => tops.map((top) => ({ sx, rect: labelRect(pin, sx, top, plot) })));
+  // A spot that touches a keep-clear box (the hide button) is also tried slid
+  // to the left of that box, a bit away from its dot but not covering the button.
+  const slid = all.flatMap((spot) => {
+    const box = keepClear.find((k) => overlaps(spot.rect, k));
+    if (!box || spot.sx > 0) return [];
+    const move = spot.rect.right - (box.left - 2);
+    return [{ ...spot, rect: { ...spot.rect, left: spot.rect.left - move, right: spot.rect.right - move } }];
+  });
+  const spots = [...all, ...slid].filter((spot) => fitsAcross(spot.rect, plot));
   // Plot narrower than the label: nothing fits, use the first choice anyway
   return spots.length ? spots : [{ sx: sides[0], rect: labelRect(pin, sides[0], tops[0], plot) }];
 }
@@ -55,7 +62,7 @@ export function placePinLabels(pins, plot, keepClear = []) {
     ...keepClear,
     ...pins.map((p) => ({ left: p.x - 7, right: p.x + 7, top: p.y - 7, bottom: p.y + 7 })),
   ];
-  const options = pins.map((pin) => spotsFor(pin, plot));
+  const options = pins.map((pin) => spotsFor(pin, plot, keepClear));
 
   // Try the combinations (a few pins, a few spots each) and keep the one with
   // no overlaps that is closest to everyone's first choice.
