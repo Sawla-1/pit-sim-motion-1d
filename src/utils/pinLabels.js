@@ -19,12 +19,19 @@ function labelRect(pin, sx, top, plot) {
 const overlaps = (a, b) =>
   a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
 
+// How far the rectangle is from the dot (nearest edge to the dot's centre)
+function distanceToDot(rect, pin) {
+  const dx = Math.max(rect.left - pin.x, 0, pin.x - rect.right);
+  const dy = Math.max(rect.top - pin.y, 0, pin.y - rect.bottom);
+  return Math.hypot(dx, dy);
+}
+
 // Must stay inside the plot sideways
 const fitsAcross = (rect, plot) => rect.left >= plot.left && rect.right <= plot.right;
 
 // Every spot this pin's label could go, best first: the preferred side first,
 // then the other side. On each side: above the dot, below it, beside it, then
-// the very top and the very bottom of the plot. Spots are kept inside the plot.
+// every row down the plot. Spots are kept inside the plot.
 function spotsFor(pin, plot, keepClear) {
   const lowest = plot.bottom - LABEL_H;
   const inside = (top) => Math.max(plot.top, Math.min(top, lowest));
@@ -32,9 +39,11 @@ function spotsFor(pin, plot, keepClear) {
   const below = inside(pin.y + GAP);
   const beside = inside(pin.y - LABEL_H / 2);
   const roomAbove = pin.y - plot.top > LABEL_H + GAP;
-  const tops = [...new Set(roomAbove
-    ? [above, below, beside, plot.top, lowest]
-    : [below, above, beside, lowest, plot.top])];
+  // Rows to try: the three next to the dot first, then every half label height
+  // down the plot, so a label can always find a free row close by.
+  const steps = Math.ceil((lowest - plot.top) / (LABEL_H / 2));
+  const rows = Array.from({ length: steps + 1 }, (_, i) => plot.top + ((lowest - plot.top) * i) / steps);
+  const tops = [...new Set([...(roomAbove ? [above, below, beside] : [below, above, beside]), ...rows])];
 
   const rightFirst = fitsAcross(labelRect(pin, 1, plot.top, plot), plot);
   // Beside the dot first; centered above/below it only when the sides do not fit
@@ -65,7 +74,7 @@ export function placePinLabels(pins, plot, keepClear = []) {
   const options = pins.map((pin) => spotsFor(pin, plot, keepClear));
 
   // Try the combinations (a few pins, a few spots each) and keep the one with
-  // no overlaps that is closest to everyone's first choice.
+  // no overlaps with the labels closest to their dots (the spot order breaks ties).
   let best = null;
   const search = (i, picked, cost) => {
     if (best && cost >= best.cost) return;
@@ -75,7 +84,7 @@ export function placePinLabels(pins, plot, keepClear = []) {
     }
     options[i].forEach((spot, rank) => {
       const clash = [...fixed, ...picked.map((p) => p.rect)].some((t) => overlaps(spot.rect, t));
-      if (!clash) search(i + 1, [...picked, spot], cost + rank);
+      if (!clash) search(i + 1, [...picked, spot], cost + distanceToDot(spot.rect, pins[i]) + rank / 100);
     });
   };
   search(0, [], 0);
