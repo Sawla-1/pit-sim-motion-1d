@@ -1,5 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { makeScale, makeTicks, evenTicks, decimateMinMax, toPath } from "../utils/chartMath";
+import { placePinLabels } from "../utils/pinLabels";
 
 // Space around the plot (px). The bottom is 26 when this chart shows the
 // time numbers, else 8 (just the little tick marks), same as before.
@@ -10,7 +11,9 @@ const TICK = 6; // length of a tick mark
 // A line chart drawn with SVG. Props in only; it knows nothing about
 // "position" or "velocity" (so simulation #2 can use it too).
 // points = [{ x, y }, ...] sorted by x.
-function SvgChart({ points, color, xMin, xMax, yMin, yMax, showXNumbers, label }) {
+// nowX = where to draw the "now" band (data units, or leave out for none).
+// pins = [{ name, x, y, text }] in data units; `text` is the label's words.
+function SvgChart({ points, color, xMin, xMax, yMin, yMax, showXNumbers, label, nowX, pins = [] }) {
   const ref = useRef(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
   const clipId = useId(); // each chart needs its own clip id
@@ -50,6 +53,14 @@ function SvgChart({ points, color, xMin, xMax, yMin, yMax, showXNumbers, label }
   const yTicks = evenTicks(yMin, yMax, 5);
   const isZero = (t) => Math.abs(t) < 1e-9;
 
+  // Pins in pixels, with their label spots (no overlaps)
+  const placedPins = ready
+    ? placePinLabels(
+        pins.map((p) => ({ ...p, x: toX(p.x), y: toY(p.y) })),
+        { left, right, top, bottom }
+      )
+    : [];
+
   return (
     <svg ref={ref} role="img" aria-label={label} className="block w-full h-full">
       {ready && (
@@ -72,12 +83,39 @@ function SvgChart({ points, color, xMin, xMax, yMin, yMax, showXNumbers, label }
           <rect x={left} y={top} width={right - left} height={bottom - top}
             fill="none" stroke="#6b7280" strokeWidth="2" />
 
-          {/* the data line, cut off at the plot edge */}
+          {/* the data line, "now" band and pins: cut off at the plot edge */}
           <clipPath id={clipId}>
             <rect x={left} y={top} width={right - left} height={bottom - top} />
           </clipPath>
-          <path d={path} fill="none" stroke={color} strokeWidth="3"
-            strokeLinejoin="round" clipPath={`url(#${clipId})`} />
+          <g clipPath={`url(#${clipId})`}>
+            <path d={path} fill="none" stroke={color} strokeWidth="3" strokeLinejoin="round" />
+
+            {/* "now" band: see-through orange, 8px wide, dashed edges */}
+            {nowX != null && (
+              <g>
+                <rect x={toX(nowX) - 4} y={top} width="8" height={bottom - top} fill="rgba(245, 158, 11, 0.5)" />
+                {[-4, 4].map((d) => (
+                  <line key={d} x1={toX(nowX) + d} x2={toX(nowX) + d} y1={top} y2={bottom}
+                    stroke="#f59e0b" strokeDasharray="4 4" />
+                ))}
+              </g>
+            )}
+
+            {/* A / B pins: dot, big letter, and a dark label box */}
+            {pins.map((p) => (
+              <circle key={`dot${p.name}`} cx={toX(p.x)} cy={toY(p.y)} r="5"
+                fill="#fff" stroke="#1f2937" strokeWidth="2" />
+            ))}
+            {placedPins.map((p) => (
+              <g key={`label${p.name}`}>
+                <text x={p.letterX} y={p.centerY} textAnchor="middle" dominantBaseline="middle"
+                  fontSize="16" fontWeight="700" fill="#1f2937">{p.name}</text>
+                <rect x={p.boxLeft} y={p.centerY - 13} width={p.boxWidth} height="26" rx="6" fill="#1f2937" />
+                <text x={p.boxLeft + p.boxWidth / 2} y={p.centerY} textAnchor="middle"
+                  dominantBaseline="middle" fontSize="12" fill="#fff">{p.text}</text>
+              </g>
+            ))}
+          </g>
 
           {/* tick marks (every chart) and numbers */}
           <g fill="#1f2937" fontSize={fontSize} fontWeight="600">
