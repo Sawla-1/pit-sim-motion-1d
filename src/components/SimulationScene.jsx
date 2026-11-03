@@ -36,7 +36,7 @@ const MOVING_THRESHOLD = 0.1; // m/s; at or below this he stands
 // position, velocity = the man (meters, meters per second)
 // pins = [{ name, position }], tall = Introduction size, look = the ruler colours
 // onManDragStart / onManDragSample(meters) / onManDragEnd = the man being dragged
-// STEP 7 (the man): the bar, sticks, numbers, pins and the man (no dragging yet). The parts come in step by step.
+// STEP 8 (dragging): the whole scene. Next: compare it with Simulation3D, then delete the old file.
 function SimulationScene(props) {
   const ref = useRef(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
@@ -61,7 +61,8 @@ function SimulationScene(props) {
   const pins = props.pins ?? [];
   const range = Math.max(MIN_RANGE, Math.abs(props.position), ...pins.map((p) => Math.abs(p.position)));
   const { ticks, showEdge } = makeRulerTicks(range);
-  const toWorldX = (meters) => (meters / range) * EDGE; // sticks (and later the labels and the man) use this
+  const toWorldX = (meters) => (meters / range) * EDGE; // sticks, labels, pins and the man all use this
+  const fromWorldX = (worldX) => (worldX / EDGE) * range; // undoes toWorldX — turns a drag back into meters
 
   // A stick, centred on its spot just below the ground line (world units → pixels)
   const stickRect = (worldX, height) => ({
@@ -109,6 +110,33 @@ function SimulationScene(props) {
   // Only the walking picture turns: he walks left when his speed is 0 or less (the art faces right).
   const manWidth = manHeight * MAN_ASPECT;
   const isStanding = Math.abs(props.velocity) <= MOVING_THRESHOLD;
+  // Dragging must START on the man (the handler is only on his pictures), but once started it
+  // tracks the mouse anywhere on the page, even over the charts or the controls, same as PhET.
+  // So the move and up listeners are on the window. Mouse pixel → meters: the pixel's distance
+  // from the middle of the scene, divided by the scale (pixels per world unit), is world units;
+  // fromWorldX turns that into meters. (`range` and `view` are the ones from the moment you press.)
+  const handleManPointerDown = (event) => {
+    event.stopPropagation();
+    event.preventDefault(); // stops the browser from selecting text while the mouse drags over the page
+    props.onManDragStart();
+
+    const sceneRect = ref.current.getBoundingClientRect();
+
+    const handleWindowPointerMove = (moveEvent) => {
+      const worldX = (moveEvent.clientX - sceneRect.left - sceneRect.width / 2) / view.zoom;
+      props.onManDragSample(fromWorldX(worldX));
+    };
+
+    const handleWindowPointerUp = () => {
+      window.removeEventListener("pointermove", handleWindowPointerMove);
+      window.removeEventListener("pointerup", handleWindowPointerUp);
+      props.onManDragEnd();
+    };
+
+    window.addEventListener("pointermove", handleWindowPointerMove);
+    window.addEventListener("pointerup", handleWindowPointerUp);
+  };
+
   const manPicture = (href, show, turned) => {
     const centerX = view.toX(toWorldX(props.position));
     return (
@@ -127,7 +155,7 @@ function SimulationScene(props) {
   };
 
   return (
-    <svg ref={ref} width="100%" height="100%" className="block rounded-[inherit]">
+    <svg ref={ref} width="100%" height="100%" className="block rounded-[inherit] select-none">
       {view && (
         <g>
           {/* A top-to-bottom colour change, so a flat bar can look round (like bamboo) */}
@@ -216,8 +244,10 @@ function SimulationScene(props) {
           </g>
 
           {/* The man, in front of the bar and the numbers (the pins' poles are behind him) */}
-          {manPicture(MAN_STANDING, isStanding, false)}
-          {manPicture(MAN_WALKING, !isStanding, props.velocity <= 0)}
+          <g onPointerDown={handleManPointerDown}>
+            {manPicture(MAN_STANDING, isStanding, false)}
+            {manPicture(MAN_WALKING, !isStanding, props.velocity <= 0)}
+          </g>
 
           {/* The pins' dots on the ground, in front of the bar: dark ring, white middle (like the chart's) */}
           {pins.map((pin) => {
