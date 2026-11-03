@@ -26,12 +26,17 @@ const PIN_FLAG_WIDTH = 0.5;
 const PIN_LETTER_SIZE = 0.3; // fits inside the flag
 const PIN_DOT_RADIUS = 0.08; // the dot where the pole meets the ground
 
+const MAN_STANDING = "/karen-intro-svgs/boy-standing.svg";
+const MAN_WALKING = "/karen-intro-svgs/boy-side-walking.svg"; // the art faces right
+const MAN_ASPECT = 30 / 44; // the boy art is 30 wide and 44 tall
+const MOVING_THRESHOLD = 0.1; // m/s; at or below this he stands
+
 // The scene (ruler, pins and the man) drawn with SVG. It replaces Simulation3D,
 // so it takes the same props:
 // position, velocity = the man (meters, meters per second)
 // pins = [{ name, position }], tall = Introduction size, look = the ruler colours
 // onManDragStart / onManDragSample(meters) / onManDragEnd = the man being dragged
-// STEP 6 (pins): the bar, its sticks and numbers, and the pins. The parts come in step by step.
+// STEP 7 (the man): the bar, sticks, numbers, pins and the man (no dragging yet). The parts come in step by step.
 function SimulationScene(props) {
   const ref = useRef(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
@@ -96,6 +101,29 @@ function SimulationScene(props) {
     const x = toWorldX(pin.position);
     const side = index === 0 ? -1 : 1;
     return { x, flagX: x + side * (PIN_POLE_WIDTH / 2 + PIN_FLAG_WIDTH / 2) };
+  };
+
+  // The man: his feet stand on the ground line and his middle is over his position.
+  // He stands when he is (nearly) still and walks when he moves. Both pictures are always
+  // in the page and only one is shown, so switching never waits for a download.
+  // Only the walking picture turns: he walks left when his speed is 0 or less (the art faces right).
+  const manWidth = manHeight * MAN_ASPECT;
+  const isStanding = Math.abs(props.velocity) <= MOVING_THRESHOLD;
+  const manPicture = (href, show, turned) => {
+    const centerX = view.toX(toWorldX(props.position));
+    return (
+      <g transform={turned ? `translate(${2 * centerX} 0) scale(-1 1)` : undefined}>
+        <image
+          href={href}
+          x={centerX - (manWidth * view.zoom) / 2}
+          y={view.toY(GROUND_Y + manHeight)}
+          width={manWidth * view.zoom}
+          height={manHeight * view.zoom}
+          preserveAspectRatio="none"
+          visibility={show ? "visible" : "hidden"}
+        />
+      </g>
+    );
   };
 
   return (
@@ -186,6 +214,10 @@ function SimulationScene(props) {
                 rulerText(`edge-label-${x}`, x, look.labelDrop + 0.05, formatNumber((x / EDGE) * range, 1), look.edgeMark)
               )}
           </g>
+
+          {/* The man, in front of the bar and the numbers (the pins' poles are behind him) */}
+          {manPicture(MAN_STANDING, isStanding, false)}
+          {manPicture(MAN_WALKING, !isStanding, props.velocity <= 0)}
 
           {/* The pins' dots on the ground, in front of the bar: dark ring, white middle (like the chart's) */}
           {pins.map((pin) => {
