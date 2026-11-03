@@ -62,7 +62,9 @@ function SvgChart({ points, color, xMin, xMax, yMin, yMax, showXNumbers, label, 
   const placedPins = ready
     ? placePinLabels(
         pins.map((p) => ({ ...p, x: toX(p.x), y: toY(p.y) })),
-        { left, right, top, bottom }
+        { left, right, top, bottom },
+        // the red hide button sits in the plot's top-right corner (see ChartPanel)
+        [{ left: right - 32, right, top, bottom: top + 32 }]
       )
     : [];
 
