@@ -65,15 +65,26 @@ function App() {
   // While scrubbing: { time, direction }: the time we moved to last (not the render's
   // simulation.time, which can lag a move behind) and which way time went (+1 / -1)
   const scrub = useRef(null);
+  // Let go of the man (Record): the loop stops him in its next frame (see onDragStep).
+  // Not in the let-go handler: a change made there could be overwritten by the loop's next frame.
+  const dragReleased = useRef(false);
   // A mode switch, Clear Data or Reset All in the middle of a drag (e.g. a second
   // finger tapping a button) ends the drag
   const endDrag = () => {
     dragMode.current = null;
     dragSamples.current = null;
+    dragReleased.current = false;
   };
 
   // One frame of dragging: the engine does all the maths and hands back its photos
   const onDragStep = (sim, frameTime) => {
+    if (dragReleased.current) {
+      // Let go: he stops where he is, and the drag ends
+      dragReleased.current = false;
+      dragSamples.current = null;
+      const stopped = { ...sim, velocity: 0, acceleration: 0, time: sim.time + frameTime };
+      return { simulation: stopped, recordedState: stopped };
+    }
     const result = calculateDragStep(sim, frameTime, dragMouseX.current, dragSamples.current);
     dragSamples.current = result.photos;
     return { simulation: result.simulation, recordedState: result.simulation };
@@ -293,6 +304,7 @@ function App() {
       return;
     }
     dragMode.current = "record";
+    dragReleased.current = false; // a new drag: an old let-go note must not stop it
     if (activeFormula) stopFormula(FORMULA_TOOK_OVER);
     dragSamples.current = [];
     dragMouseX.current = simulation.position; // until the mouse moves, he stays where he is
@@ -314,8 +326,13 @@ function App() {
 
   const handleManDragEnd = () => {
     if (dragMode.current === "record") {
-      dragSamples.current = null;
-      setSimulation((prev) => ({ ...prev, velocity: 0, acceleration: 0 }));
+      if (playing) {
+        dragReleased.current = true; // the loop stops him in its next frame
+      } else {
+        // Paused (e.g. the 10-minute limit): the loop isn't running, so stop him here
+        dragSamples.current = null;
+        setSimulation((prev) => ({ ...prev, velocity: 0, acceleration: 0 }));
+      }
     }
     dragMode.current = null;
   };
