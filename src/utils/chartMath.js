@@ -114,10 +114,15 @@ export function findNearestPoint(points, scales, pixelX, pixelY, radius) {
   return best;
 }
 
-// Pixel points → the text an SVG <path d="..."> needs.
-// toPath([{ x: 0, y: 0 }, { x: 5, y: 3 }]) → "M0.0 0.0L5.0 3.0"
-export function toPath(pixelPoints) {
-  return pixelPoints
-    .map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)} ${p.y.toFixed(1)}`)
-    .join("");
+// Points → the text an SVG <path d="..."> needs, in TENTHS of a pixel.
+// Whole numbers turn into text about 5x faster than 104.5, and SvgChart draws
+// the path with scale(0.1), so it lands exactly where 104.5 would.
+// `toX` / `toY` turn a point's x / y into pixels.
+// toPath([{ x: 0, y: 0 }, { x: 5, y: 3 }], (x) => x, (y) => y) → "M0 0L50 30"
+export function toPath(points, toX, toY) {
+  let d = "";
+  for (let i = 0; i < points.length; i++) {
+    d += (i === 0 ? "M" : "L") + Math.round(toX(points[i].x) * 10) + " " + Math.round(toY(points[i].y) * 10);
+  }
+  return d;
 }
