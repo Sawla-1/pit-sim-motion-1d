@@ -9,6 +9,10 @@ const TOP = 8; // room for half of the top y number
 const RIGHT = 16;
 const TICK = 6; // length of a tick mark
 
+// One shared formatter for the y numbers (building a new one for every
+// number, every frame, was slow). Same output as toLocaleString.
+const Y_NUMBERS = new Intl.NumberFormat(undefined, { maximumFractionDigits: 1 });
+
 // A line chart drawn with SVG. Props in only; it knows nothing about
 // "position" or "velocity" (so simulation #2 can use it too).
 // points = [{ x, y }, ...] sorted by x.
@@ -130,8 +134,10 @@ function SvgChart({ points, color, xMin, xMax, yMin, yMax, showXNumbers, label, 
             <rect x={left} y={top} width={right - left} height={bottom - top} />
           </clipPath>
           <g clipPath={`url(#${clipId})`}>
-            {/* the path is in tenths of a pixel (see toPath): scale(0.1) puts it back; 30 × 0.1 = a 3 px line */}
-            <path d={path} transform="scale(0.1)" fill="none" stroke={color} strokeWidth="30" strokeLinejoin="round" />
+            {/* the path is in tenths of a pixel (see toPath): scale(0.1) puts it back; 30 × 0.1 = a 3 px line.
+                pointerEvents none: hover and scrub are handled by the svg, so the browser needn't hit-test the line */}
+            <path d={path} transform="scale(0.1)" fill="none" stroke={color} strokeWidth="30" strokeLinejoin="round"
+              pointerEvents="none" />
 
             {/* "now" band: see-through orange, 8px wide, dashed edges */}
             {nowX != null && (
@@ -166,7 +172,7 @@ function SvgChart({ points, color, xMin, xMax, yMin, yMax, showXNumbers, label, 
               <g key={`ty${t}`}>
                 <line x1={left - TICK} x2={left} y1={toY(t)} y2={toY(t)} stroke="#6b7280" strokeWidth="2" />
                 <text x={left - TICK - 4} y={toY(t)} textAnchor="end" dominantBaseline="middle">
-                  {t.toLocaleString(undefined, { maximumFractionDigits: 1 })}
+                  {Y_NUMBERS.format(t)}
                 </text>
               </g>
             ))}

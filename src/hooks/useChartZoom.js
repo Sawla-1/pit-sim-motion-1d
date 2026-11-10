@@ -148,11 +148,13 @@ export function useChartZoom(data, valueKeys) {
   // recording only the new points are read (it used to re-read the whole
   // recording every frame). Same "remember and compare while rendering"
   // pattern as the zoom reset above.
-  const [ranges, setRanges] = useState({ data: null, byKey: null });
+  const [ranges, setRanges] = useState({ data: null, keys: null, byKey: null });
   let byKey = ranges.byKey;
-  if (ranges.data !== data.recordedData) {
-    byKey = growRanges(ranges, data.recordedData, valueKeys);
-    setRanges({ data: data.recordedData, byKey });
+  if (ranges.data !== data.recordedData || ranges.keys !== valueKeys) {
+    // Different charts (keys): nothing to reuse, so read everything
+    const old = ranges.keys === valueKeys ? ranges : { data: null, byKey: null };
+    byKey = growRanges(old, data.recordedData, valueKeys);
+    setRanges({ data: data.recordedData, keys: valueKeys, byKey });
   }
   const fitWindow = (valueKey) => byKey[valueKey].window;
 

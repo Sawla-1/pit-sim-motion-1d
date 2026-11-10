@@ -18,9 +18,13 @@ const CHART_KEYS = CHARTS.map((c) => c.key); // made once, so the zoom hook can 
 // of the recording: only the new points are turned into {x, y}.
 function growSeries(old, recordedData) {
   const from = newItemsStart(old.data, recordedData);
+  // Nothing new (like a Play press that trims nothing): keep the same lines,
+  // so the charts don't redraw them
+  if (from > 0 && from === recordedData.length) return old.byKey;
+  const newStates = recordedData.slice(from);
   const result = {};
   for (const { key } of CHARTS) {
-    const added = recordedData.slice(from).map((state) => ({ x: state.time, y: state[key] }));
+    const added = newStates.map((state) => ({ x: state.time, y: state[key] }));
     result[key] = from > 0 ? old.byKey[key].concat(added) : added;
   }
   return result;
