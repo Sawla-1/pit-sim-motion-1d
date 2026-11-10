@@ -1,5 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { formatNumber } from "../utils/formatNumber";
+import { newItemsStart } from "../utils/newItemsStart";
 import { useChartZoom } from "../hooks/useChartZoom";
 import { ChartZoomControls, ChartPanel } from "./ChartControls";
 import SvgChart from "./SvgChart";
@@ -12,6 +13,18 @@ const CHARTS = [
   { key: "acceleration", label: "Acceleration" },
 ];
 const CHART_KEYS = CHARTS.map((c) => c.key); // made once, so the zoom hook can trust it
+
+// Each chart's line as {x, y} points. `old` = the lines for an earlier version
+// of the recording: only the new points are turned into {x, y}.
+function growSeries(old, recordedData) {
+  const from = newItemsStart(old.data, recordedData);
+  const result = {};
+  for (const { key } of CHARTS) {
+    const added = recordedData.slice(from).map((state) => ({ x: state.time, y: state[key] }));
+    result[key] = from > 0 ? old.byKey[key].concat(added) : added;
+  }
+  return result;
+}
 
 // Renders the Position/Velocity/Acceleration line charts, each with its own
 // Y-axis zoom/pan and a shared X-axis (time) zoom/pan across all three.
@@ -43,15 +56,15 @@ function Charts({ data, simulation, pins, onSeek, showScrubHint, inputs }) {
   } = useChartZoom(data, CHART_KEYS);
   const isPlayback = data.selectedMode === "playback";
 
-  // The line for each chart as {x, y} points. Only rebuilt when the recording
-  // changes (in playback that is never), not on every frame.
-  const series = useMemo(() => {
-    const result = {};
-    for (const { key } of CHARTS) {
-      result[key] = data.recordedData.map((state) => ({ x: state.time, y: state[key] }));
-    }
-    return result;
-  }, [data.recordedData]);
+  // The line for each chart as {x, y} points. Worked out only when the recording
+  // changes, and while recording only the new points are added (rebuilding all
+  // of them every frame was slow). Same pattern as the ranges in useChartZoom.
+  const [lines, setLines] = useState({ data: null, byKey: null });
+  let series = lines.byKey;
+  if (lines.data !== data.recordedData) {
+    series = growSeries(lines, data.recordedData);
+    setLines({ data: data.recordedData, byKey: series });
+  }
 
   // Drag on a chart (playback only): seek to the time under the pointer,
   // kept inside the recording.

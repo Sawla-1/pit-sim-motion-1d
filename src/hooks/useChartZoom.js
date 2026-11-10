@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { newItemsStart } from "../utils/newItemsStart";
 
 const MIN_ZOOM_WINDOW = 1; // seconds - smallest visible x-axis window when zoomed in
 
@@ -70,11 +71,10 @@ function windowFor({ low, high }) {
 // place, only the new points are read. Otherwise (Clear, Reset, trim)
 // everything is read again.
 function growRanges(old, recordedData, keys) {
-  const oldCount = old.data?.length ?? 0;
-  const grown = oldCount > 0 && recordedData[oldCount - 1] === old.data[oldCount - 1];
+  const from = newItemsStart(old.data, recordedData);
   const result = {};
   for (const key of keys) {
-    const range = grown ? lowHigh(recordedData, key, oldCount, old.byKey[key]) : lowHigh(recordedData, key);
+    const range = from > 0 ? lowHigh(recordedData, key, from, old.byKey[key]) : lowHigh(recordedData, key);
     result[key] = { ...range, window: windowFor(range) };
   }
   return result;
