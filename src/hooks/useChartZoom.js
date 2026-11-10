@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 const MIN_ZOOM_WINDOW = 1; // seconds - smallest visible x-axis window when zoomed in
 
@@ -43,19 +43,41 @@ function makeWindow(center, step) {
   return { min: middle - 2 * step, max: middle + 2 * step, step };
 }
 
-// The smallest round window that covers item[key] for all the items.
-// fitValues([{ x: 1 }, { x: 3.2 }, { x: 7 }], "x") → lines 0, 2, 4, 6, 8 (step 2)
-function fitValues(items, key) {
+// The lowest and highest item[key], reading from items[from] on,
+// starting from `start` (the low/high found so far).
+// lowHigh([{ x: 1 }, { x: 3.2 }, { x: 7 }], "x") → { low: 1, high: 7 }
+function lowHigh(items, key, from = 0, start = { low: Infinity, high: -Infinity }) {
   // A plain loop, not Math.min(...): a very long recording is too many
   // values for one call and would crash
-  let low = Infinity;
-  let high = -Infinity;
-  for (const item of items) {
-    low = Math.min(low, item[key]);
-    high = Math.max(high, item[key]);
+  let { low, high } = start;
+  for (let i = from; i < items.length; i++) {
+    low = Math.min(low, items[i][key]);
+    high = Math.max(high, items[i][key]);
   }
+  return { low, high };
+}
+
+// The smallest round window that covers low..high.
+// windowFor({ low: 1, high: 7 }) → lines 0, 2, 4, 6, 8 (step 2)
+function windowFor({ low, high }) {
   const windows = STEPS.map((step) => makeWindow((low + high) / 2, step));
   return windows.find((w) => w.min <= low && w.max >= high) ?? windows.at(-1);
+}
+
+// Each chart's low/high and default window for a recording. `old` = the
+// result for an earlier version of it. A recording only grows (points are
+// added, never changed), so if the old last point is still in the same
+// place, only the new points are read. Otherwise (Clear, Reset, trim)
+// everything is read again.
+function growRanges(old, recordedData, keys) {
+  const oldCount = old.data?.length ?? 0;
+  const grown = oldCount > 0 && recordedData[oldCount - 1] === old.data[oldCount - 1];
+  const result = {};
+  for (const key of keys) {
+    const range = grown ? lowHigh(recordedData, key, oldCount, old.byKey[key]) : lowHigh(recordedData, key);
+    result[key] = { ...range, window: windowFor(range) };
+  }
+  return result;
 }
 
 // Owns all zoom/pan/reset state for the three charts:
@@ -122,14 +144,17 @@ export function useChartZoom(data, valueKeys) {
   // ---- Y-axis: 5 round lines, independent per chart ----
 
   // Default view of each chart: the smallest round window that covers all
-  // its data. Worked out only when the recording changes: once in playback,
-  // once per frame while recording (it used to be 9 times per frame).
-  const fits = useMemo(() => {
-    const result = {};
-    for (const key of valueKeys) result[key] = fitValues(data.recordedData, key);
-    return result;
-  }, [data.recordedData, valueKeys]);
-  const fitWindow = (valueKey) => fits[valueKey];
+  // its data. Worked out only when the recording changes, and while
+  // recording only the new points are read (it used to re-read the whole
+  // recording every frame). Same "remember and compare while rendering"
+  // pattern as the zoom reset above.
+  const [ranges, setRanges] = useState({ data: null, byKey: null });
+  let byKey = ranges.byKey;
+  if (ranges.data !== data.recordedData) {
+    byKey = growRanges(ranges, data.recordedData, valueKeys);
+    setRanges({ data: data.recordedData, byKey });
+  }
+  const fitWindow = (valueKey) => byKey[valueKey].window;
 
   // What a chart shows now: its zoomed window, or the default view.
   const getYWindow = (valueKey, index) => yRanges[index] ?? fitWindow(valueKey);
@@ -181,7 +206,7 @@ export function useChartZoom(data, valueKeys) {
 
     const next = {};
     valueKeys.forEach((key, index) => {
-      const pinWindow = fitValues(pins, key);
+      const pinWindow = windowFor(lowHigh(pins, key));
       if (pinWindow.step < fitWindow(key).step) next[index] = pinWindow;
     });
     setYRanges(next);
