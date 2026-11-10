@@ -50,8 +50,7 @@ function SvgChart({ points, color, xMin, xMax, yMin, yMax, showXNumbers, label, 
   // Only rebuilt when the data or the view changes, not on every frame
   const path = useMemo(() => {
     if (!ready) return "";
-    const kept = decimateMinMax(points, xMin, xEnd, right - left);
-    return toPath(kept.map((p) => ({ x: toX(p.x), y: toY(p.y) })));
+    return toPath(decimateMinMax(points, xMin, xEnd, right - left), toX, toY);
   }, [ready, points, xMin, xEnd, left, right, toX, toY]);
 
   const xTicks = ready ? makeTicks(xMin, xEnd, Math.max(1, Math.floor((right - left) / 50))) : [];
@@ -131,7 +130,8 @@ function SvgChart({ points, color, xMin, xMax, yMin, yMax, showXNumbers, label, 
             <rect x={left} y={top} width={right - left} height={bottom - top} />
           </clipPath>
           <g clipPath={`url(#${clipId})`}>
-            <path d={path} fill="none" stroke={color} strokeWidth="3" strokeLinejoin="round" />
+            {/* the path is in tenths of a pixel (see toPath): scale(0.1) puts it back; 30 × 0.1 = a 3 px line */}
+            <path d={path} transform="scale(0.1)" fill="none" stroke={color} strokeWidth="30" strokeLinejoin="round" />
 
             {/* "now" band: see-through orange, 8px wide, dashed edges */}
             {nowX != null && (
