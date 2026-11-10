@@ -63,13 +63,15 @@ export function useSimulationLoop({
           if (result.isEndOfPlayback) setPlaying(false);
         } else if (dragSamplesRef && dragSamplesRef.current) {
           // DRAGGING: same recording pipeline as below, but the position comes
-          // from the mouse (smoothed) instead of calculatePhysicsStep's acceleration math
+          // from the mouse instead of calculatePhysicsStep's acceleration math
           const result = onDragStep(sim, frameTime);
+          simulationRef.current = result.simulation; // same reason as above
           setSimulation(result.simulation);
           setData((prev) => ({
             ...prev,
             recordedData: [...prev.recordedData, result.recordedState],
           }));
+          if (result.simulation.time >= MAX_RECORD_TIME) setPlaying(false); // same 10 min limit
         } else if (formulaActive) {
           // FORMULA: same recording pipeline, but position comes from the typed
           // formula. null = the formula gave no number, so it cannot go on.

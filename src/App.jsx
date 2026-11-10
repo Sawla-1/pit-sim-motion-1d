@@ -15,7 +15,7 @@ import {
   handlePlaybackSeek,
   trimRecordedDataAfter,
 } from "./engine/recordPlayback";
-import { calculateDragStep, NUMBER_MOUSE_POINTS_TO_AVERAGE } from "./engine/kinematics1d";
+import { calculateDragStep } from "./engine/kinematics1d";
 import { compileFormula } from "./engine/evaluateFormula";
 import { calculateFormulaStep } from "./engine/formulaMotion";
 import { formatNumber } from "./utils/formatNumber";
@@ -52,20 +52,16 @@ function App() {
     selectedMode: "record", // 'record' or 'playback'
   });
 
-  // null = not dragging; array of { x: meters, t: wallClockMs } while dragging
+  // null = not dragging. While dragging: the mouse photos that calculateDragStep keeps.
   const dragSamples = useRef(null);
+  // Where the mouse is right now (meters)
+  const dragMouseX = useRef(null);
 
+  // One frame of dragging: the engine does all the maths and hands back its photos
   const onDragStep = (sim, frameTime) => {
-    const next = calculateDragStep(sim, frameTime, dragSamples.current);
-    return {
-      simulation: next,
-      recordedState: {
-        time: next.time,
-        position: next.position,
-        velocity: next.velocity,
-        acceleration: next.acceleration,
-      },
-    };
+    const result = calculateDragStep(sim, frameTime, dragMouseX.current, dragSamples.current);
+    dragSamples.current = result.photos;
+    return { simulation: result.simulation, recordedState: result.simulation };
   };
 
   // Is the "Reset everything?" popup open
@@ -273,18 +269,16 @@ function App() {
   const handleManDragStart = () => {
     if (activeFormula) stopFormula(FORMULA_TOOK_OVER);
     dragSamples.current = [];
+    dragMouseX.current = simulation.position; // until the mouse moves, he stays where he is
     trimRecordingToNow();
     setData((prev) => ({ ...prev, selectedMode: "record" }));
     setPlaying(true);
   };
 
-  // Called on every raw mouse reading while dragging. Just records the
-  // reading — the smoothing and the actual position/velocity math happen
-  // once per frame in onDragStep above, not here.
+  // Called on every mouse move while dragging. Only remembers where the mouse
+  // is; onDragStep above takes one photo of it per frame and does the maths.
   const handleManDragSample = (meters) => {
-    if (!dragSamples.current) return;
-    const next = [...dragSamples.current, { x: meters, t: performance.now() }];
-    dragSamples.current = next.slice(-NUMBER_MOUSE_POINTS_TO_AVERAGE);
+    if (dragSamples.current) dragMouseX.current = meters;
   };
 
   const handleManDragEnd = () => {
