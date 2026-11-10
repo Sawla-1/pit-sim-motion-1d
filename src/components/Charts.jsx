@@ -11,6 +11,7 @@ const CHARTS = [
   { key: "velocity", label: "Velocity" },
   { key: "acceleration", label: "Acceleration" },
 ];
+const CHART_KEYS = CHARTS.map((c) => c.key); // made once, so the zoom hook can trust it
 
 // Renders the Position/Velocity/Acceleration line charts, each with its own
 // Y-axis zoom/pan and a shared X-axis (time) zoom/pan across all three.
@@ -39,7 +40,7 @@ function Charts({ data, simulation, pins, onSeek, showScrubHint, inputs }) {
     zoomToPins,
     handleReset,
     isResetDisabled,
-  } = useChartZoom(data);
+  } = useChartZoom(data, CHART_KEYS);
   const isPlayback = data.selectedMode === "playback";
 
   // The line for each chart as {x, y} points. Only rebuilt when the recording
@@ -119,7 +120,7 @@ function Charts({ data, simulation, pins, onSeek, showScrubHint, inputs }) {
               scrubHint={showScrubHint && index === topIndex}
               onReset={() => handleReset(index, isBottom)}
               resetDisabled={isResetDisabled(index, isBottom)}
-              onZoomToPins={() => zoomToPins(pins, CHARTS.map((c) => c.key))}
+              onZoomToPins={() => zoomToPins(pins)}
               zoomToPinsDisabled={pins.length < 2}
               input={inputs[index]}
             >

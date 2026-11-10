@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 const MIN_ZOOM_WINDOW = 1; // seconds - smallest visible x-axis window when zoomed in
 
@@ -43,13 +43,29 @@ function makeWindow(center, step) {
   return { min: middle - 2 * step, max: middle + 2 * step, step };
 }
 
+// The smallest round window that covers item[key] for all the items.
+// fitValues([{ x: 1 }, { x: 3.2 }, { x: 7 }], "x") → lines 0, 2, 4, 6, 8 (step 2)
+function fitValues(items, key) {
+  // A plain loop, not Math.min(...): a very long recording is too many
+  // values for one call and would crash
+  let low = Infinity;
+  let high = -Infinity;
+  for (const item of items) {
+    low = Math.min(low, item[key]);
+    high = Math.max(high, item[key]);
+  }
+  const windows = STEPS.map((step) => makeWindow((low + high) / 2, step));
+  return windows.find((w) => w.min <= low && w.max >= high) ?? windows.at(-1);
+}
+
 // Owns all zoom/pan/reset state for the three charts:
 // - X-axis (time) is a single React-state window shared across all charts,
 //   since they all share the same time axis.
 // - Y-axis (value) zoom/pan is independent per chart, keyed by chart index.
 // Zoom is only shown in playback mode (see Charts.jsx), where the recorded
 // data is fixed and never grows.
-export function useChartZoom(data) {
+// valueKeys = the charts' keys in chart order (a constant array)
+export function useChartZoom(data, valueKeys) {
   const [xRange, setXRange] = useState(null);
   const [yRanges, setYRanges] = useState({});
 
@@ -93,14 +109,15 @@ export function useChartZoom(data) {
 
   // ---- Y-axis: 5 round lines, independent per chart ----
 
-  // Default view: the smallest round window that covers all the data
-  // (or just the given values, e.g. the two pins).
-  const fitWindow = (valueKey, values = data.recordedData.map((state) => state[valueKey])) => {
-    const low = Math.min(...values);
-    const high = Math.max(...values);
-    const windows = STEPS.map((step) => makeWindow((low + high) / 2, step));
-    return windows.find((w) => w.min <= low && w.max >= high) ?? windows.at(-1);
-  };
+  // Default view of each chart: the smallest round window that covers all
+  // its data. Worked out only when the recording changes: once in playback,
+  // once per frame while recording (it used to be 9 times per frame).
+  const fits = useMemo(() => {
+    const result = {};
+    for (const key of valueKeys) result[key] = fitValues(data.recordedData, key);
+    return result;
+  }, [data.recordedData, valueKeys]);
+  const fitWindow = (valueKey) => fits[valueKey];
 
   // What a chart shows now: its zoomed window, or the default view.
   const getYWindow = (valueKey, index) => yRanges[index] ?? fitWindow(valueKey);
@@ -143,7 +160,7 @@ export function useChartZoom(data) {
 
   // Time: from A to B with some space around (never under MIN_ZOOM_WINDOW).
   // Value: each chart gets the smallest round window that covers both pins.
-  const zoomToPins = (pins, valueKeys) => {
+  const zoomToPins = (pins) => {
     const low = Math.min(pins[0].time, pins[1].time);
     const high = Math.max(pins[0].time, pins[1].time);
     const width = Math.max(MIN_ZOOM_WINDOW, (high - low) * 1.5);
@@ -152,7 +169,7 @@ export function useChartZoom(data) {
 
     const next = {};
     valueKeys.forEach((key, index) => {
-      const pinWindow = fitWindow(key, pins.map((p) => p[key]));
+      const pinWindow = fitValues(pins, key);
       if (pinWindow.step < fitWindow(key).step) next[index] = pinWindow;
     });
     setYRanges(next);
