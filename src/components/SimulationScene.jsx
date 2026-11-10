@@ -31,12 +31,25 @@ const MAN_WALKING = "/karen-intro-svgs/boy-side-walking.svg"; // the art faces r
 const MAN_ASPECT = 30 / 44; // the boy art is 30 wide and 44 tall
 const MOVING_THRESHOLD = 0.1; // m/s; at or below this he stands
 
+// Phones: a finger that starts on the man must drag him, not scroll the page. Chrome ignores
+// `touch-action` on parts of an SVG, so the scroll is stopped in touchstart. It must be a real
+// listener with { passive: false } (React's touch handlers can't stop scrolling), and it sits
+// only on the man, so swipes elsewhere stay smooth. Used as a ref; returns its cleanup (React 19).
+function stopScrollOnTouch(element) {
+  const stop = (event) => {
+    if (event.cancelable) event.preventDefault();
+  };
+  element.addEventListener("touchstart", stop, { passive: false });
+  return () => element.removeEventListener("touchstart", stop);
+}
+
 // The scene (ruler, pins and the man) drawn with SVG. Props:
 // position, velocity = the man (meters, meters per second)
 // pins = [{ name, position }], tall = Introduction size, look = the ruler colours
 // onManDragStart / onManDragSample(meters) / onManDragEnd = the man being dragged
 function SimulationScene(props) {
   const ref = useRef(null);
+  const drag = useRef(null); // while dragging: the scale from the moment of the press; null = not dragging
   const [size, setSize] = useState({ width: 0, height: 0 });
   const gradientId = useId(); // each scene needs its own gradient id
 
@@ -60,7 +73,6 @@ function SimulationScene(props) {
   const range = Math.max(MIN_RANGE, Math.abs(props.position), ...pins.map((p) => Math.abs(p.position)));
   const { ticks, showEdge } = makeRulerTicks(range);
   const toWorldX = (meters) => (meters / range) * EDGE; // sticks, labels, pins and the man all use this
-  const fromWorldX = (worldX) => (worldX / EDGE) * range; // undoes toWorldX — turns a drag back into meters
 
   // A stick, centred on its spot just below the ground line (world units → pixels)
   const stickRect = (worldX, height) => ({
@@ -108,31 +120,33 @@ function SimulationScene(props) {
   // Only the walking picture turns: he walks left when his speed is 0 or less (the art faces right).
   const manWidth = manHeight * MAN_ASPECT;
   const isStanding = Math.abs(props.velocity) <= MOVING_THRESHOLD;
-  // Dragging must START on the man (the handler is only on his pictures), but once started it
-  // tracks the mouse anywhere on the page, even over the charts or the controls, same as PhET.
-  // So the move and up listeners are on the window. Mouse pixel → meters: the pixel's distance
-  // from the middle of the scene, divided by the scale (pixels per world unit), is world units;
-  // fromWorldX turns that into meters. (`range` and `view` are the ones from the moment you press.)
+  // Dragging must START on the man (the handlers are only on his pictures), but once started it
+  // follows the mouse or finger anywhere on the page, even over the charts or the controls, same
+  // as PhET: pointer capture sends all of that pointer's moves to the man (like SvgChart does).
   const handleManPointerDown = (event) => {
     event.stopPropagation();
     event.preventDefault(); // stops the browser from selecting text while the mouse drags over the page
+    if (drag.current || event.button !== 0) return; // already dragging (a second finger), or not the main button
+    // Keep the scale from the moment of the press: the ruler grows while he walks past 10 m,
+    // and the new scale would make him run away from the mouse
+    drag.current = { zoom: view.zoom, range };
+    event.currentTarget.setPointerCapture(event.pointerId);
     props.onManDragStart();
+  };
 
-    const sceneRect = ref.current.getBoundingClientRect();
+  // Pixel → meters: the pixel's distance from the middle of the scene, divided by the scale
+  // (pixels per world unit), is world units; over EDGE, times the range, is meters.
+  const handleManPointerMove = (event) => {
+    if (!event.currentTarget.hasPointerCapture(event.pointerId)) return; // only the finger or mouse that grabbed him
+    const sceneRect = ref.current.getBoundingClientRect(); // read now, so a page scroll mid-drag is fine
+    const worldX = (event.clientX - sceneRect.left - sceneRect.width / 2) / drag.current.zoom;
+    props.onManDragSample((worldX / EDGE) * drag.current.range);
+  };
 
-    const handleWindowPointerMove = (moveEvent) => {
-      const worldX = (moveEvent.clientX - sceneRect.left - sceneRect.width / 2) / view.zoom;
-      props.onManDragSample(fromWorldX(worldX));
-    };
-
-    const handleWindowPointerUp = () => {
-      window.removeEventListener("pointermove", handleWindowPointerMove);
-      window.removeEventListener("pointerup", handleWindowPointerUp);
-      props.onManDragEnd();
-    };
-
-    window.addEventListener("pointermove", handleWindowPointerMove);
-    window.addEventListener("pointerup", handleWindowPointerUp);
+  // Let go (pointerup), or the browser took the pointer away (pointercancel): the capture ends either way
+  const handleManLostCapture = () => {
+    drag.current = null;
+    props.onManDragEnd();
   };
 
   const manPicture = (href, show, turned) => {
@@ -242,7 +256,14 @@ function SimulationScene(props) {
           </g>
 
           {/* The man, in front of the bar and the numbers (the pins' poles are behind him) */}
-          <g onPointerDown={handleManPointerDown}>
+          {/* touch-action for browsers that honor it on SVG; stopScrollOnTouch for Chrome */}
+          <g
+            ref={stopScrollOnTouch}
+            style={{ touchAction: "none" }}
+            onPointerDown={handleManPointerDown}
+            onPointerMove={handleManPointerMove}
+            onLostPointerCapture={handleManLostCapture}
+          >
             {manPicture(MAN_STANDING, isStanding, false)}
             {manPicture(MAN_WALKING, !isStanding, props.velocity <= 0)}
           </g>
