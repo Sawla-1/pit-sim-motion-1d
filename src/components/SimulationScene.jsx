@@ -123,23 +123,29 @@ function SimulationScene(props) {
   // Dragging must START on the man (the handlers are only on his pictures), but once started it
   // follows the mouse or finger anywhere on the page, even over the charts or the controls, same
   // as PhET: pointer capture sends all of that pointer's moves to the man (like SvgChart does).
+  // Where a pointer is, in world units from the middle of the scene: its distance in
+  // pixels divided by the scale (pixels per world unit)
+  const pointerWorldX = (clientX, zoom) => {
+    const sceneRect = ref.current.getBoundingClientRect(); // read now, so a page scroll mid-drag is fine
+    return (clientX - sceneRect.left - sceneRect.width / 2) / zoom;
+  };
+
   const handleManPointerDown = (event) => {
     event.stopPropagation();
     event.preventDefault(); // stops the browser from selecting text while the mouse drags over the page
     if (drag.current || event.button !== 0) return; // already dragging (a second finger), or not the main button
     // Keep the scale from the moment of the press: the ruler grows while he walks past 10 m,
-    // and the new scale would make him run away from the mouse
-    drag.current = { zoom: view.zoom, range };
+    // and the new scale would make him run away from the mouse.
+    // grabX = where on him you grabbed (world units from his middle), so he doesn't jump to the pointer.
+    drag.current = { zoom: view.zoom, range, grabX: pointerWorldX(event.clientX, view.zoom) - toWorldX(props.position) };
     event.currentTarget.setPointerCapture(event.pointerId);
     props.onManDragStart();
   };
 
-  // Pixel → meters: the pixel's distance from the middle of the scene, divided by the scale
-  // (pixels per world unit), is world units; over EDGE, times the range, is meters.
+  // Pointer → meters: his middle is grabX away from the pointer; world units over EDGE, times the range, is meters
   const handleManPointerMove = (event) => {
     if (!event.currentTarget.hasPointerCapture(event.pointerId)) return; // only the finger or mouse that grabbed him
-    const sceneRect = ref.current.getBoundingClientRect(); // read now, so a page scroll mid-drag is fine
-    const worldX = (event.clientX - sceneRect.left - sceneRect.width / 2) / drag.current.zoom;
+    const worldX = pointerWorldX(event.clientX, drag.current.zoom) - drag.current.grabX;
     props.onManDragSample((worldX / EDGE) * drag.current.range);
   };
 
