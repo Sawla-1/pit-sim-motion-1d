@@ -69,6 +69,18 @@ export function useChartZoom(data, valueKeys) {
   const [xRange, setXRange] = useState(null);
   const [yRanges, setYRanges] = useState({});
 
+  // Clear Data and Reset All start a new recording: its first point is a new object
+  // (recording more only adds points after it). The old zoom doesn't fit the new
+  // data, so forget it. (React's way to reset state when a prop changes: remember
+  // the value and compare it while rendering, instead of an effect.)
+  const firstPoint = data.recordedData[0];
+  const [zoomedFirstPoint, setZoomedFirstPoint] = useState(firstPoint);
+  if (firstPoint !== zoomedFirstPoint) {
+    setZoomedFirstPoint(firstPoint);
+    setXRange(null);
+    setYRanges({});
+  }
+
   const maxTime = data.recordedData[data.recordedData.length - 1].time;
 
   // ---- X-axis: shared time window across all 3 charts ----
