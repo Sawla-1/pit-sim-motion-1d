@@ -5,7 +5,9 @@ import { evaluateExpression } from "../engine/evaluateExpression";
 // slider beside its chart. Intro tab (horizontal): left-right slider.
 // While the user is typing, the box shows their draft text; otherwise it
 // shows the live value. No effect is needed to keep the two in sync.
-function PhysicsInput({ id, label, unit, value, min, max, color, track, disabled, onChange, horizontal = false }) {
+// readOnly (Playback: only look at the result): the number is plain text in the
+// same spot, and the slider still moves with the value but can't be dragged.
+function PhysicsInput({ id, label, unit, value, min, max, color, track, disabled, readOnly = false, onChange, horizontal = false }) {
   const [draft, setDraft] = useState(null); // null = not typing right now
   const shown = String(Math.round(value * 100) / 100); // 2 decimals
   const text = draft ?? shown;
@@ -27,20 +29,28 @@ function PhysicsInput({ id, label, unit, value, min, max, color, track, disabled
 
   const numberBox = (
     <div className="flex items-center gap-2 whitespace-nowrap">
-      <input
-        id={id}
-        type="text"
-        value={text}
-        disabled={disabled}
-        onFocus={(e) => {
-          setDraft(shown);
-          e.target.select();
-        }}
-        onChange={(e) => setDraft(e.target.value)}
-        onBlur={(e) => commit(e.target.value)}
-        onKeyDown={(e) => { if (e.key === "Enter") e.target.blur(); }}
-        className="w-[72px] h-8 px-2 border border-gray-400 rounded text-base font-semibold text-right bg-white text-gray-800 shadow-sm focus:outline-none focus:border-gray-700 focus:shadow-[0_0_0_3px_rgba(55,65,81,0.18)] disabled:opacity-50 disabled:cursor-not-allowed"
-      />
+      {readOnly ? (
+        // Same size and place as the box, so nothing moves when the mode changes.
+        // aria-live="off": screen readers would otherwise read out every change (60 a second)
+        <output id={id} aria-live="off" className="w-[72px] h-8 px-2 flex items-center justify-end text-base font-semibold text-gray-800">
+          {shown}
+        </output>
+      ) : (
+        <input
+          id={id}
+          type="text"
+          value={text}
+          disabled={disabled}
+          onFocus={(e) => {
+            setDraft(shown);
+            e.target.select();
+          }}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={(e) => commit(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") e.target.blur(); }}
+          className="w-[72px] h-8 px-2 border border-gray-400 rounded text-base font-semibold text-right bg-white text-gray-800 shadow-sm focus:outline-none focus:border-gray-700 focus:shadow-[0_0_0_3px_rgba(55,65,81,0.18)] disabled:opacity-50 disabled:cursor-not-allowed"
+        />
+      )}
       <span className="w-[34px] text-base font-semibold" style={{ color }}>
         {unit}
       </span>
@@ -54,10 +64,11 @@ function PhysicsInput({ id, label, unit, value, min, max, color, track, disabled
       max={max}
       step={0.1}
       value={value}
-      disabled={disabled}
+      disabled={disabled || readOnly}
       aria-label={`${label} slider`}
       onChange={(e) => onChange(Number(e.target.value))}
-      className={`${className} disabled:opacity-50 disabled:cursor-not-allowed`}
+      // Read-only: locked but not greyed (it still shows the value). Disabled: greyed.
+      className={`${className} ${readOnly ? "cursor-default" : "disabled:opacity-50 disabled:cursor-not-allowed"}`}
       style={{ color, background: track }}
     />
   );

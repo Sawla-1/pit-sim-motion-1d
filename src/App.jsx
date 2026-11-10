@@ -14,8 +14,9 @@ import {
   handlePlaybackStep,
   handlePlaybackSeek,
   trimRecordedDataAfter,
+  findScrubTime,
 } from "./engine/recordPlayback";
-import { calculateDragStep, NUMBER_MOUSE_POINTS_TO_AVERAGE } from "./engine/kinematics1d";
+import { calculateDragStep } from "./engine/kinematics1d";
 import { compileFormula } from "./engine/evaluateFormula";
 import { calculateFormulaStep } from "./engine/formulaMotion";
 import { formatNumber } from "./utils/formatNumber";
@@ -51,21 +52,31 @@ function App() {
     recordedData: [simulation], // All simulation states
     selectedMode: "record", // 'record' or 'playback'
   });
+  // Record: make data (values can change). Playback: only look at it.
+  const isRecording = data.selectedMode === "record";
 
-  // null = not dragging; array of { x: meters, t: wallClockMs } while dragging
+  // null = not dragging. While dragging: the mouse photos that calculateDragStep keeps.
   const dragSamples = useRef(null);
+  // Where the mouse is right now (meters)
+  const dragMouseX = useRef(null);
+  // Which drag is going on: null, "record" (drag the man and record it) or
+  // "scrub" (Playback: drag him to move time, record nothing)
+  const dragMode = useRef(null);
+  // While scrubbing: { time, direction }: the time we moved to last (not the render's
+  // simulation.time, which can lag a move behind) and which way time went (+1 / -1)
+  const scrub = useRef(null);
+  // A mode switch, Clear Data or Reset All in the middle of a drag (e.g. a second
+  // finger tapping a button) ends the drag
+  const endDrag = () => {
+    dragMode.current = null;
+    dragSamples.current = null;
+  };
 
+  // One frame of dragging: the engine does all the maths and hands back its photos
   const onDragStep = (sim, frameTime) => {
-    const next = calculateDragStep(sim, frameTime, dragSamples.current);
-    return {
-      simulation: next,
-      recordedState: {
-        time: next.time,
-        position: next.position,
-        velocity: next.velocity,
-        acceleration: next.acceleration,
-      },
-    };
+    const result = calculateDragStep(sim, frameTime, dragMouseX.current, dragSamples.current);
+    dragSamples.current = result.photos;
+    return { simulation: result.simulation, recordedState: result.simulation };
   };
 
   // Is the "Reset everything?" popup open
@@ -149,6 +160,7 @@ function App() {
   // Reset everything to initial state
   const reset = () => {
     stopFormula();
+    endDrag();
     setSimulation({
       position: 0,
       velocity: 0,
@@ -187,6 +199,7 @@ function App() {
   // Switch between Record and Playback modes
   const switchMode = (mode) => {
     stopFormula();
+    endDrag();
     setData((prev) => ({ ...prev, selectedMode: mode }));
 
     if (mode === "playback") {
@@ -215,6 +228,7 @@ function App() {
   // Clear all recorded data
   const clearRecordedData = () => {
     stopFormula();
+    endDrag();
     setPlaying(false);
     setPins([]);
     setData((prev) => ({
@@ -271,25 +285,39 @@ function App() {
   };
 
   const handleManDragStart = () => {
+    if (!isRecording) {
+      // Playback: only look, so move time; record nothing
+      dragMode.current = "scrub";
+      scrub.current = { time: simulation.time, direction: 1 };
+      setPlaying(false); // he is held, so playback must not move him on
+      return;
+    }
+    dragMode.current = "record";
     if (activeFormula) stopFormula(FORMULA_TOOK_OVER);
     dragSamples.current = [];
+    dragMouseX.current = simulation.position; // until the mouse moves, he stays where he is
     trimRecordingToNow();
-    setData((prev) => ({ ...prev, selectedMode: "record" }));
     setPlaying(true);
   };
 
-  // Called on every raw mouse reading while dragging. Just records the
-  // reading — the smoothing and the actual position/velocity math happen
-  // once per frame in onDragStep above, not here.
+  // Called on every mouse move while dragging.
+  // Playback: move time to where he was at that spot. Record: only remember where
+  // the mouse is; onDragStep above takes one photo of it per frame and does the maths.
   const handleManDragSample = (meters) => {
-    if (!dragSamples.current) return;
-    const next = [...dragSamples.current, { x: meters, t: performance.now() }];
-    dragSamples.current = next.slice(-NUMBER_MOUSE_POINTS_TO_AVERAGE);
+    if (dragMode.current === "scrub") {
+      scrub.current = findScrubTime(data.recordedData, scrub.current.time, meters, scrub.current.direction);
+      handleSeek(scrub.current.time);
+    } else if (dragMode.current === "record") {
+      dragMouseX.current = meters;
+    }
   };
 
   const handleManDragEnd = () => {
-    dragSamples.current = null;
-    setSimulation((prev) => ({ ...prev, velocity: 0, acceleration: 0 }));
+    if (dragMode.current === "record") {
+      dragSamples.current = null;
+      setSimulation((prev) => ({ ...prev, velocity: 0, acceleration: 0 }));
+    }
+    dragMode.current = null;
   };
 
 
@@ -309,12 +337,11 @@ function App() {
       value={simulation[key]} min={-10} max={10}
       color={SERIES_COLORS[key].color} track={SERIES_COLORS[key].track}
       disabled={playing}
+      readOnly={!isRecording} // Playback: only look; change things in Record
       horizontal={!isCharts}
       onChange={(v) => handleSimulationChange({ [key]: v })}
     />
   ));
-
-  const isRecording = data.selectedMode === "record";
 
   // The panel's message line (an error, if any, is shown first by the panel)
   const formulaStatus = activeFormula

@@ -23,43 +23,46 @@ export function calculatePhysicsStep(simulation, deltaTime) {
   };
 }
 
-// Same idea PhET's own Moving Man uses: average a few recent mouse readings
-// instead of trusting the newest one outright, so small timing jitter doesn't
-// turn into huge velocity/acceleration spikes.
-export const NUMBER_MOUSE_POINTS_TO_AVERAGE = 4;
-       const MIN_VELOCITY_SPAN = 0.03; //it is in seconds
-const SMOOTHING = 0.2; // 0..1; each frame moves this fraction of the way to the new value (smaller = smoother but slower)
+// Dragging the man (same idea as PhET's Moving Man): every frame takes one "photo"
+// of where the mouse is, even when it stands still. The speed is how far the photos
+// moved across the last DRAG_WINDOW seconds, so a little hand shake doesn't turn
+// into huge velocity/acceleration spikes.
+const DRAG_WINDOW = 0.06; // seconds looked back: about 4 frames at 60 fps
+const MIN_SPAN = 0.03; // seconds; photos closer than this are too noisy for a speed
+const SMOOTHING_TIME = 0.075; // seconds; new values ease in (0.2 per frame at 60 fps, same feel on any screen)
 
 /**
- * Calculate one step of drag-driven motion, called once per animation frame
- * (same clock as calculatePhysicsStep) — not once per raw mouse event.
- *
- * `samples` is a short rolling history of recent raw mouse readings,
- * each { x: positionInMeters, t: wallClockMs }, oldest first.
+ * One frame of drag motion (same clock as calculatePhysicsStep).
+ * mouseX = where the mouse is now (meters).
+ * photos = what this function returned last frame ([] when the drag starts),
+ *   [{ x: meters, t: seconds, v: velocity then }], oldest first.
+ * Returns { simulation, photos }; keep `photos` for the next frame.
  */
-export function calculateDragStep(simulation, deltaTime, samples) {
+export function calculateDragStep(simulation, deltaTime, mouseX, photos) {
   const time = simulation.time + deltaTime;
 
-  if (!samples || samples.length === 0) {
-    return { position: simulation.position, velocity: simulation.velocity, acceleration: simulation.acceleration, time };
-  }
+  // This frame's photo, plus the ones from the last DRAG_WINDOW seconds
+  // (at least 2, so one slow frame never leaves just one)
+  const all = [...photos, { x: mouseX, t: time }];
+  const recent = all.filter((photo) => photo.t >= time - DRAG_WINDOW);
+  const kept = recent.length >= 2 ? recent : all.slice(-2);
+  const oldest = kept[0];
+  const newest = kept[kept.length - 1];
+  const span = newest.t - oldest.t;
 
-  // Smoothed position: the average of the recent raw readings.
-  const position = samples.reduce((sum, s) => sum + s.x, 0) / samples.length;
+  // How much of the way to the new value to go this frame (0..1)
+  const smoothing = 1 - Math.exp(-deltaTime / SMOOTHING_TIME);
 
-  // Velocity/acceleration from the span of the whole window (oldest to newest),
-  // not just the latest two readings — a wider time baseline is far less
-  // sensitive to a single mouse event landing a few milliseconds off.
-  const oldest = samples[0];
-  const newest = samples[samples.length - 1];
-  const span = (newest.t - oldest.t) / 1000;
+  // Velocity: how far the mouse moved across the photos, eased in
+  const rawVelocity = span >= MIN_SPAN ? (newest.x - oldest.x) / span : simulation.velocity;
+  const velocity = simulation.velocity + smoothing * (rawVelocity - simulation.velocity);
+  newest.v = velocity; // remembered, for the acceleration in later frames
 
-  const rawVelocity = span > MIN_VELOCITY_SPAN ? (newest.x - oldest.x) / span : simulation.velocity;
-  const velocity = simulation.velocity + SMOOTHING * (rawVelocity - simulation.velocity);
+  // Acceleration: how much the velocity changed across the same photos, eased in
+  const rawAcceleration = span >= MIN_SPAN ? (velocity - oldest.v) / span : simulation.acceleration;
+  const acceleration = simulation.acceleration + smoothing * (rawAcceleration - simulation.acceleration);
 
-  const rawAcceleration = span > MIN_VELOCITY_SPAN ? (velocity - simulation.velocity) / span : simulation.acceleration;
-  const acceleration = simulation.acceleration + SMOOTHING * (rawAcceleration - simulation.acceleration);
-
-  return { position, velocity, acceleration, time };
+  // The man stands right under the mouse
+  return { simulation: { position: newest.x, velocity, acceleration, time }, photos: kept };
 }
 
