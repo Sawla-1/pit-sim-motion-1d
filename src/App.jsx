@@ -10,13 +10,12 @@ import { SERIES_COLORS } from "./styles/seriesColors";
 import { KAREN_ART, KAREN_BANNER, KAREN_PAGE, KAREN_RULER, KAREN_TIME } from "./styles/karenStyles";
 import { useSimulationLoop } from "./hooks/useSimulationLoop";
 import {
-  handleRecordingStep,
   handlePlaybackStep,
-  handlePlaybackSeek,
+  resolvePlaybackState,
   trimRecordedDataAfter,
   findScrubTime,
 } from "./engine/recordPlayback";
-import { calculateDragStep } from "./engine/kinematics1d";
+import { calculatePhysicsStep, calculateDragStep } from "./engine/kinematics1d";
 import { compileFormula } from "./engine/evaluateFormula";
 import { calculateFormulaStep } from "./engine/formulaMotion";
 import { formatNumber } from "./utils/formatNumber";
@@ -86,11 +85,11 @@ function App() {
       dragReleased.current = false;
       dragSamples.current = null;
       const stopped = { ...sim, velocity: 0, acceleration: 0, time: sim.time + frameTime };
-      return { simulation: stopped };
+      return stopped;
     }
     const result = calculateDragStep(sim, frameTime, dragMouseX.current, dragSamples.current);
     dragSamples.current = result.photos;
-    return { simulation: result.simulation };
+    return result.simulation;
   };
 
   // Is the "Reset everything?" popup open
@@ -140,11 +139,8 @@ function App() {
   // One frame of formula motion. null = the formula gave no number, so it stops.
   const onFormulaStep = (sim, frameTime) => {
     const next = calculateFormulaStep(activeFormula.evaluate, sim, frameTime);
-    if (!next) {
-      stopFormula(`Formula stopped: it gave no number at t = ${formatNumber(sim.time, 1)} s.`);
-      return null;
-    }
-    return { simulation: next };
+    if (!next) stopFormula(`Formula stopped: it gave no number at t = ${formatNumber(sim.time, 1)} s.`);
+    return next;
   };
 
   // One frame of Record mode. The man is moved by the mouse (drag), by a
@@ -152,7 +148,7 @@ function App() {
   const onRecordStep = (sim, frameTime) => {
     if (dragSamples.current) return onDragStep(sim, frameTime);
     if (activeFormula) return onFormulaStep(sim, frameTime);
-    return handleRecordingStep(sim, frameTime);
+    return calculatePhysicsStep(sim, frameTime);
   };
 
   // Pinned snapshots { name, time, position, velocity, acceleration }: [] / [A] / [A, B]
@@ -215,29 +211,12 @@ function App() {
   const switchMode = (mode) => {
     stopFormula();
     endDrag();
+    setPlaying(false);
     setData((prev) => ({ ...prev, selectedMode: mode }));
-
-    if (mode === "playback") {
-      setPlaybackTried(true);
-      // Switch to playback: reset playback time
-      setSimulation(() => ({
-        time: 0,
-        position: data.recordedData[0].position,
-        velocity: data.recordedData[0].velocity,
-        acceleration: data.recordedData[0].acceleration,
-      }));
-      setPlaying(false);
-    } else {
-      // Switch to record: continue from latest recorded data
-      const lastState = data.recordedData[data.recordedData.length - 1];
-      setSimulation({
-        position: lastState.position,
-        velocity: lastState.velocity,
-        acceleration: lastState.acceleration,
-        time: lastState.time,
-      });
-      setPlaying(false);
-    }
+    if (mode === "playback") setPlaybackTried(true);
+    // Playback starts at the first recorded point. Record continues from the last.
+    const points = data.recordedData;
+    setSimulation(mode === "playback" ? points[0] : points[points.length - 1]);
   };
 
   // Clear all recorded data
@@ -273,8 +252,7 @@ function App() {
 
   // Handle timeline scrubbing from charts
   const handleSeek = (newTime) => {
-    const result = handlePlaybackSeek(data.recordedData, newTime);
-    setSimulation(result.simulation);
+    setSimulation(resolvePlaybackState(data.recordedData, newTime).simulation);
   };
 
   // Dragging on a chart: remember it (the hint goes away), then move the time

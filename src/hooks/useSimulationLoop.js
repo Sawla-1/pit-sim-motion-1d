@@ -62,17 +62,17 @@ export function useSimulationLoop({
           // care where it comes from). null = it cannot go on, so pause.
           // Time adds up as simulation.time + frameTime, so a pause just
           // stops adding to it.
-          const result = onRecordStep(sim, frameTime);
-          if (result) {
-            simulationRef.current = result.simulation; // same reason as above
-            setSimulation(result.simulation);
+          const next = onRecordStep(sim, frameTime);
+          if (next) {
+            simulationRef.current = next; // same reason as above
+            setSimulation(next);
             setData((prev) => ({
               ...prev,
-              recordedData: [...prev.recordedData, result.simulation],
+              recordedData: [...prev.recordedData, next],
             }));
           }
           // Stop when it cannot go on, or at the 10 min limit
-          if (!result || result.simulation.time >= MAX_RECORD_TIME) setPlaying(false);
+          if (!next || next.time >= MAX_RECORD_TIME) setPlaying(false);
         }
       }
       raf = requestAnimationFrame(loop);

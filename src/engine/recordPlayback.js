@@ -6,21 +6,9 @@
  * should look like at any point in time.
  */
 
-import { calculatePhysicsStep } from "./kinematics1d";
-
 // ---------------------------------------------------------------------------
 // Recording
 // ---------------------------------------------------------------------------
-
-/**
- * One step of recording: move the simulation forward a bit, then
- * save that moment as a new point in the recorded history.
- */
-export function handleRecordingStep(simulation, deltaTime) {
-  const newSimulation = calculatePhysicsStep(simulation, deltaTime);
-
-  return { simulation: newSimulation };
-}
 
 /**
  * Start recording from a past moment: throw away every recorded point that
@@ -34,22 +22,17 @@ export function trimRecordedDataAfter(recordedData, time) {
 // ---------------------------------------------------------------------------
 // Playback
 //
-// These four work together as one chain (the "playback engine"):
+// These three work together as one chain (the "playback engine"):
 //
-//   handlePlaybackStep  ─┐
-//                         ├──> resolvePlaybackState ──> interpolateStateAtTime
-//   handlePlaybackSeek  ─┘
+//   handlePlaybackStep ──> resolvePlaybackState ──> interpolateStateAtTime
 //
 // - interpolateStateAtTime does the actual math — finds the two nearest
 //   recorded points and blends between them.
 // - resolvePlaybackState wraps that with "stop at the end if we've gone
-//   past the last recorded point."
-// - handlePlaybackStep and handlePlaybackSeek both call
-//   resolvePlaybackState — they're just two different doors into the same
-//   logic (one for "advance a little bit each frame," one for "jump
-//   straight to this time from a drag"). That's why they were split into
-//   a shared function in the first place: without resolvePlaybackState,
-//   step and seek would each need their own copy of the same lookup code.
+//   past the last recorded point." A jump straight to a time (a drag on a
+//   chart, the frame buttons) calls it directly.
+// - handlePlaybackStep is the "advance a little bit each frame" door into
+//   the same lookup, so playing and jumping always agree.
 // ---------------------------------------------------------------------------
 
 /**
@@ -70,24 +53,12 @@ export function handlePlaybackStep(simulation, data, deltaTime) {
 }
 
 /**
- * Jump playback straight to a chosen time. Called when the user drags
- * the timeline on the chart.
- */
-export function handlePlaybackSeek(recordedData, targetTime) {
-  const { simulation } = resolvePlaybackState(recordedData, targetTime);
-
-  return {
-    simulation,
-  };
-}
-
-/**
  * Get the simulation state at a chosen playback time. If that time is
  * past the last recorded point, it stays at the end instead of going
  * further. Both normal playback and dragging the chart to scrub use
  * this same function, so they always agree.
  */
-function resolvePlaybackState(recordedData, targetTime) {
+export function resolvePlaybackState(recordedData, targetTime) {
   const maxTime = recordedData[recordedData.length - 1].time;
    
   if (targetTime >= maxTime) {
