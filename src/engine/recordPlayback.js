@@ -19,10 +19,7 @@ import { calculatePhysicsStep } from "./kinematics1d";
 export function handleRecordingStep(simulation, deltaTime) {
   const newSimulation = calculatePhysicsStep(simulation, deltaTime);
 
-  return {
-    simulation: newSimulation,
-    recordedState: newSimulation,
-  };
+  return { simulation: newSimulation };
 }
 
 /**

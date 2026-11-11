@@ -68,7 +68,7 @@ export function useSimulationLoop({
             setSimulation(result.simulation);
             setData((prev) => ({
               ...prev,
-              recordedData: [...prev.recordedData, result.recordedState],
+              recordedData: [...prev.recordedData, result.simulation],
             }));
           }
           // Stop when it cannot go on, or at the 10 min limit

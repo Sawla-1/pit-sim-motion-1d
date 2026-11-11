@@ -86,11 +86,11 @@ function App() {
       dragReleased.current = false;
       dragSamples.current = null;
       const stopped = { ...sim, velocity: 0, acceleration: 0, time: sim.time + frameTime };
-      return { simulation: stopped, recordedState: stopped };
+      return { simulation: stopped };
     }
     const result = calculateDragStep(sim, frameTime, dragMouseX.current, dragSamples.current);
     dragSamples.current = result.photos;
-    return { simulation: result.simulation, recordedState: result.simulation };
+    return { simulation: result.simulation };
   };
 
   // Is the "Reset everything?" popup open
@@ -144,7 +144,7 @@ function App() {
       stopFormula(`Formula stopped: it gave no number at t = ${formatNumber(sim.time, 1)} s.`);
       return null;
     }
-    return { simulation: next, recordedState: next };
+    return { simulation: next };
   };
 
   // One frame of Record mode. The man is moved by the mouse (drag), by a
@@ -464,7 +464,7 @@ function App() {
       )}
 
       {/* Bottom: the toolbar pill, 8px gap under it. Centered on the page on both tabs (laptops: one row). */}
-      <div className={`relative z-[6] shrink-0 flex justify-center px-2 sm:px-4 pb-2[@media(min-height:700px)]:pb-8 max-lg:mt-auto max-lg:sticky max-lg:bottom-0 max-lg:z-20 ${KAREN_PAGE.stickyBg}`}>
+      <div className={`relative z-[6] shrink-0 flex justify-center px-2 sm:px-4 pb-2 [@media(min-height:700px)]:pb-8 max-lg:mt-auto max-lg:sticky max-lg:bottom-0 max-lg:z-20 ${KAREN_PAGE.stickyBg}`}>
         {/* The rice-field strip behind the bar (it sticks with the bar on phones) */}
         <img src={KAREN_ART.bottomStrip} alt="" aria-hidden="true" className={KAREN_PAGE.strip} />
         <Controls
