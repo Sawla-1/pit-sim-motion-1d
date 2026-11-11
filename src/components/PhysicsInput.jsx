@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { evaluateExpression } from "../engine/evaluateExpression";
+import { evaluateExpression } from "../utils/evaluateExpression";
 
 // One input panel: name, number box + unit, slider. Charts tab: vertical
 // slider beside its chart. Intro tab (horizontal): left-right slider.

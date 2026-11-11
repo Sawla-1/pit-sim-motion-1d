@@ -9,10 +9,6 @@ export function useSimulationLoop({
   setPlaying,
   onRecordStep,
   onPlaybackStep,
-  onDragStep,
-  dragSamplesRef,
-  formulaActive,
-  onFormulaStep,
 }) {
   const last = useRef(performance.now());
 
@@ -61,50 +57,27 @@ export function useSimulationLoop({
           simulationRef.current = result.simulation;
           setSimulation(result.simulation);
           if (result.isEndOfPlayback) setPlaying(false);
-        } else if (dragSamplesRef && dragSamplesRef.current) {
-          // DRAGGING: same recording pipeline as below, but the position comes
-          // from the mouse instead of calculatePhysicsStep's acceleration math
-          const result = onDragStep(sim, frameTime);
-          simulationRef.current = result.simulation; // same reason as above
-          setSimulation(result.simulation);
-          setData((prev) => ({
-            ...prev,
-            recordedData: [...prev.recordedData, result.recordedState],
-          }));
-          if (result.simulation.time >= MAX_RECORD_TIME) setPlaying(false); // same 10 min limit
-        } else if (formulaActive) {
-          // FORMULA: same recording pipeline, but position comes from the typed
-          // formula. null = the formula gave no number, so it cannot go on.
-          const result = onFormulaStep(sim, frameTime);
+        } else {
+          // RECORD MODE: onRecordStep gives the next state (the hook does not
+          // care where it comes from). null = it cannot go on, so pause.
+          // Time adds up as simulation.time + frameTime, so a pause just
+          // stops adding to it.
+          const result = onRecordStep(sim, frameTime);
           if (result) {
-            simulationRef.current = result.simulation;
+            simulationRef.current = result.simulation; // same reason as above
             setSimulation(result.simulation);
             setData((prev) => ({
               ...prev,
               recordedData: [...prev.recordedData, result.recordedState],
             }));
-            if (result.simulation.time >= MAX_RECORD_TIME) setPlaying(false);
-          } else {
-            setPlaying(false);
           }
-        } else {
-          // RECORDING MODE: time accumulates as simulation.time + frameTime,
-          // so pausing just stops adding to it — no anchor/pause bookkeeping needed
-          const result = onRecordStep(sim, frameTime);
-          simulationRef.current = result.simulation; // same reason as above
-          setSimulation(result.simulation);
-          setData((prev) => ({
-            ...prev,
-            recordedData: [...prev.recordedData, result.recordedState],
-          }));
-          if (result.simulation.time >= MAX_RECORD_TIME) {
-            setPlaying(false);
-          }
+          // Stop when it cannot go on, or at the 10 min limit
+          if (!result || result.simulation.time >= MAX_RECORD_TIME) setPlaying(false);
         }
       }
       raf = requestAnimationFrame(loop);
     }
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
-  }, [playing, setSimulation, setData, setPlaying, onRecordStep, onPlaybackStep, onDragStep, dragSamplesRef, formulaActive, onFormulaStep]); // setters are stable React refs; listed to satisfy exhaustive-deps
+  }, [playing, setSimulation, setData, setPlaying, onRecordStep, onPlaybackStep]); // setters are stable React refs; listed to satisfy exhaustive-deps
 }

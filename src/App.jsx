@@ -147,6 +147,14 @@ function App() {
     return { simulation: next, recordedState: next };
   };
 
+  // One frame of Record mode. The man is moved by the mouse (drag), by a
+  // formula, or by plain physics, checked in this order.
+  const onRecordStep = (sim, frameTime) => {
+    if (dragSamples.current) return onDragStep(sim, frameTime);
+    if (activeFormula) return onFormulaStep(sim, frameTime);
+    return handleRecordingStep(sim, frameTime);
+  };
+
   // Pinned snapshots { name, time, position, velocity, acceleration }: [] / [A] / [A, B]
   const [pins, setPins] = useState([]);
   const pinAtNow = pins.find((p) => Math.abs(p.time - simulation.time) < PIN_TOLERANCE);
@@ -159,12 +167,8 @@ function App() {
     setSimulation,
     setData,
     setPlaying,
-    onRecordStep: handleRecordingStep,
+    onRecordStep,
     onPlaybackStep: handlePlaybackStep,
-    onDragStep,
-    dragSamplesRef: dragSamples,
-    formulaActive: activeFormula !== null,
-    onFormulaStep,
   });
 
   // ============================================================================
