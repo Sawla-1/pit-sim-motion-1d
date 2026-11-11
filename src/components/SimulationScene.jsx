@@ -1,11 +1,12 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { makeSceneView, makeRulerTicks, labelFontSize, GROUND_Y, EDGE, MIN_RANGE, EDGE_LABEL_GAP, LABEL_BASE, PIN_FLAG_HEIGHT } from "../utils/sceneMath";
 import { formatNumber } from "../utils/formatNumber";
+import { KAREN_ART } from "../styles/karenStyles";
 
 const MAN_HEIGHT_TALL = 1.7; // Introduction: about 8.5% of the ruler's width, like the mockup
 const MAN_HEIGHT_SHORT = 1.2; // Charts: the scene is short, so he is smaller
 
-// The ruler look when no `look` is given (the Charts tab): same as before
+// The ruler look when no `look` is given (the Charts tab)
 const DEFAULT_RULER = {
   ground: "skyblue", groundWidth: 50, groundHeight: 0.1, gradient: null, edge: null,
   tick: "#2d5016", tickWidth: 0.02, tickDrop: 0.1, tickHeight: 0.15, tickLabeledHeight: 0.3, labelDrop: 0.3,
@@ -26,8 +27,6 @@ const PIN_FLAG_WIDTH = 0.5;
 const PIN_LETTER_SIZE = 0.3; // fits inside the flag
 const PIN_DOT_RADIUS = 0.08; // the dot where the pole meets the ground
 
-const MAN_STANDING = "/karen-intro-svgs/boy-standing.svg";
-const MAN_WALKING = "/karen-intro-svgs/boy-side-walking.svg"; // the art faces right
 const MAN_ASPECT = 30 / 44; // the boy art is 30 wide and 44 tall
 const MOVING_THRESHOLD = 0.1; // m/s; at or below this he stands
 
@@ -47,7 +46,7 @@ function stopScrollOnTouch(element) {
 // position, velocity = the man (meters, meters per second)
 // pins = [{ name, position }], tall = Introduction size, look = the ruler colours
 // onManDragStart / onManDragSample(meters) / onManDragEnd = the man being dragged
-function SimulationScene(props) {
+function SimulationScene({ position, velocity, pins = [], tall, look = DEFAULT_RULER, onManDragStart, onManDragSample, onManDragEnd }) {
   const ref = useRef(null);
   const drag = useRef(null); // while dragging: the scale from the moment of the press; null = not dragging
   const [size, setSize] = useState({ width: 0, height: 0 });
@@ -62,15 +61,13 @@ function SimulationScene(props) {
     return () => observer.disconnect();
   }, []);
 
-  const look = props.look ?? DEFAULT_RULER;
-  const manHeight = props.tall ? MAN_HEIGHT_TALL : MAN_HEIGHT_SHORT;
+  const manHeight = tall ? MAN_HEIGHT_TALL : MAN_HEIGHT_SHORT;
   const ready = size.width > 0 && size.height > 0;
   const view = ready ? makeSceneView(size.width, size.height, manHeight) : null;
 
   // The ruler spans -range..range with 0 in the center, and follows the man both ways.
   // Pins count too, so a pin is never off the ruler.
-  const pins = props.pins ?? [];
-  const range = Math.max(MIN_RANGE, Math.abs(props.position), ...pins.map((p) => Math.abs(p.position)));
+  const range = Math.max(MIN_RANGE, Math.abs(position), ...pins.map((p) => Math.abs(p.position)));
   const { ticks, showEdge } = makeRulerTicks(range);
   const toWorldX = (meters) => (meters / range) * EDGE; // sticks, labels, pins and the man all use this
 
@@ -119,7 +116,7 @@ function SimulationScene(props) {
   // in the page and only one is shown, so switching never waits for a download.
   // Only the walking picture turns: he walks left when his speed is 0 or less (the art faces right).
   const manWidth = manHeight * MAN_ASPECT;
-  const isStanding = Math.abs(props.velocity) <= MOVING_THRESHOLD;
+  const isStanding = Math.abs(velocity) <= MOVING_THRESHOLD;
   // Dragging must START on the man (the handlers are only on his pictures), but once started it
   // follows the mouse or finger anywhere on the page, even over the charts or the controls, same
   // as PhET: pointer capture sends all of that pointer's moves to the man (like SvgChart does).
@@ -137,26 +134,26 @@ function SimulationScene(props) {
     // Keep the scale from the moment of the press: the ruler grows while he walks past 10 m,
     // and the new scale would make him run away from the mouse.
     // grabX = where on him you grabbed (world units from his middle), so he doesn't jump to the pointer.
-    drag.current = { zoom: view.zoom, range, grabX: pointerWorldX(event.clientX, view.zoom) - toWorldX(props.position) };
+    drag.current = { zoom: view.zoom, range, grabX: pointerWorldX(event.clientX, view.zoom) - toWorldX(position) };
     event.currentTarget.setPointerCapture(event.pointerId);
-    props.onManDragStart();
+    onManDragStart();
   };
 
   // Pointer → meters: his middle is grabX away from the pointer; world units over EDGE, times the range, is meters
   const handleManPointerMove = (event) => {
     if (!event.currentTarget.hasPointerCapture(event.pointerId)) return; // only the finger or mouse that grabbed him
     const worldX = pointerWorldX(event.clientX, drag.current.zoom) - drag.current.grabX;
-    props.onManDragSample((worldX / EDGE) * drag.current.range);
+    onManDragSample((worldX / EDGE) * drag.current.range);
   };
 
   // Let go (pointerup), or the browser took the pointer away (pointercancel): the capture ends either way
   const handleManLostCapture = () => {
     drag.current = null;
-    props.onManDragEnd();
+    onManDragEnd();
   };
 
   const manPicture = (href, show, turned) => {
-    const centerX = view.toX(toWorldX(props.position));
+    const centerX = view.toX(toWorldX(position));
     return (
       <g transform={turned ? `translate(${2 * centerX} 0) scale(-1 1)` : undefined}>
         <image
@@ -199,7 +196,7 @@ function SimulationScene(props) {
             );
           })}
           {/* The letters come after ALL the flags, so when two pins are close a flag
-              never covers the other pin's letter (same as the old scene) */}
+              never covers the other pin's letter */}
           {pins.map((pin, index) => (
             <text
               key={`letter-${pin.name}`}
@@ -270,8 +267,8 @@ function SimulationScene(props) {
             onPointerMove={handleManPointerMove}
             onLostPointerCapture={handleManLostCapture}
           >
-            {manPicture(MAN_STANDING, isStanding, false)}
-            {manPicture(MAN_WALKING, !isStanding, props.velocity <= 0)}
+            {manPicture(KAREN_ART.boyStanding, isStanding, false)}
+            {manPicture(KAREN_ART.boyWalking, !isStanding, velocity <= 0)}
           </g>
 
           {/* The pins' dots on the ground, in front of the bar: dark ring, white middle (like the chart's) */}

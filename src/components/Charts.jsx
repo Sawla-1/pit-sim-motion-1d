@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { formatNumber } from "../utils/formatNumber";
 import { newItemsStart } from "../utils/newItemsStart";
 import { useChartZoom } from "../hooks/useChartZoom";
@@ -6,24 +6,16 @@ import { ChartZoomControls, ChartPanel } from "./ChartControls";
 import SvgChart from "./SvgChart";
 import { SERIES_COLORS } from "../styles/seriesColors";
 
-// The 3 charts, top to bottom. `key` is the field name in the recorded data.
-const CHARTS = [
-  { key: "position", label: "Position" },
-  { key: "velocity", label: "Velocity" },
-  { key: "acceleration", label: "Acceleration" },
-];
-const CHART_KEYS = CHARTS.map((c) => c.key); // made once, so the zoom hook can trust it
-
 // Each chart's line as {x, y} points. `old` = the lines for an earlier version
 // of the recording: only the new points are turned into {x, y}.
-function growSeries(old, recordedData) {
+function growSeries(old, recordedData, keys) {
   const from = newItemsStart(old.data, recordedData);
   // Nothing new (like a Play press that trims nothing): keep the same lines,
   // so the charts don't redraw them
   if (from > 0 && from === recordedData.length) return old.byKey;
   const newStates = recordedData.slice(from);
   const result = {};
-  for (const { key } of CHARTS) {
+  for (const key of keys) {
     const added = newStates.map((state) => ({ x: state.time, y: state[key] }));
     result[key] = from > 0 ? old.byKey[key].concat(added) : added;
   }
@@ -33,12 +25,11 @@ function growSeries(old, recordedData) {
 // Renders the Position/Velocity/Acceleration line charts, each with its own
 // Y-axis zoom/pan and a shared X-axis (time) zoom/pan across all three.
 // `inputs` = the 3 input panels (built in App), one shown beside each chart.
-function Charts({ data, simulation, pins, onSeek, showScrubHint, inputs }) {
-  const [visibility, setVisibility] = useState({
-    position: true,
-    velocity: true,
-    acceleration: true,
-  });
+// `charts` = [{ key, label }], top to bottom. `key` is the field name in the recorded data.
+function Charts({ charts, data, simulation, pins, onSeek, showScrubHint, inputs }) {
+  const [hidden, setHidden] = useState({}); // { velocity: true } = that chart is hidden
+  // The same array on every render, so the zoom hook can trust it
+  const keys = useMemo(() => charts.map((c) => c.key), [charts]);
 
   const {
     maxTime,
@@ -57,7 +48,7 @@ function Charts({ data, simulation, pins, onSeek, showScrubHint, inputs }) {
     zoomToPins,
     handleReset,
     isResetDisabled,
-  } = useChartZoom(data, CHART_KEYS);
+  } = useChartZoom(data, keys);
   const isPlayback = data.selectedMode === "playback";
 
   // The line for each chart as {x, y} points. Worked out only when the recording
@@ -66,7 +57,7 @@ function Charts({ data, simulation, pins, onSeek, showScrubHint, inputs }) {
   const [lines, setLines] = useState({ data: null, byKey: null });
   let series = lines.byKey;
   if (lines.data !== data.recordedData) {
-    series = growSeries(lines, data.recordedData);
+    series = growSeries(lines, data.recordedData, keys);
     setLines({ data: data.recordedData, byKey: series });
   }
 
@@ -80,11 +71,11 @@ function Charts({ data, simulation, pins, onSeek, showScrubHint, inputs }) {
   // and all three are the same height.
   const hasRecording = data.recordedData.length > 1;
   const bottomIndex = hasRecording
-    ? CHARTS.map(({ key }) => visibility[key]).lastIndexOf(true)
+    ? charts.map(({ key }) => !hidden[key]).lastIndexOf(true)
     : -1;
 
   // The top visible chart shows the scrub hint
-  const topIndex = CHARTS.findIndex(({ key }) => visibility[key]);
+  const topIndex = charts.findIndex(({ key }) => !hidden[key]);
 
   // Identical across all three charts - the x-axis (time) is shared state,
   // not per-chart - so it's built once here instead of repeated 3x below.
@@ -109,23 +100,23 @@ function Charts({ data, simulation, pins, onSeek, showScrubHint, inputs }) {
           isPlayback ? "touch-pan-y" : ""
         }`}
       >
-        {CHARTS.map(({ key, label }, index) => {
-          const yDisabled = getYDisabled(key, index);
+        {charts.map(({ key, label }, index) => {
+          const yDisabled = getYDisabled(key);
           const isBottom = index === bottomIndex;
           // Record mode always shows the default view (it grows with the data).
-          const yWindow = isPlayback ? getYWindow(key, index) : fitWindow(key);
+          const yWindow = isPlayback ? getYWindow(key) : fitWindow(key);
           return (
             <ChartPanel
               key={key}
               label={label}
-              visible={visibility[key]}
-              onShow={() => setVisibility({ ...visibility, [key]: true })}
-              onHide={() => setVisibility({ ...visibility, [key]: false })}
+              visible={!hidden[key]}
+              onShow={() => setHidden({ ...hidden, [key]: false })}
+              onHide={() => setHidden({ ...hidden, [key]: true })}
               yControlsProps={{
-                onZoomIn: () => handleYZoom(key, index, 1.2),
-                onZoomOut: () => handleYZoom(key, index, 0.8),
-                onPanPositive: () => handleYPan(index, 1),
-                onPanNegative: () => handleYPan(index, -1),
+                onZoomIn: () => handleYZoom(key, 1.2),
+                onZoomOut: () => handleYZoom(key, 0.8),
+                onPanPositive: () => handleYPan(key, 1),
+                onPanNegative: () => handleYPan(key, -1),
                 zoomInDisabled: yDisabled.zoomInDisabled,
                 zoomOutDisabled: yDisabled.zoomOutDisabled,
                 panPositiveDisabled: yDisabled.panUpDisabled,
@@ -135,8 +126,8 @@ function Charts({ data, simulation, pins, onSeek, showScrubHint, inputs }) {
               xControls={xControls}
               isBottom={isBottom}
               scrubHint={showScrubHint && index === topIndex}
-              onReset={() => handleReset(index, isBottom)}
-              resetDisabled={isResetDisabled(index, isBottom)}
+              onReset={() => handleReset(key, isBottom)}
+              resetDisabled={isResetDisabled(key, isBottom)}
               onZoomToPins={() => zoomToPins(pins)}
               zoomToPinsDisabled={pins.length < 2}
               input={inputs[index]}

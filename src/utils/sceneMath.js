@@ -1,7 +1,6 @@
 import { niceStep } from "./niceStep";
 
-// Turns the scene's "world units" into pixels. The numbers are the ones the old
-// 3D scene used (the ruler is 20 units wide), so the picture looks the same.
+// Turns the scene's "world units" into pixels. The ruler is 20 world units wide.
 export const EDGE = 10; // half-width of the ruler picture in world units; the picture never changes size
 export const MIN_RANGE = 10; // meters shown on each side of 0 while the man is near the middle
 const MAX_LABELS_PER_SIDE = 6;

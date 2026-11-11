@@ -83,7 +83,7 @@ function growRanges(old, recordedData, keys) {
 // Owns all zoom/pan/reset state for the three charts:
 // - X-axis (time) is a single React-state window shared across all charts,
 //   since they all share the same time axis.
-// - Y-axis (value) zoom/pan is independent per chart, keyed by chart index.
+// - Y-axis (value) zoom/pan is independent per chart, keyed by the chart's key.
 // Zoom is only shown in playback mode (see Charts.jsx), where the recorded
 // data is fixed and never grows.
 // valueKeys = the charts' keys in chart order (a constant array)
@@ -159,33 +159,33 @@ export function useChartZoom(data, valueKeys) {
   const fitWindow = (valueKey) => byKey[valueKey].window;
 
   // What a chart shows now: its zoomed window, or the default view.
-  const getYWindow = (valueKey, index) => yRanges[index] ?? fitWindow(valueKey);
+  const getYWindow = (valueKey) => yRanges[valueKey] ?? fitWindow(valueKey);
 
   // Zoom: one step smaller (in) or bigger (out) in STEPS. The zoom buttons
   // are disabled at both ends of the list, so `step` always exists here.
-  const handleYZoom = (valueKey, index, factor) => {
-    const current = getYWindow(valueKey, index);
+  const handleYZoom = (valueKey, factor) => {
+    const current = getYWindow(valueKey);
     const step = STEPS[STEPS.indexOf(current.step) + (factor > 1 ? -1 : 1)];
     const center = (current.min + current.max) / 2;
     // Back at the default size → forget the zoom.
     const next = step >= fitWindow(valueKey).step ? undefined : makeWindow(center, step);
-    setYRanges((prev) => ({ ...prev, [index]: next }));
+    setYRanges((prev) => ({ ...prev, [valueKey]: next }));
   };
 
   // Pan: move exactly 1 line up (+1) or down (-1). The pan buttons are
   // disabled until the chart is zoomed, so `current` always exists here.
-  const handleYPan = (index, direction) => {
-    const current = yRanges[index];
+  const handleYPan = (valueKey, direction) => {
+    const current = yRanges[valueKey];
     const center = (current.min + current.max) / 2 + direction * current.step;
-    setYRanges((prev) => ({ ...prev, [index]: makeWindow(center, current.step) }));
+    setYRanges((prev) => ({ ...prev, [valueKey]: makeWindow(center, current.step) }));
   };
 
   // Which y buttons are greyed out.
-  const getYDisabled = (valueKey, index) => {
-    const current = yRanges[index];
+  const getYDisabled = (valueKey) => {
+    const current = yRanges[valueKey];
     const fit = fitWindow(valueKey);
     return {
-      zoomInDisabled: getYWindow(valueKey, index).step === STEPS[0],
+      zoomInDisabled: getYWindow(valueKey).step === STEPS[0],
       zoomOutDisabled: !current,
       // Pan stops at the top/bottom of the default (full data) view. Half a
       // step of slack absorbs float noise (15.000000000000002) and zoom steps
@@ -207,10 +207,10 @@ export function useChartZoom(data, valueKeys) {
     setXRange(width >= maxTime ? null : { min: start, max: start + width });
 
     const next = {};
-    valueKeys.forEach((key, index) => {
+    for (const key of valueKeys) {
       const pinWindow = windowFor(lowHigh(pins, key));
-      if (pinWindow.step < fitWindow(key).step) next[index] = pinWindow;
-    });
+      if (pinWindow.step < fitWindow(key).step) next[key] = pinWindow;
+    }
     setYRanges(next);
   };
 
@@ -219,18 +219,18 @@ export function useChartZoom(data, valueKeys) {
   // Resets this chart's y-axis zoom/pan. With `withTime` (the bottom chart's
   // reset, which sits under both button groups) it also resets the shared
   // time window for all three charts.
-  const handleReset = (index, withTime) => {
+  const handleReset = (valueKey, withTime) => {
     if (withTime) setXRange(null);
     setYRanges((prev) => {
       const next = { ...prev };
-      delete next[index];
+      delete next[valueKey];
       return next;
     });
   };
 
   // Off when there is nothing to reset (time only counts with `withTime`)
-  const isResetDisabled = (index, withTime) =>
-    yRanges[index] === undefined && (!withTime || xRange === null);
+  const isResetDisabled = (valueKey, withTime) =>
+    yRanges[valueKey] === undefined && (!withTime || xRange === null);
 
   return {
     maxTime,

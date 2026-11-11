@@ -150,7 +150,7 @@ export function ChartPanel({
   return (
     // One row: input on the left, chart on the right (phones: input on top).
     // Phones/tablets: fixed chart heights. Desktop: the rows share the space
-    // under the 3D scene. The bottom row is exactly 18px taller: 26px of time
+    // under the scene. The bottom row is exactly 18px taller: 26px of time
     // numbers (fixed in Charts.jsx) minus the other charts' ~8px of x tick marks.
     // So all 3 plots are the same height.
     // The minimums keep the right-edge button column from overlapping on

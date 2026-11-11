@@ -24,6 +24,14 @@ import { formatNumber } from "./utils/formatNumber";
 const FRAME_STEP = 0.1; // seconds moved by one Next/Previous frame click
 const PIN_TOLERANCE = 0.05; // seconds: "same time" for Unpin (half a frame step)
 const FORMULA_TOOK_OVER = "Formula stopped. You took control.";
+// Where everything starts: standing still at 0 (meters, m/s, m/s², seconds)
+const START_STATE = { position: 0, velocity: 0, acceleration: 0, time: 0 };
+// The 3 quantities, in screen order. `key` is the field name in the simulation state.
+const QUANTITIES = [
+  { key: "position", label: "Position", unit: "m" },
+  { key: "velocity", label: "Velocity", unit: "m/s" },
+  { key: "acceleration", label: "Acceleration", unit: "m/s²" },
+];
 
 function App() {
   // ============================================================================
@@ -31,12 +39,7 @@ function App() {
   // ============================================================================
 
   // Core simulation state
-  const [simulation, setSimulation] = useState({
-    position: 0, // Current position (meters)
-    velocity: 0, // Current velocity (m/s)
-    acceleration: 0, // Current acceleration (m/s²)
-    time: 0, // Current simulation time (seconds)
-  });
+  const [simulation, setSimulation] = useState(START_STATE);
 
   const [playing, setPlaying] = useState(false);
   // Open tab: "intro" (big scene + sliders) or "charts". Both share the same data, like PhET.
@@ -172,17 +175,14 @@ function App() {
   const reset = () => {
     stopFormula();
     endDrag();
-    setSimulation({
-      position: 0,
-      velocity: 0,
-      acceleration: 0,
-      time: 0,
-    });
+    setSimulation(START_STATE);
     setPlaying(false);
     setPins([]);
     setData((prev) => ({
       ...prev,
-      recordedData: [{ time: 0, position: 0, velocity: 0, acceleration: 0 }],
+      // A copy, not START_STATE itself: a new first point tells the charts
+      // "new recording", so they forget the old zoom (see useChartZoom)
+      recordedData: [{ ...START_STATE }],
       selectedMode: "record",
     }));
   };
@@ -203,7 +203,7 @@ function App() {
 
   // Toggle play/pause
   const togglePlayPause = () => {
-    if (!playing && data.selectedMode === "record") trimRecordingToNow();
+    if (!playing && isRecording) trimRecordingToNow();
     setPlaying(p => !p);
   };
 
@@ -287,7 +287,7 @@ function App() {
   const handleSimulationChange = (changes) => {
     if (activeFormula) stopFormula(FORMULA_TOOK_OVER);
     setSimulation((prev) => ({ ...prev, ...changes }));
-    if (simulation.time === 0 && data.selectedMode === 'record') {
+    if (simulation.time === 0 && isRecording) {
       setData((prev) => ({
         ...prev,
         recordedData: [{ ...prev.recordedData[0], ...changes }],
@@ -339,16 +339,12 @@ function App() {
 
 
   // ============================================================================
-  // RENDER - Using refactored components
+  // RENDER
   // ============================================================================
 
   // Charts tab: the 3 inputs are beside their charts (Charts puts each in its row).
   // Intro tab: they sit in one row under the scene.
-  const inputs = [
-    { key: "position", label: "Position", unit: "m" },
-    { key: "velocity", label: "Velocity", unit: "m/s" },
-    { key: "acceleration", label: "Acceleration", unit: "m/s²" },
-  ].map(({ key, label, unit }) => (
+  const inputs = QUANTITIES.map(({ key, label, unit }) => (
     <PhysicsInput
       key={key} id={key} label={label} unit={unit}
       value={simulation[key]} min={-10} max={10}
@@ -378,7 +374,7 @@ function App() {
           <img src={KAREN_ART.bambooRight} alt="" aria-hidden="true" className="hidden sm:block absolute right-[-12px] top-0 w-[84px] h-full z-[5] pointer-events-none" />
         </>
       )}
-      {/* Top: tab row, then the 3D scene (with the time). Charts tab: short scene. Intro: tall
+      {/* Top: tab row, then the scene (with the time). Charts tab: short scene. Intro: tall
           (laptops: fills the space left). Phones/tablets: the tab row is above the scene, so its top-left corner
           is square. Laptops: the tabs float on the scene's corner. */}
       <div className={`w-full flex flex-col lg:relative ${
@@ -406,7 +402,7 @@ function App() {
             <img src={KAREN_ART.titleBanner} alt="Karen" className={KAREN_BANNER} />
           </>
         )}
-        {/* Fills the scene box, so the canvas always gets a real height (Introduction: side room for the bamboo) */}
+        {/* Fills the scene box, so the scene always gets a real height (Introduction: side room for the bamboo) */}
         <div className={`absolute rounded-[inherit] ${isCharts ? "inset-0" : "inset-x-6 sm:inset-x-[72px] top-[50%] [@media(max-height:600px)]:top-[25%] bottom-[2%]"}`}>
           <SimulationScene
             position={simulation.position}
@@ -449,11 +445,12 @@ function App() {
         // Middle: charts take all the space that is left (short screens: less padding)
         <div className="flex flex-col w-full px-4 pt-4 pb-2 [@media(max-height:600px)]:pt-2.5 max-lg:[@media(max-height:600px)]:pb-1 lg:pb-0 lg:flex-1 lg:min-h-0 lg:overflow-y-auto">
           <Charts
+            charts={QUANTITIES}
             data={data}
             simulation={simulation}
             pins={pins}
             onSeek={handleScrub}
-            showScrubHint={data.selectedMode === "playback" && !scrubTried}
+            showScrubHint={!isRecording && !scrubTried}
             inputs={inputs}
           />
         </div>

@@ -4,7 +4,7 @@ import { placePinLabels } from "../utils/pinLabels";
 import { formatNumber } from "../utils/formatNumber";
 
 // Space around the plot (px). The bottom is 26 when this chart shows the
-// time numbers, else 8 (just the little tick marks), same as before.
+// time numbers, else 8 (just the little tick marks).
 const TOP = 8; // room for half of the top y number
 const RIGHT = 16;
 const TICK = 6; // length of a tick mark

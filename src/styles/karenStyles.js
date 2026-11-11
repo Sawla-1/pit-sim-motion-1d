@@ -11,6 +11,8 @@ export const KAREN_ART = {
   barBackground: `${ART}/bar-background-tall.svg`, // a copy of bar-background.svg whose height stretches (one or two rows of buttons)
   drum: `${ART}/drum-horns-empty.svg`, // the drum without its ▶: our Play/Pause icon goes on top
   tabBackground: `${ART}/tab-background-short.svg`, // a shorter copy of tab-background.svg (37px tall, the strip is 32px)
+  boyStanding: `${ART}/boy-standing.svg`,
+  boyWalking: `${ART}/boy-side-walking.svg`, // the art faces right
 };
 
 // The two view tabs: a woven mat behind them; the open tab is red
