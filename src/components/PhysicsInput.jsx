@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { evaluateExpression } from "../engine/evaluateExpression";
+import { evaluateNumber } from "../utils/evaluateFormula";
 
 // One input panel: name, number box + unit, slider. Charts tab: vertical
 // slider beside its chart. Intro tab (horizontal): left-right slider.
@@ -16,7 +16,7 @@ function PhysicsInput({ id, label, unit, value, min, max, color, track, disabled
   // falls back to showing the last real value. Unchanged text is skipped,
   // so clicking in and out doesn't round the real value to 2 decimals.
   const commit = (raw) => {
-    const evaluated = evaluateExpression(raw);
+    const evaluated = evaluateNumber(raw);
     if (evaluated !== null && raw !== shown) onChange(evaluated);
     setDraft(null);
   };

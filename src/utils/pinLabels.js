@@ -2,7 +2,7 @@ const GAP = 14; // space between the dot and its label
 const LETTER_W = 18; // room for the big letter (A / B)
 const LABEL_H = 26; // same as the chip's height
 
-// Rough width of the label box (about 7px per character, same as before)
+// Rough width of the label box (about 7px per character)
 const labelWidth = (text) => text.length * 7 + 12;
 
 // The rectangle that the letter + label fill.

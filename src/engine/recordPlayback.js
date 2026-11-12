@@ -1,88 +1,25 @@
 /**
  * recordPlayback.js
  *
- * This file records the motion as it happens, and plays it back later.
- * It keeps the list of recorded points and works out what the simulation
- * should look like at any point in time.
+ * This file plays a recording back. From the list of recorded points it
+ * works out what the simulation should look like at any point in time.
+ * (Recording itself is simple: the loop adds each new state to the list.)
  */
-
-import { calculatePhysicsStep } from "./kinematics1d";
-
-// ---------------------------------------------------------------------------
-// Recording
-// ---------------------------------------------------------------------------
-
-/**
- * One step of recording: move the simulation forward a bit, then
- * save that moment as a new point in the recorded history.
- */
-export function handleRecordingStep(simulation, deltaTime) {
-  const newSimulation = calculatePhysicsStep(simulation, deltaTime);
-
-  return {
-    simulation: newSimulation,
-    recordedState: newSimulation,
-  };
-}
-
-/**
- * Start recording from a past moment: throw away every recorded point that
- * is later than `time`, so new points continue from there and the list stays
- * in time order. At the end of the recording this removes nothing.
- */
-export function trimRecordedDataAfter(recordedData, time) {
-  return recordedData.filter((state) => state.time <= time);
-}
 
 // ---------------------------------------------------------------------------
 // Playback
 //
-// These four work together as one chain (the "playback engine"):
+// These two work together (the "playback engine"):
 //
-//   handlePlaybackStep  ─┐
-//                         ├──> resolvePlaybackState ──> interpolateStateAtTime
-//   handlePlaybackSeek  ─┘
+//   resolvePlaybackState ──> interpolateStateAtTime
 //
 // - interpolateStateAtTime does the actual math — finds the two nearest
 //   recorded points and blends between them.
 // - resolvePlaybackState wraps that with "stop at the end if we've gone
-//   past the last recorded point."
-// - handlePlaybackStep and handlePlaybackSeek both call
-//   resolvePlaybackState — they're just two different doors into the same
-//   logic (one for "advance a little bit each frame," one for "jump
-//   straight to this time from a drag"). That's why they were split into
-//   a shared function in the first place: without resolvePlaybackState,
-//   step and seek would each need their own copy of the same lookup code.
+//   past the last recorded point." Playing (a little further each frame)
+//   and jumping (a drag on a chart, the frame buttons) both call it, so
+//   they always agree.
 // ---------------------------------------------------------------------------
-
-/**
- * One step of normal playback: move playback time forward a bit,
- * then find the matching state. Called every frame while playing.
- */
-export function handlePlaybackStep(simulation, data, deltaTime) {
-  const newTime = simulation.time + deltaTime;
-  const { simulation: newSimulation, isEndOfPlayback } = resolvePlaybackState(
-    data.recordedData,
-    newTime
-  );
-
-  return {
-    simulation: newSimulation,
-    isEndOfPlayback,
-  };
-}
-
-/**
- * Jump playback straight to a chosen time. Called when the user drags
- * the timeline on the chart.
- */
-export function handlePlaybackSeek(recordedData, targetTime) {
-  const { simulation } = resolvePlaybackState(recordedData, targetTime);
-
-  return {
-    simulation,
-  };
-}
 
 /**
  * Get the simulation state at a chosen playback time. If that time is
@@ -90,16 +27,10 @@ export function handlePlaybackSeek(recordedData, targetTime) {
  * further. Both normal playback and dragging the chart to scrub use
  * this same function, so they always agree.
  */
-function resolvePlaybackState(recordedData, targetTime) {
-  const maxTime = recordedData[recordedData.length - 1].time;
-   
-  if (targetTime >= maxTime) {
-    const lastState = recordedData[recordedData.length - 1];
-    return { simulation: lastState, isEndOfPlayback: true };
-  }
-
-  const interpolated = interpolateStateAtTime(recordedData, targetTime);
-  return { simulation: interpolated, isEndOfPlayback: false };
+export function resolvePlaybackState(recordedData, targetTime) {
+  const lastState = recordedData[recordedData.length - 1];
+  if (targetTime >= lastState.time) return { simulation: lastState, isEndOfPlayback: true };
+  return { simulation: interpolateStateAtTime(recordedData, targetTime), isEndOfPlayback: false };
 }
 
 /**

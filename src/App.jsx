@@ -1,4 +1,4 @@
-import { useState,useRef } from "react";
+import { useState, useRef } from "react";
 import SimulationScene from "./components/SimulationScene";
 import Charts from "./components/Charts";
 import Controls from "./components/Controls";
@@ -9,21 +9,23 @@ import FormulaPanel from "./components/FormulaPanel";
 import { SERIES_COLORS } from "./styles/seriesColors";
 import { KAREN_ART, KAREN_BANNER, KAREN_PAGE, KAREN_RULER, KAREN_TIME } from "./styles/karenStyles";
 import { useSimulationLoop } from "./hooks/useSimulationLoop";
-import {
-  handleRecordingStep,
-  handlePlaybackStep,
-  handlePlaybackSeek,
-  trimRecordedDataAfter,
-  findScrubTime,
-} from "./engine/recordPlayback";
-import { calculateDragStep } from "./engine/kinematics1d";
-import { compileFormula } from "./engine/evaluateFormula";
+import { resolvePlaybackState, findScrubTime } from "./engine/recordPlayback";
+import { calculatePhysicsStep, calculateDragStep } from "./engine/kinematics1d";
+import { compileFormula } from "./utils/evaluateFormula";
 import { calculateFormulaStep } from "./engine/formulaMotion";
 import { formatNumber } from "./utils/formatNumber";
 
 const FRAME_STEP = 0.1; // seconds moved by one Next/Previous frame click
 const PIN_TOLERANCE = 0.05; // seconds: "same time" for Unpin (half a frame step)
 const FORMULA_TOOK_OVER = "Formula stopped. You took control.";
+// Where everything starts: standing still at 0 (meters, m/s, m/s², seconds)
+const START_STATE = { position: 0, velocity: 0, acceleration: 0, time: 0 };
+// The 3 quantities, in screen order. `key` is the field name in the simulation state.
+const QUANTITIES = [
+  { key: "position", label: "Position", unit: "m" },
+  { key: "velocity", label: "Velocity", unit: "m/s" },
+  { key: "acceleration", label: "Acceleration", unit: "m/s²" },
+];
 
 function App() {
   // ============================================================================
@@ -31,12 +33,7 @@ function App() {
   // ============================================================================
 
   // Core simulation state
-  const [simulation, setSimulation] = useState({
-    position: 0, // Current position (meters)
-    velocity: 0, // Current velocity (m/s)
-    acceleration: 0, // Current acceleration (m/s²)
-    time: 0, // Current simulation time (seconds)
-  });
+  const [simulation, setSimulation] = useState(START_STATE);
 
   const [playing, setPlaying] = useState(false);
   // Open tab: "intro" (big scene + sliders) or "charts". Both share the same data, like PhET.
@@ -82,12 +79,11 @@ function App() {
       // Let go: he stops where he is, and the drag ends
       dragReleased.current = false;
       dragSamples.current = null;
-      const stopped = { ...sim, velocity: 0, acceleration: 0, time: sim.time + frameTime };
-      return { simulation: stopped, recordedState: stopped };
+      return { ...sim, velocity: 0, acceleration: 0, time: sim.time + frameTime };
     }
     const result = calculateDragStep(sim, frameTime, dragMouseX.current, dragSamples.current);
     dragSamples.current = result.photos;
-    return { simulation: result.simulation, recordedState: result.simulation };
+    return result.simulation;
   };
 
   // Is the "Reset everything?" popup open
@@ -123,7 +119,6 @@ function App() {
     }
     setFormulaError(null);
     setFormulaNotice(null);
-    trimRecordingToNow();
     setActiveFormula({ text: formulaText.trim(), evaluate: compiled.evaluate });
     setPlaying(true);
   };
@@ -137,12 +132,20 @@ function App() {
   // One frame of formula motion. null = the formula gave no number, so it stops.
   const onFormulaStep = (sim, frameTime) => {
     const next = calculateFormulaStep(activeFormula.evaluate, sim, frameTime);
-    if (!next) {
-      stopFormula(`Formula stopped: it gave no number at t = ${formatNumber(sim.time, 1)} s.`);
-      return null;
-    }
-    return { simulation: next, recordedState: next };
+    if (!next) stopFormula(`Formula stopped: it gave no number at t = ${formatNumber(sim.time, 1)} s.`);
+    return next;
   };
+
+  // One frame of Record mode. The man is moved by the mouse (drag), by a
+  // formula, or by plain physics, checked in this order.
+  const onRecordStep = (sim, frameTime) => {
+    if (dragSamples.current) return onDragStep(sim, frameTime);
+    if (activeFormula) return onFormulaStep(sim, frameTime);
+    return calculatePhysicsStep(sim, frameTime);
+  };
+
+  // One frame of Playback: move time on a little, and look up that moment
+  const onPlaybackStep = (sim, dat, frameTime) => resolvePlaybackState(dat.recordedData, sim.time + frameTime);
 
   // Pinned snapshots { name, time, position, velocity, acceleration }: [] / [A] / [A, B]
   const [pins, setPins] = useState([]);
@@ -156,12 +159,8 @@ function App() {
     setSimulation,
     setData,
     setPlaying,
-    onRecordStep: handleRecordingStep,
-    onPlaybackStep: handlePlaybackStep,
-    onDragStep,
-    dragSamplesRef: dragSamples,
-    formulaActive: activeFormula !== null,
-    onFormulaStep,
+    onRecordStep,
+    onPlaybackStep,
   });
 
   // ============================================================================
@@ -172,27 +171,15 @@ function App() {
   const reset = () => {
     stopFormula();
     endDrag();
-    setSimulation({
-      position: 0,
-      velocity: 0,
-      acceleration: 0,
-      time: 0,
-    });
+    setSimulation(START_STATE);
     setPlaying(false);
     setPins([]);
-    setData((prev) => ({
-      ...prev,
-      recordedData: [{ time: 0, position: 0, velocity: 0, acceleration: 0 }],
+    setData({
+      // A copy, not START_STATE itself: a new first point tells the charts
+      // "new recording", so they forget the old zoom (see useChartZoom)
+      recordedData: [{ ...START_STATE }],
       selectedMode: "record",
-    }));
-  };
-
-  // Recording from a past time (after scrubbing back) replaces everything after it, like PhET
-  const trimRecordingToNow = () => {
-    setData((prev) => ({
-      ...prev,
-      recordedData: trimRecordedDataAfter(prev.recordedData, simulation.time),
-    }));
+    });
   };
 
   // How long the recording is, for the Reset popup text
@@ -202,38 +189,18 @@ function App() {
   const requestReset = () => (data.recordedData.length > 1 ? setConfirmingReset(true) : reset());
 
   // Toggle play/pause
-  const togglePlayPause = () => {
-    if (!playing && data.selectedMode === "record") trimRecordingToNow();
-    setPlaying(p => !p);
-  };
+  const togglePlayPause = () => setPlaying((p) => !p);
 
   // Switch between Record and Playback modes
   const switchMode = (mode) => {
     stopFormula();
     endDrag();
+    setPlaying(false);
     setData((prev) => ({ ...prev, selectedMode: mode }));
-
-    if (mode === "playback") {
-      setPlaybackTried(true);
-      // Switch to playback: reset playback time
-      setSimulation(() => ({
-        time: 0,
-        position: data.recordedData[0].position,
-        velocity: data.recordedData[0].velocity,
-        acceleration: data.recordedData[0].acceleration,
-      }));
-      setPlaying(false);
-    } else {
-      // Switch to record: continue from latest recorded data
-      const lastState = data.recordedData[data.recordedData.length - 1];
-      setSimulation({
-        position: lastState.position,
-        velocity: lastState.velocity,
-        acceleration: lastState.acceleration,
-        time: lastState.time,
-      });
-      setPlaying(false);
-    }
+    if (mode === "playback") setPlaybackTried(true);
+    // Playback starts at the first recorded point. Record continues from the last.
+    const points = data.recordedData;
+    setSimulation(mode === "playback" ? points[0] : points[points.length - 1]);
   };
 
   // Clear all recorded data
@@ -242,12 +209,10 @@ function App() {
     endDrag();
     setPlaying(false);
     setPins([]);
-    setData((prev) => ({
-      ...prev,
-      recordedData: [{ time: 0, position: simulation.position, velocity: simulation.velocity, acceleration: simulation.acceleration }],
-      selectedMode: "record",
-    }));
-    setSimulation((prev) => ({ ...prev, time: 0 }));
+    // Keep the values he has now, and start the clock again at 0
+    const start = { ...simulation, time: 0 };
+    setData({ recordedData: [start], selectedMode: "record" });
+    setSimulation(start);
   };
 
   // Press 1: pin A. Press 2: pin B. Press 3: clear both.
@@ -267,10 +232,9 @@ function App() {
   // There is some pin that we are not standing on
   const canGoToPin = pins.some((p) => p !== pinAtNow);
 
-  // Handle timeline scrubbing from charts
+  // Jump to a time in the recording (chart drag, frame buttons, pins, dragging the man)
   const handleSeek = (newTime) => {
-    const result = handlePlaybackSeek(data.recordedData, newTime);
-    setSimulation(result.simulation);
+    setSimulation(resolvePlaybackState(data.recordedData, newTime).simulation);
   };
 
   // Dragging on a chart: remember it (the hint goes away), then move the time
@@ -287,7 +251,7 @@ function App() {
   const handleSimulationChange = (changes) => {
     if (activeFormula) stopFormula(FORMULA_TOOK_OVER);
     setSimulation((prev) => ({ ...prev, ...changes }));
-    if (simulation.time === 0 && data.selectedMode === 'record') {
+    if (simulation.time === 0 && isRecording) {
       setData((prev) => ({
         ...prev,
         recordedData: [{ ...prev.recordedData[0], ...changes }],
@@ -308,7 +272,6 @@ function App() {
     if (activeFormula) stopFormula(FORMULA_TOOK_OVER);
     dragSamples.current = [];
     dragMouseX.current = simulation.position; // until the mouse moves, he stays where he is
-    trimRecordingToNow();
     setPlaying(true);
   };
 
@@ -337,18 +300,13 @@ function App() {
     dragMode.current = null;
   };
 
-
   // ============================================================================
-  // RENDER - Using refactored components
+  // RENDER
   // ============================================================================
 
   // Charts tab: the 3 inputs are beside their charts (Charts puts each in its row).
   // Intro tab: they sit in one row under the scene.
-  const inputs = [
-    { key: "position", label: "Position", unit: "m" },
-    { key: "velocity", label: "Velocity", unit: "m/s" },
-    { key: "acceleration", label: "Acceleration", unit: "m/s²" },
-  ].map(({ key, label, unit }) => (
+  const inputs = QUANTITIES.map(({ key, label, unit }) => (
     <PhysicsInput
       key={key} id={key} label={label} unit={unit}
       value={simulation[key]} min={-10} max={10}
@@ -361,13 +319,13 @@ function App() {
   ));
 
   // The panel's message line (an error, if any, is shown first by the panel)
-  const formulaStatus = activeFormula
-    ? { text: playing ? `Running: x(t) = ${activeFormula.text}` : "Paused. Press Play to continue.", running: playing }
-    : !isRecording
-      ? { text: "Switch to Record to run a formula.", running: false }
-      : formulaNotice
-        ? { text: formulaNotice, running: false }
-        : null;
+  const formulaStatus = () => {
+    if (activeFormula && playing) return { text: `Running: x(t) = ${activeFormula.text}`, running: true };
+    if (activeFormula) return { text: "Paused. Press Play to continue.", running: false };
+    if (!isRecording) return { text: "Switch to Record to run a formula.", running: false };
+    if (formulaNotice) return { text: formulaNotice, running: false };
+    return null;
+  };
 
   return (
     <div className={`relative min-h-screen lg:h-screen w-full flex flex-col box-border ${KAREN_PAGE.bg} text-gray-800 overflow-x-clip`}>
@@ -378,7 +336,7 @@ function App() {
           <img src={KAREN_ART.bambooRight} alt="" aria-hidden="true" className="hidden sm:block absolute right-[-12px] top-0 w-[84px] h-full z-[5] pointer-events-none" />
         </>
       )}
-      {/* Top: tab row, then the 3D scene (with the time). Charts tab: short scene. Intro: tall
+      {/* Top: tab row, then the scene (with the time). Charts tab: short scene. Intro: tall
           (laptops: fills the space left). Phones/tablets: the tab row is above the scene, so its top-left corner
           is square. Laptops: the tabs float on the scene's corner. */}
       <div className={`w-full flex flex-col lg:relative ${
@@ -406,7 +364,7 @@ function App() {
             <img src={KAREN_ART.titleBanner} alt="Karen" className={KAREN_BANNER} />
           </>
         )}
-        {/* Fills the scene box, so the canvas always gets a real height (Introduction: side room for the bamboo) */}
+        {/* Fills the scene box, so the scene always gets a real height (Introduction: side room for the bamboo) */}
         <div className={`absolute rounded-[inherit] ${isCharts ? "inset-0" : "inset-x-6 sm:inset-x-[72px] top-[50%] [@media(max-height:600px)]:top-[25%] bottom-[2%]"}`}>
           <SimulationScene
             position={simulation.position}
@@ -449,11 +407,12 @@ function App() {
         // Middle: charts take all the space that is left (short screens: less padding)
         <div className="flex flex-col w-full px-4 pt-4 pb-2 [@media(max-height:600px)]:pt-2.5 max-lg:[@media(max-height:600px)]:pb-1 lg:pb-0 lg:flex-1 lg:min-h-0 lg:overflow-y-auto">
           <Charts
+            charts={QUANTITIES}
             data={data}
             simulation={simulation}
             pins={pins}
             onSeek={handleScrub}
-            showScrubHint={data.selectedMode === "playback" && !scrubTried}
+            showScrubHint={!isRecording && !scrubTried}
             inputs={inputs}
           />
         </div>
@@ -463,7 +422,7 @@ function App() {
       )}
 
       {/* Bottom: the toolbar pill, 8px gap under it. Centered on the page on both tabs (laptops: one row). */}
-      <div className={`relative z-[6] shrink-0 flex justify-center px-2 sm:px-4 pb-2[@media(min-height:700px)]:pb-8 max-lg:mt-auto max-lg:sticky max-lg:bottom-0 max-lg:z-20 ${KAREN_PAGE.stickyBg}`}>
+      <div className={`relative z-[6] shrink-0 flex justify-center px-2 sm:px-4 pb-2 [@media(min-height:700px)]:pb-8 max-lg:mt-auto max-lg:sticky max-lg:bottom-0 max-lg:z-20 ${KAREN_PAGE.stickyBg}`}>
         {/* The rice-field strip behind the bar (it sticks with the bar on phones) */}
         <img src={KAREN_ART.bottomStrip} alt="" aria-hidden="true" className={KAREN_PAGE.strip} />
         <Controls
@@ -496,7 +455,7 @@ function App() {
           example="7 * sin(t) + 2"
           text={formulaText}
           error={formulaError}
-          status={formulaStatus}
+          status={formulaStatus()}
           running={activeFormula !== null}
           runDisabled={!isRecording}
           onTextChange={(value) => {

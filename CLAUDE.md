@@ -37,7 +37,7 @@ change, ask: "would this change be required if we added simulation #2?"
   `data.selectedMode`: `'record'` or `'playback'`.
 - `PhysicsInput` keeps a draft string only while the user types. It shows the live value
   otherwise, with no `useEffect` sync (the value changes every frame in playback).
-- Pins A and B live in `App.jsx` state. `Charts` and `Simulation3D` both draw them.
+- Pins A and B live in `App.jsx` state. `Charts` and `SimulationScene` both draw them.
 - Reset All asks first (`ConfirmDialog`) unless nothing is recorded.
 
 ## Keeping this file current

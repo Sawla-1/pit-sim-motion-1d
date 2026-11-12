@@ -1,14 +1,13 @@
 import { niceStep } from "./niceStep";
 
-// Turns the scene's "world units" into pixels. The numbers are the ones the old
-// 3D scene used (the ruler is 20 units wide), so the picture looks the same.
+// Turns the scene's "world units" into pixels. The ruler is 20 world units wide.
 export const EDGE = 10; // half-width of the ruler picture in world units; the picture never changes size
 export const MIN_RANGE = 10; // meters shown on each side of 0 while the man is near the middle
 const MAX_LABELS_PER_SIDE = 6;
 const MIN_EDGE_GAP = 0.2; // world units; any closer and the edge stick doubles up with the last stick
 export const EDGE_LABEL_GAP = 0.8; // world units; a regular label closer than this to the edge label would overlap it, so it is hidden
 export const GROUND_Y = -0.6; // height of the ground line; the man's and the pins' feet stand on it
-export const FIT_HALF_WIDTH = 11; // ruler ±10 plus room for the man sprite and the edge label
+const FIT_HALF_WIDTH = 11; // ruler ±10 plus room for the man sprite and the edge label
 export const PIN_FLAG_HEIGHT = 0.36;
 const CONTENT_BOTTOM = -1.25; // just below the ruler labels (when they are LABEL_REFERENCE tall)
 

@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* The ruler numbers in the scene (SimulationScene): the same bold font file the 3D text used */
+/* The ruler numbers in the scene (SimulationScene) use this bold font file */
 @font-face {
   font-family: "Ruler Roboto";
   src: url("/fonts/Roboto-Bold.woff") format("woff");

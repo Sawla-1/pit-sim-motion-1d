@@ -94,7 +94,7 @@ function Controls({
         <div className="flex items-center gap-2">
           <button
             onClick={onClearRecordedData}
-            disabled={data.recordedData.length <= 1}
+            disabled={noRecording}
             className={`${KAREN_BAR.word} ${KAREN_BAR.clear}`}
           >
             <TrashIcon />
