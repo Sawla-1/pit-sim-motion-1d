@@ -52,37 +52,28 @@ function App() {
   // Record: make data (values can change). Playback: only look at it.
   const isRecording = data.selectedMode === "record";
 
-  // null = not dragging. While dragging: the mouse photos that calculateDragStep keeps.
-  const dragSamples = useRef(null);
-  // Where the mouse is right now (meters)
-  const dragMouseX = useRef(null);
-  // Which drag is going on: null, "record" (drag the man and record it) or
-  // "scrub" (Playback: drag him to move time, record nothing)
-  const dragMode = useRef(null);
-  // While scrubbing: { time, direction }: the time we moved to last (not the render's
-  // simulation.time, which can lag a move behind) and which way time went (+1 / -1)
-  const scrub = useRef(null);
-  // Let go of the man (Record): the loop stops him in its next frame (see onDragStep).
-  // Not in the let-go handler: a change made there could be overwritten by the loop's next frame.
-  const dragReleased = useRef(false);
+  // The drag of the man that is going on, or null. One of:
+  //   Record (drag him and record it): { mode: "record", mouseX, photos, released }
+  //     mouseX = where the mouse is right now (meters)
+  //     photos = the mouse photos that calculateDragStep keeps
+  //     released = he was let go: the loop stops him in its next frame (see onDragStep).
+  //       Not in the let-go handler: a change made there could be overwritten by the loop's next frame.
+  //   Playback (drag him to move time, record nothing): { mode: "scrub", time, direction }
+  //     the time we moved to last (not the render's simulation.time, which can lag a
+  //     move behind) and which way time went (+1 / -1)
   // A mode switch, Clear Data or Reset All in the middle of a drag (e.g. a second
-  // finger tapping a button) ends the drag
-  const endDrag = () => {
-    dragMode.current = null;
-    dragSamples.current = null;
-    dragReleased.current = false;
-  };
+  // finger tapping a button) ends the drag: they set it back to null.
+  const drag = useRef(null);
 
   // One frame of dragging: the engine does all the maths and hands back its photos
   const onDragStep = (sim, frameTime) => {
-    if (dragReleased.current) {
+    if (drag.current.released) {
       // Let go: he stops where he is, and the drag ends
-      dragReleased.current = false;
-      dragSamples.current = null;
+      drag.current = null;
       return { ...sim, velocity: 0, acceleration: 0, time: sim.time + frameTime };
     }
-    const result = calculateDragStep(sim, frameTime, dragMouseX.current, dragSamples.current);
-    dragSamples.current = result.photos;
+    const result = calculateDragStep(sim, frameTime, drag.current.mouseX, drag.current.photos);
+    drag.current.photos = result.photos;
     return result.simulation;
   };
 
@@ -139,7 +130,7 @@ function App() {
   // One frame of Record mode. The man is moved by the mouse (drag), by a
   // formula, or by plain physics, checked in this order.
   const onRecordStep = (sim, frameTime) => {
-    if (dragSamples.current) return onDragStep(sim, frameTime);
+    if (drag.current?.mode === "record") return onDragStep(sim, frameTime);
     if (activeFormula) return onFormulaStep(sim, frameTime);
     return calculatePhysicsStep(sim, frameTime);
   };
@@ -170,7 +161,7 @@ function App() {
   // Reset everything to initial state
   const reset = () => {
     stopFormula();
-    endDrag();
+    drag.current = null;
     setSimulation(START_STATE);
     setPlaying(false);
     setPins([]);
@@ -194,7 +185,7 @@ function App() {
   // Switch between Record and Playback modes
   const switchMode = (mode) => {
     stopFormula();
-    endDrag();
+    drag.current = null;
     setPlaying(false);
     setData((prev) => ({ ...prev, selectedMode: mode }));
     if (mode === "playback") setPlaybackTried(true);
@@ -206,7 +197,7 @@ function App() {
   // Clear all recorded data
   const clearRecordedData = () => {
     stopFormula();
-    endDrag();
+    drag.current = null;
     setPlaying(false);
     setPins([]);
     // Keep the values he has now, and start the clock again at 0
@@ -262,16 +253,13 @@ function App() {
   const handleManDragStart = () => {
     if (!isRecording) {
       // Playback: only look, so move time; record nothing
-      dragMode.current = "scrub";
-      scrub.current = { time: simulation.time, direction: 1 };
+      drag.current = { mode: "scrub", time: simulation.time, direction: 1 };
       setPlaying(false); // he is held, so playback must not move him on
       return;
     }
-    dragMode.current = "record";
-    dragReleased.current = false; // a new drag: an old let-go note must not stop it
     if (activeFormula) stopFormula(FORMULA_TOOK_OVER);
-    dragSamples.current = [];
-    dragMouseX.current = simulation.position; // until the mouse moves, he stays where he is
+    // A new note (an old let-go must not stop this drag). Until the mouse moves, he stays where he is.
+    drag.current = { mode: "record", mouseX: simulation.position, photos: [], released: false };
     setPlaying(true);
   };
 
@@ -279,25 +267,24 @@ function App() {
   // Playback: move time to where he was at that spot. Record: only remember where
   // the mouse is; onDragStep above takes one photo of it per frame and does the maths.
   const handleManDragSample = (meters) => {
-    if (dragMode.current === "scrub") {
-      scrub.current = findScrubTime(data.recordedData, scrub.current.time, meters, scrub.current.direction);
-      handleSeek(scrub.current.time);
-    } else if (dragMode.current === "record") {
-      dragMouseX.current = meters;
+    const d = drag.current;
+    if (d?.mode === "scrub") {
+      drag.current = { mode: "scrub", ...findScrubTime(data.recordedData, d.time, meters, d.direction) };
+      handleSeek(drag.current.time);
+    } else if (d?.mode === "record") {
+      d.mouseX = meters;
     }
   };
 
   const handleManDragEnd = () => {
-    if (dragMode.current === "record") {
-      if (playing) {
-        dragReleased.current = true; // the loop stops him in its next frame
-      } else {
-        // Paused (e.g. the 10-minute limit): the loop isn't running, so stop him here
-        dragSamples.current = null;
-        setSimulation((prev) => ({ ...prev, velocity: 0, acceleration: 0 }));
-      }
+    const d = drag.current;
+    if (d?.mode === "record" && playing) {
+      d.released = true; // the loop stops him in its next frame
+      return;
     }
-    dragMode.current = null;
+    // Scrub, or Record while paused (e.g. the 10-minute limit): the loop isn't running, so end the drag here
+    drag.current = null;
+    if (d?.mode === "record") setSimulation((prev) => ({ ...prev, velocity: 0, acceleration: 0 }));
   };
 
   // ============================================================================

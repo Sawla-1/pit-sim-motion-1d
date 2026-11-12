@@ -31,29 +31,20 @@ class FormulaError extends Error {}
 // `words` = the words the text may use.
 function tokenize(text, words) {
   const tokens = [];
-  let i = 0;
-  while (i < text.length) {
-    const rest = text.slice(i);
-    const number = rest.match(/^(\d+\.?\d*|\.\d+)/);
-    const word = rest.match(/^[A-Za-z]+/);
-
-    if (/\s/.test(text[i])) {
-      i += 1;
-    } else if (number) {
-      tokens.push({ type: "number", value: Number(number[0]) });
-      i += number[0].length;
-    } else if (word) {
-      const name = word[0].toLowerCase();
+  // One piece at a time: a number, a word, or any other single character (spaces are skipped)
+  for (const [piece] of text.matchAll(/\d+\.?\d*|\.\d+|[A-Za-z]+|\S/g)) {
+    if (/^\.?\d/.test(piece)) {
+      tokens.push({ type: "number", value: Number(piece) });
+    } else if (/^[A-Za-z]/.test(piece)) {
+      const name = piece.toLowerCase();
       if (!words.includes(name)) {
-        throw new FormulaError(`I do not know "${word[0]}". You can use: ${words.join(", ")}.`);
+        throw new FormulaError(`I do not know "${piece}". You can use: ${words.join(", ")}.`);
       }
       tokens.push({ type: "word", value: name });
-      i += word[0].length;
-    } else if ("+-*/^()".includes(text[i])) {
-      tokens.push({ type: "symbol", value: text[i] });
-      i += 1;
+    } else if ("+-*/^()".includes(piece)) {
+      tokens.push({ type: "symbol", value: piece });
     } else {
-      throw new FormulaError(`I do not know the symbol "${text[i]}".`);
+      throw new FormulaError(`I do not know the symbol "${piece}".`);
     }
   }
   return tokens;
