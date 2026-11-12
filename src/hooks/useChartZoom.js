@@ -1,41 +1,15 @@
 import { useState } from "react";
 import { newItemsStart } from "../utils/newItemsStart";
 
-const MIN_ZOOM_WINDOW = 1; // seconds - smallest visible x-axis window when zoomed in
-
-// Tolerance for the zoom-in "at smallest window" checks below. Repeated
-// width / factor divisions drift a hair past the floor (Math.max clamps the
-// zoom itself correctly, but the raw comparison can land a few ULPs short),
-// so without this the zoom-in button can stay visibly enabled at the limit.
-const EPSILON = 1e-9;
-
-// Shifts a [min,max] window by 20% of its own width, clamped to [lower,
-// upper]. Used by the x-axis (time) pan. Returns null when already fully
-// zoomed out (nothing to pan).
-function panWindow(current, lower, upper, direction) {
-  const width = current.max - current.min;
-  if (width >= upper - lower) return null;
-
-  const step = width * 0.2 * direction;
-  let min = current.min + step;
-  let max = current.max + step;
-
-  if (min < lower) {
-    max -= min - lower;
-    min = lower;
-  } else if (max > upper) {
-    min -= max - upper;
-    max = upper;
-  }
-
-  return { min, max };
-}
-
 // Allowed gaps between the 5 y-axis lines (0.1 is the smallest).
 const STEPS = [
   0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500,
   1000, 2000, 5000, 10000, 20000, 50000, 100000, 200000, 500000,
 ];
+
+// Allowed widths of the time window (seconds) when zoomed in: the same list
+// as STEPS, from 1 s up (the time window is never under 1 s wide).
+const TIME_WIDTHS = STEPS.filter((step) => step >= 1);
 
 // 5 lines `step` apart, with the middle line on a round number.
 // makeWindow(6.4, 2) → middle 6 → lines 2, 4, 6, 8, 10
@@ -82,13 +56,15 @@ function growRanges(old, recordedData, keys) {
 
 // Owns all zoom/pan/reset state for the three charts:
 // - X-axis (time) is a single React-state window shared across all charts,
-//   since they all share the same time axis.
+//   since they all share the same time axis: null = show everything, or
+//   { start, width } in seconds.
 // - Y-axis (value) zoom/pan is independent per chart, keyed by the chart's key.
-// Zoom is only shown in playback mode (see Charts.jsx), where the recorded
-// data is fixed and never grows.
+// Zoom is only shown in playback mode (see Charts.jsx). Between two visits to
+// Playback the recording can get longer (more is recorded), never shorter, so
+// a zoomed window still fits it. Clear Data and Reset All forget the zoom.
 // valueKeys = the charts' keys in chart order (a constant array)
 export function useChartZoom(data, valueKeys) {
-  const [xRange, setXRange] = useState(null);
+  const [timeZoom, setTimeZoom] = useState(null);
   const [yRanges, setYRanges] = useState({});
 
   // Clear Data and Reset All start a new recording: its first point is a new object
@@ -99,7 +75,7 @@ export function useChartZoom(data, valueKeys) {
   const [zoomedFirstPoint, setZoomedFirstPoint] = useState(firstPoint);
   if (firstPoint !== zoomedFirstPoint) {
     setZoomedFirstPoint(firstPoint);
-    setXRange(null);
+    setTimeZoom(null);
     setYRanges({});
   }
 
@@ -107,39 +83,37 @@ export function useChartZoom(data, valueKeys) {
 
   // ---- X-axis: shared time window across all 3 charts ----
 
-  const handleXZoom = (factor) => {
-    if (maxTime === 0) return;
-    if (factor > 1 && maxTime < MIN_ZOOM_WINDOW) return; // not enough data to zoom in
-
-    const currentMax = xRange?.max ?? maxTime;
-    const requestedMax = currentMax / factor;
-    const newMax = factor > 1
-      ? Math.max(MIN_ZOOM_WINDOW, requestedMax) // zoom in: never shrink below MIN_ZOOM_WINDOW
-      : Math.min(maxTime, requestedMax);         // zoom out: never exceed full data
-
-    // Reset to null (full/auto range) instead of an explicit {0, maxTime}
-    // snapshot once zoomed all the way out - null auto-tracks a still-growing
-    // recording, a frozen snapshot would go stale the moment more data comes in.
-    setXRange(newMax >= maxTime ? null : { min: 0, max: newMax });
+  // The window `width` seconds wide that starts at `start`, kept inside
+  // 0..maxTime. null = show everything (it then grows with the recording).
+  const timeWindow = (start, width) => {
+    if (width >= maxTime) return null;
+    return { start: Math.max(0, Math.min(start, maxTime - width)), width };
   };
 
-  // X-axis (time) is shared React state across all three charts - not a
-  // scale owned by one chart - so panning moves the xRange window instead,
-  // the same way handleXZoom resizes it. Clamped to [0, maxTime].
+  // Zoom: the next smaller (+1 = in) or bigger (-1 = out) width in TIME_WIDTHS.
+  // The left edge stays where it is. No bigger width left = show everything.
+  const handleXZoom = (direction) => {
+    const width = timeZoom?.width ?? maxTime;
+    const next = direction > 0 ? TIME_WIDTHS.findLast((w) => w < width) : TIME_WIDTHS.find((w) => w > width);
+    setTimeZoom(timeWindow(timeZoom?.start ?? 0, next ?? Infinity));
+  };
+
+  // Pan: move by 20% of the window
   const handleXPan = (direction) => {
-    if (maxTime === 0) return;
-    const current = { min: xRange?.min ?? 0, max: xRange?.max ?? maxTime };
-    const next = panWindow(current, 0, maxTime, direction);
-    if (next) setXRange(next);
+    if (!timeZoom) return; // showing everything: nothing to pan
+    setTimeZoom(timeWindow(timeZoom.start + timeZoom.width * 0.2 * direction, timeZoom.width));
   };
 
-  // X-axis disabled states - button should visibly reflect when a click
-  // would be a no-op, since x-zoom/pan state is already tracked in React.
-  const xZoomInDisabled = maxTime < MIN_ZOOM_WINDOW ||
-    (xRange !== null && xRange.max - xRange.min <= MIN_ZOOM_WINDOW + EPSILON);
-  const xZoomOutDisabled = maxTime === 0 || xRange === null || xRange.max - xRange.min >= maxTime;
-  const xPanLeftDisabled = maxTime === 0 || xRange === null || xRange.min <= 0;
-  const xPanRightDisabled = maxTime === 0 || xRange === null || xRange.max >= maxTime;
+  // Which time buttons are greyed out (a click would do nothing)
+  const xZoomInDisabled = (timeZoom?.width ?? maxTime) <= TIME_WIDTHS[0];
+  const xZoomOutDisabled = timeZoom === null;
+  const xPanLeftDisabled = timeZoom === null || timeZoom.start <= 0;
+  const xPanRightDisabled = timeZoom === null || timeZoom.start >= maxTime - timeZoom.width;
+
+  // What the charts show: the zoomed window, or everything
+  const timeView = timeZoom
+    ? { min: timeZoom.start, max: timeZoom.start + timeZoom.width }
+    : { min: 0, max: maxTime };
 
   // ---- Y-axis: 5 round lines, independent per chart ----
 
@@ -161,11 +135,11 @@ export function useChartZoom(data, valueKeys) {
   // What a chart shows now: its zoomed window, or the default view.
   const getYWindow = (valueKey) => yRanges[valueKey] ?? fitWindow(valueKey);
 
-  // Zoom: one step smaller (in) or bigger (out) in STEPS. The zoom buttons
-  // are disabled at both ends of the list, so `step` always exists here.
-  const handleYZoom = (valueKey, factor) => {
+  // Zoom: one step smaller (+1 = in) or bigger (-1 = out) in STEPS. The zoom
+  // buttons are disabled at both ends of the list, so `step` always exists here.
+  const handleYZoom = (valueKey, direction) => {
     const current = getYWindow(valueKey);
-    const step = STEPS[STEPS.indexOf(current.step) + (factor > 1 ? -1 : 1)];
+    const step = STEPS[STEPS.indexOf(current.step) - direction];
     const center = (current.min + current.max) / 2;
     // Back at the default size → forget the zoom.
     const next = step >= fitWindow(valueKey).step ? undefined : makeWindow(center, step);
@@ -197,14 +171,14 @@ export function useChartZoom(data, valueKeys) {
 
   // ---- Zoom to the two pins ----
 
-  // Time: from A to B with some space around (never under MIN_ZOOM_WINDOW).
+  // Time: from A to B with some space around (never under the smallest width),
+  // with the two pins in the middle.
   // Value: each chart gets the smallest round window that covers both pins.
   const zoomToPins = (pins) => {
     const low = Math.min(pins[0].time, pins[1].time);
     const high = Math.max(pins[0].time, pins[1].time);
-    const width = Math.max(MIN_ZOOM_WINDOW, (high - low) * 1.5);
-    const start = Math.max(0, Math.min((low + high) / 2 - width / 2, maxTime - width));
-    setXRange(width >= maxTime ? null : { min: start, max: start + width });
+    const width = Math.max(TIME_WIDTHS[0], (high - low) * 1.5);
+    setTimeZoom(timeWindow((low + high) / 2 - width / 2, width));
 
     const next = {};
     for (const key of valueKeys) {
@@ -220,7 +194,7 @@ export function useChartZoom(data, valueKeys) {
   // reset, which sits under both button groups) it also resets the shared
   // time window for all three charts.
   const handleReset = (valueKey, withTime) => {
-    if (withTime) setXRange(null);
+    if (withTime) setTimeZoom(null);
     setYRanges((prev) => {
       const next = { ...prev };
       delete next[valueKey];
@@ -230,11 +204,11 @@ export function useChartZoom(data, valueKeys) {
 
   // Off when there is nothing to reset (time only counts with `withTime`)
   const isResetDisabled = (valueKey, withTime) =>
-    yRanges[valueKey] === undefined && (!withTime || xRange === null);
+    yRanges[valueKey] === undefined && (!withTime || timeZoom === null);
 
   return {
     maxTime,
-    xRange,
+    timeView,
     getYWindow,
     fitWindow,
     handleXZoom,

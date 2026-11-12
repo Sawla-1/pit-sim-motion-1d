@@ -33,7 +33,7 @@ function Charts({ charts, data, simulation, pins, onSeek, showScrubHint, inputs 
 
   const {
     maxTime,
-    xRange,
+    timeView,
     getYWindow,
     fitWindow,
     handleXZoom,
@@ -82,8 +82,8 @@ function Charts({ charts, data, simulation, pins, onSeek, showScrubHint, inputs 
   const xControls = (
     <ChartZoomControls
       axis="x"
-      onZoomIn={() => handleXZoom(1.2)}
-      onZoomOut={() => handleXZoom(0.8)}
+      onZoomIn={() => handleXZoom(1)}
+      onZoomOut={() => handleXZoom(-1)}
       onPanPositive={() => handleXPan(-1)}
       onPanNegative={() => handleXPan(1)}
       zoomInDisabled={xZoomInDisabled}
@@ -113,8 +113,8 @@ function Charts({ charts, data, simulation, pins, onSeek, showScrubHint, inputs 
               onShow={() => setHidden({ ...hidden, [key]: false })}
               onHide={() => setHidden({ ...hidden, [key]: true })}
               yControlsProps={{
-                onZoomIn: () => handleYZoom(key, 1.2),
-                onZoomOut: () => handleYZoom(key, 0.8),
+                onZoomIn: () => handleYZoom(key, 1),
+                onZoomOut: () => handleYZoom(key, -1),
                 onPanPositive: () => handleYPan(key, 1),
                 onPanNegative: () => handleYPan(key, -1),
                 zoomInDisabled: yDisabled.zoomInDisabled,
@@ -136,8 +136,8 @@ function Charts({ charts, data, simulation, pins, onSeek, showScrubHint, inputs 
                 label={label}
                 points={series[key]}
                 color={SERIES_COLORS[key].color}
-                xMin={isPlayback ? xRange?.min ?? 0 : 0}
-                xMax={isPlayback ? xRange?.max ?? maxTime : maxTime}
+                xMin={isPlayback ? timeView.min : 0}
+                xMax={isPlayback ? timeView.max : maxTime}
                 yMin={yWindow.min}
                 yMax={yWindow.max}
                 showXNumbers={isBottom}
