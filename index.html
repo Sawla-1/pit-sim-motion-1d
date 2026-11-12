@@ -5,9 +5,60 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/png" href="/logo.png" />
     <title>PIT Simulation</title>
+    <style>
+      /* The page color from the first moment, so there is no white flash */
+      body {
+        margin: 0;
+        background: #f5f9f3;
+      }
+      /* The loading screen. It is plain HTML inside #root, so it shows before any
+         code has downloaded, and React replaces it by itself when the app starts.
+         It waits 0.3 s before it shows: on a fast connection nobody sees it blink. */
+      .app-loading {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        font: 700 18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        color: #4a2a12;
+        opacity: 0;
+        animation: app-loading-show 0.2s 0.3s forwards;
+      }
+      .app-loading-ring {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        border: 5px solid #e8dcc0;
+        border-top-color: #b4262d;
+        animation: app-loading-spin 0.9s linear infinite;
+      }
+      @keyframes app-loading-show {
+        to {
+          opacity: 1;
+        }
+      }
+      @keyframes app-loading-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      /* People who asked their device for less motion get a ring that stands still */
+      @media (prefers-reduced-motion: reduce) {
+        .app-loading-ring {
+          animation: none;
+        }
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="app-loading" role="status">
+        <div class="app-loading-ring"></div>
+        Loading…
+      </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
