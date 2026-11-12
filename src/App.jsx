@@ -7,7 +7,7 @@ import PhysicsInput from "./components/PhysicsInput";
 import Tabs from "./components/Tabs";
 import FormulaPanel from "./components/FormulaPanel";
 import { SERIES_COLORS } from "./styles/seriesColors";
-import { KAREN_ART, KAREN_BANNER, KAREN_PAGE, KAREN_RULER, KAREN_TIME } from "./styles/karenStyles";
+import { KAREN_ART, KAREN_BANNER, KAREN_PAGE, KAREN_RULER, KAREN_SCENE_PLACEHOLDER, KAREN_TIME } from "./styles/karenStyles";
 import { useSimulationLoop } from "./hooks/useSimulationLoop";
 import { resolvePlaybackState, findScrubTime } from "./engine/recordPlayback";
 import { calculatePhysicsStep, calculateDragStep } from "./engine/kinematics1d";
@@ -339,10 +339,10 @@ function App() {
           selected={tab}
           onSelect={setTab}
         />
-        <div className={`relative w-full bg-blue-50 rounded-b-lg rounded-tr-lg lg:rounded-lg ${
+        <div className={`relative w-full rounded-b-lg rounded-tr-lg lg:rounded-lg ${
           isCharts
-            ? "h-[125px] [@media(max-height:600px)]:h-[112px]"
-            : "flex-1 min-h-0"
+            ? "bg-blue-50 h-[125px] [@media(max-height:600px)]:h-[112px]"
+            : `${KAREN_SCENE_PLACEHOLDER} flex-1 min-h-0`
         }`}>
         {/* Introduction only: the scene picture, and the hanging title sign at the top (behind the boy) */}
         {!isCharts && (

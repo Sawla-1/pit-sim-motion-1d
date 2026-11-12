@@ -3,8 +3,22 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/png" href="/logo.png" />
+    <link rel="icon" type="image/png" sizes="64x64" href="/logo-64.png" />
     <title>PIT Simulation</title>
+    <!-- Start the first-screen pictures now, so they come with the app and not after it.
+         The bamboo and the title sign are hidden on phones, so phones do not rush them. -->
+    <link rel="preload" as="image" href="/karen-intro-svgs/scene-intro.svg" />
+    <link rel="preload" as="image" href="/karen-intro-svgs/boy-standing.svg" />
+    <link rel="preload" as="image" href="/karen-intro-svgs/boy-side-walking.svg" />
+    <link rel="preload" as="image" href="/karen-intro-svgs/bar-background-tall.svg" />
+    <link rel="preload" as="image" href="/karen-intro-svgs/drum-horns-empty.svg" />
+    <link rel="preload" as="image" href="/karen-intro-svgs/time-background.svg" />
+    <link rel="preload" as="image" href="/karen-intro-svgs/tab-background-short.svg" />
+    <link rel="preload" as="image" href="/karen-intro-svgs/bottom-background.svg" />
+    <link rel="preload" as="image" href="/karen-intro-svgs/bamboo-left.svg" media="(min-width: 640px)" />
+    <link rel="preload" as="image" href="/karen-intro-svgs/bamboo-right.svg" media="(min-width: 640px)" />
+    <link rel="preload" as="image" href="/karen-intro-svgs/title-banner.svg" media="(min-width: 640px)" />
+    <link rel="preload" as="font" type="font/woff" href="/fonts/Roboto-Bold.woff" crossorigin fetchpriority="low" />
     <style>
       /* The page color from the first moment, so there is no white flash */
       body {
