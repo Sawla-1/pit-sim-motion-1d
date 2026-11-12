@@ -1,23 +1,10 @@
 /**
  * recordPlayback.js
  *
- * This file records the motion as it happens, and plays it back later.
- * It keeps the list of recorded points and works out what the simulation
- * should look like at any point in time.
+ * This file plays a recording back. From the list of recorded points it
+ * works out what the simulation should look like at any point in time.
+ * (Recording itself is simple: the loop adds each new state to the list.)
  */
-
-// ---------------------------------------------------------------------------
-// Recording
-// ---------------------------------------------------------------------------
-
-/**
- * Start recording from a past moment: throw away every recorded point that
- * is later than `time`, so new points continue from there and the list stays
- * in time order. At the end of the recording this removes nothing.
- */
-export function trimRecordedDataAfter(recordedData, time) {
-  return recordedData.filter((state) => state.time <= time);
-}
 
 // ---------------------------------------------------------------------------
 // Playback

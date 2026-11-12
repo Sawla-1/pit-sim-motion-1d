@@ -10,8 +10,7 @@ import { SERIES_COLORS } from "../styles/seriesColors";
 // of the recording: only the new points are turned into {x, y}.
 function growSeries(old, recordedData, keys) {
   const from = newItemsStart(old.data, recordedData);
-  // Nothing new (like a Play press that trims nothing): keep the same lines,
-  // so the charts don't redraw them
+  // Nothing new: keep the same lines, so the charts don't redraw them
   if (from > 0 && from === recordedData.length) return old.byKey;
   const newStates = recordedData.slice(from);
   const result = {};

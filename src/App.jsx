@@ -12,7 +12,6 @@ import { useSimulationLoop } from "./hooks/useSimulationLoop";
 import {
   handlePlaybackStep,
   resolvePlaybackState,
-  trimRecordedDataAfter,
   findScrubTime,
 } from "./engine/recordPlayback";
 import { calculatePhysicsStep, calculateDragStep } from "./engine/kinematics1d";
@@ -125,7 +124,6 @@ function App() {
     }
     setFormulaError(null);
     setFormulaNotice(null);
-    trimRecordingToNow();
     setActiveFormula({ text: formulaText.trim(), evaluate: compiled.evaluate });
     setPlaying(true);
   };
@@ -187,14 +185,6 @@ function App() {
     }));
   };
 
-  // Recording from a past time (after scrubbing back) replaces everything after it, like PhET
-  const trimRecordingToNow = () => {
-    setData((prev) => ({
-      ...prev,
-      recordedData: trimRecordedDataAfter(prev.recordedData, simulation.time),
-    }));
-  };
-
   // How long the recording is, for the Reset popup text
   const recordedSeconds = data.recordedData[data.recordedData.length - 1].time;
 
@@ -202,10 +192,7 @@ function App() {
   const requestReset = () => (data.recordedData.length > 1 ? setConfirmingReset(true) : reset());
 
   // Toggle play/pause
-  const togglePlayPause = () => {
-    if (!playing && isRecording) trimRecordingToNow();
-    setPlaying(p => !p);
-  };
+  const togglePlayPause = () => setPlaying((p) => !p);
 
   // Switch between Record and Playback modes
   const switchMode = (mode) => {
@@ -290,7 +277,6 @@ function App() {
     if (activeFormula) stopFormula(FORMULA_TOOK_OVER);
     dragSamples.current = [];
     dragMouseX.current = simulation.position; // until the mouse moves, he stays where he is
-    trimRecordingToNow();
     setPlaying(true);
   };
 

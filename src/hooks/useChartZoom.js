@@ -42,7 +42,7 @@ function windowFor({ low, high }) {
 // Each chart's low/high and default window for a recording. `old` = the
 // result for an earlier version of it. A recording only grows (points are
 // added, never changed), so if the old last point is still in the same
-// place, only the new points are read. Otherwise (Clear, Reset, trim)
+// place, only the new points are read. Otherwise (Clear, Reset)
 // everything is read again.
 function growRanges(old, recordedData, keys) {
   const from = newItemsStart(old.data, recordedData);
