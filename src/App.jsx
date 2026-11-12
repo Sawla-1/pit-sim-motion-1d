@@ -1,4 +1,4 @@
-import { useState,useRef } from "react";
+import { useState, useRef } from "react";
 import SimulationScene from "./components/SimulationScene";
 import Charts from "./components/Charts";
 import Controls from "./components/Controls";
@@ -83,8 +83,7 @@ function App() {
       // Let go: he stops where he is, and the drag ends
       dragReleased.current = false;
       dragSamples.current = null;
-      const stopped = { ...sim, velocity: 0, acceleration: 0, time: sim.time + frameTime };
-      return stopped;
+      return { ...sim, velocity: 0, acceleration: 0, time: sim.time + frameTime };
     }
     const result = calculateDragStep(sim, frameTime, dragMouseX.current, dragSamples.current);
     dragSamples.current = result.photos;
@@ -212,12 +211,10 @@ function App() {
     endDrag();
     setPlaying(false);
     setPins([]);
-    setData((prev) => ({
-      ...prev,
-      recordedData: [{ time: 0, position: simulation.position, velocity: simulation.velocity, acceleration: simulation.acceleration }],
-      selectedMode: "record",
-    }));
-    setSimulation((prev) => ({ ...prev, time: 0 }));
+    // Keep the values he has now, and start the clock again at 0
+    const start = { ...simulation, time: 0 };
+    setData({ recordedData: [start], selectedMode: "record" });
+    setSimulation(start);
   };
 
   // Press 1: pin A. Press 2: pin B. Press 3: clear both.
@@ -237,7 +234,7 @@ function App() {
   // There is some pin that we are not standing on
   const canGoToPin = pins.some((p) => p !== pinAtNow);
 
-  // Handle timeline scrubbing from charts
+  // Jump to a time in the recording (chart drag, frame buttons, pins, dragging the man)
   const handleSeek = (newTime) => {
     setSimulation(resolvePlaybackState(data.recordedData, newTime).simulation);
   };
@@ -305,7 +302,6 @@ function App() {
     dragMode.current = null;
   };
 
-
   // ============================================================================
   // RENDER
   // ============================================================================
@@ -325,13 +321,13 @@ function App() {
   ));
 
   // The panel's message line (an error, if any, is shown first by the panel)
-  const formulaStatus = activeFormula
-    ? { text: playing ? `Running: x(t) = ${activeFormula.text}` : "Paused. Press Play to continue.", running: playing }
-    : !isRecording
-      ? { text: "Switch to Record to run a formula.", running: false }
-      : formulaNotice
-        ? { text: formulaNotice, running: false }
-        : null;
+  const formulaStatus = () => {
+    if (activeFormula && playing) return { text: `Running: x(t) = ${activeFormula.text}`, running: true };
+    if (activeFormula) return { text: "Paused. Press Play to continue.", running: false };
+    if (!isRecording) return { text: "Switch to Record to run a formula.", running: false };
+    if (formulaNotice) return { text: formulaNotice, running: false };
+    return null;
+  };
 
   return (
     <div className={`relative min-h-screen lg:h-screen w-full flex flex-col box-border ${KAREN_PAGE.bg} text-gray-800 overflow-x-clip`}>
@@ -461,7 +457,7 @@ function App() {
           example="7 * sin(t) + 2"
           text={formulaText}
           error={formulaError}
-          status={formulaStatus}
+          status={formulaStatus()}
           running={activeFormula !== null}
           runDisabled={!isRecording}
           onTextChange={(value) => {

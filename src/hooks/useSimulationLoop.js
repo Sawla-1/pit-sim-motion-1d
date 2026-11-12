@@ -50,7 +50,7 @@ export function useSimulationLoop({
         const dat = dataRef.current;
 
         if (dat.selectedMode === "playback") {
-          // PLAYBACK MODE: advance through recorded data — no wall-clock refs needed
+          // PLAYBACK MODE: advance through recorded data
           const result = onPlaybackStep(sim, dat, frameTime);
           // Update the ref right away: a slow device can run the next frame
           // before React re-renders, and it must not start from the old state.

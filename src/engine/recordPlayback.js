@@ -27,16 +27,7 @@
  * then find the matching state. Called every frame while playing.
  */
 export function handlePlaybackStep(simulation, data, deltaTime) {
-  const newTime = simulation.time + deltaTime;
-  const { simulation: newSimulation, isEndOfPlayback } = resolvePlaybackState(
-    data.recordedData,
-    newTime
-  );
-
-  return {
-    simulation: newSimulation,
-    isEndOfPlayback,
-  };
+  return resolvePlaybackState(data.recordedData, simulation.time + deltaTime);
 }
 
 /**
@@ -46,15 +37,9 @@ export function handlePlaybackStep(simulation, data, deltaTime) {
  * this same function, so they always agree.
  */
 export function resolvePlaybackState(recordedData, targetTime) {
-  const maxTime = recordedData[recordedData.length - 1].time;
-   
-  if (targetTime >= maxTime) {
-    const lastState = recordedData[recordedData.length - 1];
-    return { simulation: lastState, isEndOfPlayback: true };
-  }
-
-  const interpolated = interpolateStateAtTime(recordedData, targetTime);
-  return { simulation: interpolated, isEndOfPlayback: false };
+  const lastState = recordedData[recordedData.length - 1];
+  if (targetTime >= lastState.time) return { simulation: lastState, isEndOfPlayback: true };
+  return { simulation: interpolateStateAtTime(recordedData, targetTime), isEndOfPlayback: false };
 }
 
 /**
