@@ -5,6 +5,8 @@
  * a function of time t. The text is never run as code: it is cut into pieces,
  * every piece is checked against the lists below, and only then is it turned
  * into a function. So only the allowed words and symbols can ever work.
+ *
+ * It also reads plain maths typed in a number box, like "1+2" (evaluateNumber).
  */
 
 const FUNCTIONS = {
@@ -17,15 +19,17 @@ const FUNCTIONS = {
   ln: Math.log,
 };
 const CONSTANTS = { pi: Math.PI, e: Math.E };
-const ALLOWED_WORDS = ["t", ...Object.keys(CONSTANTS), ...Object.keys(FUNCTIONS)];
+// The words a formula may use (the Formula panel)
+const FORMULA_WORDS = ["t", ...Object.keys(CONSTANTS), ...Object.keys(FUNCTIONS)];
 
 const MULTIPLY_HINT = "Use * for multiply, for example 2*t.";
 
 // Thrown for a formula the user must fix. Its message is shown to the user.
 class FormulaError extends Error {}
 
-// Step 1: cut the text into pieces: numbers, words and symbols
-function tokenize(text) {
+// Step 1: cut the text into pieces: numbers, words and symbols.
+// `words` = the words the text may use.
+function tokenize(text, words) {
   const tokens = [];
   let i = 0;
   while (i < text.length) {
@@ -40,8 +44,8 @@ function tokenize(text) {
       i += number[0].length;
     } else if (word) {
       const name = word[0].toLowerCase();
-      if (!ALLOWED_WORDS.includes(name)) {
-        throw new FormulaError(`I do not know "${word[0]}". You can use: ${ALLOWED_WORDS.join(", ")}.`);
+      if (!words.includes(name)) {
+        throw new FormulaError(`I do not know "${word[0]}". You can use: ${words.join(", ")}.`);
       }
       tokens.push({ type: "word", value: name });
       i += word[0].length;
@@ -62,14 +66,15 @@ const startsValue = (token) =>
 /**
  * Turns formula text into { ok: true, evaluate } where evaluate(t) gives the
  * position at time t, or { ok: false, error } with a message for the user.
+ * `words` = the words the text may use (left out: all the formula words).
  *
  * Step 2: read the pieces in the order of school maths. Each reading function
  * returns a small function of t. From weakest to strongest binding:
  *   + -   then   * /   then   minus sign in front   then   ^   then   numbers, t, brackets
  */
-export function compileFormula(text) {
+export function compileFormula(text, words = FORMULA_WORDS) {
   try {
-    const tokens = tokenize(text);
+    const tokens = tokenize(text, words);
     if (tokens.length === 0) throw new FormulaError("Type a formula first.");
 
     let pos = 0;
@@ -160,5 +165,20 @@ export function compileFormula(text) {
   } catch (error) {
     if (error instanceof FormulaError) return { ok: false, error: error.message };
     throw error; // a real bug, not a typing mistake: do not hide it
+  }
+}
+
+/**
+ * Reads plain maths typed in a number box, like "1+2" or "pi/2".
+ * Returns the number, or null if it cannot be read.
+ */
+export function evaluateNumber(text) {
+  try {
+    // No words allowed: a number box takes numbers and symbols only
+    const compiled = compileFormula(text, []);
+    const value = compiled.ok ? compiled.evaluate() : NaN;
+    return Number.isFinite(value) ? value : null;
+  } catch {
+    return null; // text too long or too deep to read: refuse it
   }
 }

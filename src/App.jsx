@@ -15,7 +15,7 @@ import {
   findScrubTime,
 } from "./engine/recordPlayback";
 import { calculatePhysicsStep, calculateDragStep } from "./engine/kinematics1d";
-import { compileFormula } from "./engine/evaluateFormula";
+import { compileFormula } from "./utils/evaluateFormula";
 import { calculateFormulaStep } from "./engine/formulaMotion";
 import { formatNumber } from "./utils/formatNumber";
 
