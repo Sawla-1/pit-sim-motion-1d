@@ -9,11 +9,7 @@ import FormulaPanel from "./components/FormulaPanel";
 import { SERIES_COLORS } from "./styles/seriesColors";
 import { KAREN_ART, KAREN_BANNER, KAREN_PAGE, KAREN_RULER, KAREN_TIME } from "./styles/karenStyles";
 import { useSimulationLoop } from "./hooks/useSimulationLoop";
-import {
-  handlePlaybackStep,
-  resolvePlaybackState,
-  findScrubTime,
-} from "./engine/recordPlayback";
+import { resolvePlaybackState, findScrubTime } from "./engine/recordPlayback";
 import { calculatePhysicsStep, calculateDragStep } from "./engine/kinematics1d";
 import { compileFormula } from "./utils/evaluateFormula";
 import { calculateFormulaStep } from "./engine/formulaMotion";
@@ -148,6 +144,9 @@ function App() {
     return calculatePhysicsStep(sim, frameTime);
   };
 
+  // One frame of Playback: move time on a little, and look up that moment
+  const onPlaybackStep = (sim, dat, frameTime) => resolvePlaybackState(dat.recordedData, sim.time + frameTime);
+
   // Pinned snapshots { name, time, position, velocity, acceleration }: [] / [A] / [A, B]
   const [pins, setPins] = useState([]);
   const pinAtNow = pins.find((p) => Math.abs(p.time - simulation.time) < PIN_TOLERANCE);
@@ -161,7 +160,7 @@ function App() {
     setData,
     setPlaying,
     onRecordStep,
-    onPlaybackStep: handlePlaybackStep,
+    onPlaybackStep,
   });
 
   // ============================================================================
@@ -175,13 +174,12 @@ function App() {
     setSimulation(START_STATE);
     setPlaying(false);
     setPins([]);
-    setData((prev) => ({
-      ...prev,
+    setData({
       // A copy, not START_STATE itself: a new first point tells the charts
       // "new recording", so they forget the old zoom (see useChartZoom)
       recordedData: [{ ...START_STATE }],
       selectedMode: "record",
-    }));
+    });
   };
 
   // How long the recording is, for the Reset popup text

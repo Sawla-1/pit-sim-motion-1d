@@ -79,5 +79,8 @@ export function useSimulationLoop({
     }
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
-  }, [playing, setSimulation, setData, setPlaying, onRecordStep, onPlaybackStep]); // setters are stable React refs; listed to satisfy exhaustive-deps
+    // The setters never change. The two step functions are new on every render
+    // of App, so this effect (and the loop) starts again each time. `last` lives
+    // outside the effect, so no time is lost when it does.
+  }, [playing, setSimulation, setData, setPlaying, onRecordStep, onPlaybackStep]);
 }

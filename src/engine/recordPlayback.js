@@ -9,26 +9,17 @@
 // ---------------------------------------------------------------------------
 // Playback
 //
-// These three work together as one chain (the "playback engine"):
+// These two work together (the "playback engine"):
 //
-//   handlePlaybackStep ──> resolvePlaybackState ──> interpolateStateAtTime
+//   resolvePlaybackState ──> interpolateStateAtTime
 //
 // - interpolateStateAtTime does the actual math — finds the two nearest
 //   recorded points and blends between them.
 // - resolvePlaybackState wraps that with "stop at the end if we've gone
-//   past the last recorded point." A jump straight to a time (a drag on a
-//   chart, the frame buttons) calls it directly.
-// - handlePlaybackStep is the "advance a little bit each frame" door into
-//   the same lookup, so playing and jumping always agree.
+//   past the last recorded point." Playing (a little further each frame)
+//   and jumping (a drag on a chart, the frame buttons) both call it, so
+//   they always agree.
 // ---------------------------------------------------------------------------
-
-/**
- * One step of normal playback: move playback time forward a bit,
- * then find the matching state. Called every frame while playing.
- */
-export function handlePlaybackStep(simulation, data, deltaTime) {
-  return resolvePlaybackState(data.recordedData, simulation.time + deltaTime);
-}
 
 /**
  * Get the simulation state at a chosen playback time. If that time is
