@@ -1,7 +1,7 @@
 /**
  * kinematics1d.js
  *
- * Pure 1D kinematics utilities for constant-acceleration motion.
+ * Pure 1D kinematics: constant-acceleration motion, and motion from dragging the man.
  * No React, no recording state, no playback state — only physics math.
  */
 
@@ -65,4 +65,3 @@ export function calculateDragStep(simulation, deltaTime, mouseX, photos) {
   // The man stands right under the mouse
   return { simulation: { position: newest.x, velocity, acceleration, time }, photos: kept };
 }
-

@@ -47,8 +47,8 @@ function ModeOption({ value, label, icon, iconOff = "", title, hint, selectedMod
 }
 
 /**
- * Controls Component - the bottom bar: Clear Data, prev/play/next, mode switch, Reset All
- * (the parameter inputs are beside their charts, see PhysicsInput)
+ * Controls Component - the bottom bar: Clear Data, Formula, pins, prev/play/next, mode switch, Reset All
+ * (the value inputs are not here: see PhysicsInput)
  */
 function Controls({
   simulation,

@@ -14,7 +14,7 @@ export function makeScale(domainMin, domainMax, pixelMin, pixelMax) {
 export const invertScale = makeScale;
 
 // Round tick values for the time axis. A tick that lands exactly on min or
-// max is kept (like Chart.js).
+// max is kept.
 // makeTicks(0, 10, 5) → [0, 2, 4, 6, 8, 10]
 export function makeTicks(min, max, maxCount) {
   if (!(max > min)) return [];
