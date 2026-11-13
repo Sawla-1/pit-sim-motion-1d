@@ -14,7 +14,7 @@
  * The result may still be NaN or Infinity if the function is invalid there.
  */
 export function rateOfChange(fn, t, gap) {
-  const centered = (fn(t + gap) - fn(t - gap)) / (2 * gap); //centeral difference method MATH
+  const centered = (fn(t + gap) - fn(t - gap)) / (2 * gap); // maths name: "central difference"
   if (Number.isFinite(centered)) return centered;
   return (fn(t + gap) - fn(t)) / gap;
 }

@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { makeSceneView, makeRulerTicks, labelFontSize, GROUND_Y, EDGE, MIN_RANGE, EDGE_LABEL_GAP, LABEL_BASE, PIN_FLAG_HEIGHT } from "../utils/sceneMath";
 import { formatNumber } from "../utils/formatNumber";
 import { KAREN_ART } from "../styles/karenStyles";
+import { SERIES_COLORS } from "../styles/seriesColors";
 
 const MAN_HEIGHT_TALL = 1.7; // Introduction: about 8.5% of the ruler's width, like the mockup
 const MAN_HEIGHT_SHORT = 1.2; // Charts: the scene is short, so he is smaller
@@ -11,7 +12,7 @@ const DEFAULT_RULER = {
   ground: "skyblue", groundWidth: 50, groundHeight: 0.1, gradient: null, edge: null,
   tick: "#2d5016", tickWidth: 0.02, tickDrop: 0.1, tickHeight: 0.15, tickLabeledHeight: 0.3, labelDrop: 0.3,
   zero: "#ff4444", zeroTick: "#ff4444", label: "#2d5016", outline: null,
-  edgeMark: "#1976d2", // the end marks when the ruler grows past 10 m: same blue as the Position chart, so it is not mistaken for a normal ruler number
+  edgeMark: SERIES_COLORS.position.color, // the end marks when the ruler grows past 10 m: same blue as the Position chart, so it is not mistaken for a normal ruler number
 };
 
 // The thin dark edge is a little bigger than the bar, all round (world units)

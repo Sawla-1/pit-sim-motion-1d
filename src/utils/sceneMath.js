@@ -37,7 +37,7 @@ export function makeRulerTicks(range) {
 }
 
 // Makes the ruler, the pins and the man fit inside the scene on any screen size.
-// Returns the world→pixel functions and the world height of what must be visible.
+// Returns the zoom (pixels per world unit) and the world→pixel functions.
 // World: 0 is the centre, y goes UP. Pixels: y goes DOWN, so toY flips it.
 export function makeSceneView(width, height, manHeight) {
   const top = GROUND_Y + manHeight + PIN_FLAG_HEIGHT; // top of the pin flags (the pole is as tall as the man)
@@ -47,8 +47,6 @@ export function makeSceneView(width, height, manHeight) {
 
   return {
     zoom,
-    top,
-    bottom,
     toX: (worldX) => width / 2 + worldX * zoom,
     toY: (worldY) => height / 2 - (worldY - centerY) * zoom,
   };
