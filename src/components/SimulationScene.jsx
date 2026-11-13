@@ -18,7 +18,7 @@ const DEFAULT_RULER = {
 const EDGE_EXTRA_WIDTH = 0.06;
 const EDGE_EXTRA_HEIGHT = 0.05;
 
-const RULER_FONT = '"Ruler Roboto", Roboto, sans-serif'; // bold numbers; the font file is loaded in index.css
+const RULER_FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'; // the device's own font; no font file to load
 const OUTLINE_WIDTH = 0.03; // world units; the dark outline round the numbers (when `look.outline` is set)
 
 const PIN_COLOR = "#1f2937"; // same dark color as the pin dots on the charts

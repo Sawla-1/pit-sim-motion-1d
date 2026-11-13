@@ -15,6 +15,11 @@ export const KAREN_ART = {
   boyWalking: `${ART}/boy-side-walking.svg`, // the art faces right
 };
 
+// The scene's own colours (from scene-intro.svg): sky to meadow. Shown behind the
+// Introduction scene until its picture arrives, so a slow connection shows no empty box.
+export const KAREN_SCENE_PLACEHOLDER =
+  "bg-[linear-gradient(to_bottom,#5E9ED6_0%,#D6E9EF_55%,#6E9E48_62%,#46703A_100%)]";
+
 // The two view tabs: a woven mat behind them; the open tab is red
 export const KAREN_TAB = {
   base: "relative h-[32px] px-4 flex items-center text-sm font-bold last:rounded-br-xl",
