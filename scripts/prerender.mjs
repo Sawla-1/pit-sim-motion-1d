@@ -5,8 +5,10 @@
 //   2. the CSS file's text, inside a <style> tag (no extra request that blocks painting)
 //   3. the app's JavaScript, inside a <script> tag (the page already carries the app when
 //      it arrives; a separate file costs another full round trip)
+// Then it makes the service worker again (step 4), so its list matches the finished page.
 import { readFileSync, writeFileSync, rmSync, readdirSync } from "node:fs";
 import { pathToFileURL } from "node:url";
+import { resolveConfig } from "vite";
 
 const htmlPath = "dist/index.html";
 let html = readFileSync(htmlPath, "utf8");
@@ -41,5 +43,12 @@ const otherJs = readdirSync("dist/assets").filter((name) => name.endsWith(".js")
 if (otherJs.length > 0) throw new Error(`prerender: more JavaScript files found (${otherJs.join(", ")}). Only one can go inside the page.`);
 
 writeFileSync(htmlPath, html);
+
+// 4. The service worker's list of files to save for offline use is made again, now
+//    that index.html is finished. (The first one was made before steps 1 to 3.)
+const viteConfig = await resolveConfig({}, "build", "production", "production");
+const pwa = viteConfig.plugins.find((plugin) => plugin.name === "vite-plugin-pwa");
+if (!pwa) throw new Error("prerender: could not find vite-plugin-pwa in vite.config.js");
+await pwa.api.generateSW();
 rmSync("dist-ssr", { recursive: true, force: true });
 console.log("prerender: first screen, CSS and JavaScript are now inside dist/index.html");
