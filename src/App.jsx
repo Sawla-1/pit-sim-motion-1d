@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useSyncExternalStore } from "react";
 import SimulationScene from "./components/SimulationScene";
 import Charts from "./components/Charts";
 import Controls from "./components/Controls";
@@ -6,14 +6,16 @@ import ConfirmDialog from "./components/ConfirmDialog";
 import PhysicsInput from "./components/PhysicsInput";
 import Tabs from "./components/Tabs";
 import FormulaPanel from "./components/FormulaPanel";
+import InstallButton from "./components/InstallButton";
 import { SERIES_COLORS } from "./styles/seriesColors";
-import { KAREN_ART, KAREN_BANNER, KAREN_PAGE, KAREN_RULER, KAREN_SCENE_PLACEHOLDER, KAREN_TIME } from "./styles/karenStyles";
+import { KAREN_ART, KAREN_BANNER, KAREN_PAGE, KAREN_RULER, KAREN_SCENE_PLACEHOLDER, KAREN_TAB, KAREN_TIME } from "./styles/karenStyles";
 import { useSimulationLoop } from "./hooks/useSimulationLoop";
 import { resolvePlaybackState, findScrubTime } from "./engine/recordPlayback";
 import { calculatePhysicsStep, calculateDragStep } from "./engine/kinematics1d";
 import { compileFormula } from "./utils/evaluateFormula";
 import { calculateFormulaStep } from "./engine/formulaMotion";
 import { formatNumber } from "./utils/formatNumber";
+import { installMode, watchInstallMode, openInstallBox } from "./offline/installPrompt";
 
 const FRAME_STEP = 0.1; // seconds moved by one Next/Previous frame click
 const PIN_TOLERANCE = 0.05; // seconds: "same time" for Unpin (half a frame step)
@@ -39,6 +41,10 @@ function App() {
   // Open tab: "intro" (big scene + sliders) or "charts". Both share the same data, like PhET.
   const [tab, setTab] = useState("intro");
   const isCharts = tab === "charts";
+  // What the Install button does: "prompt", "hint" or "none" (see offline/installPrompt.js).
+  // The answer lives in the browser, not in React, so React reads it and is told when it changes.
+  // The last part is for the build-time first screen: no button there.
+  const install = useSyncExternalStore(watchInstallMode, installMode, () => "none");
   // Turns true the first time the user opens Playback; stops the "try me" hint
   const [playbackTried, setPlaybackTried] = useState(false);
   // Turns true the first time the user drags a chart; stops the scrub hint
@@ -331,14 +337,17 @@ function App() {
           ? "shrink-0"
           : "flex-1 min-h-[260px] [@media(max-height:600px)]:min-h-[150px] lg:min-h-0"
       }`}>
-        <Tabs
-          tabs={[
-            { id: "intro", label: "Introduction" },
-            { id: "charts", label: "Charts" },
-          ]}
-          selected={tab}
-          onSelect={setTab}
-        />
+        <div className={KAREN_TAB.row}>
+          <Tabs
+            tabs={[
+              { id: "intro", label: "Introduction" },
+              { id: "charts", label: "Charts" },
+            ]}
+            selected={tab}
+            onSelect={setTab}
+          />
+          <InstallButton mode={install} onInstall={openInstallBox} />
+        </div>
         <div className={`relative w-full rounded-b-lg rounded-tr-lg lg:rounded-lg ${
           isCharts
             ? "bg-blue-50 h-[125px] [@media(max-height:600px)]:h-[112px]"

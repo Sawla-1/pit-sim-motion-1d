@@ -2,11 +2,10 @@ import { KAREN_ART, KAREN_TAB } from "../styles/karenStyles";
 
 // The two view tabs on a woven mat. The open tab is red; the other shows the mat.
 // Each tab is as big as its text plus padding.
-// Phones/tablets: a row above the scene. Laptops: floats on the scene's top-left
-// corner, so it uses no height.
+// (Where the tabs sit on the page is decided by App.jsx: see KAREN_TAB.row.)
 function Tabs({ tabs, selected, onSelect }) {
   return (
-    <div className="relative flex self-start lg:absolute lg:top-0 lg:left-0 lg:z-20">
+    <div className="relative flex">
       {/* The mat is a little wider than the tabs (room for its edge and shadow) */}
       <img
         src={KAREN_ART.tabBackground}
