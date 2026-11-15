@@ -25,7 +25,7 @@ change, ask: "would this change be required if we added simulation #2?"
 | `utils/` | Shared pure helpers |
 | `styles/` | Style constants only (class strings, colors) |
 | `hooks/` | `useSimulationLoop` (animation loop, engine-agnostic), `useChartZoom` (chart zoom/pan state) |
-| `offline/` | Service worker start-up code. Not about any one simulation. Called only from `main.jsx` |
+| `offline/` | Browser code for offline use and installing (service worker start-up, install signal). Not about any one simulation. No React |
 | `components/` | Presentational: props in, callbacks out, no physics state (small screen-only state, like a typing draft, is fine) |
 | `App.jsx` | All state and control logic |
 

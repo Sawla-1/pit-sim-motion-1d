@@ -22,9 +22,18 @@ export const KAREN_SCENE_PLACEHOLDER =
 
 // The two view tabs: a woven mat behind them; the open tab is red
 export const KAREN_TAB = {
+  // The tabs and the Install button, side by side. Phones/tablets: a row above the scene.
+  // Laptops: floats on the scene's top-left corner, so it uses no height.
+  row: "flex items-center gap-3 self-start lg:absolute lg:top-0 lg:left-0 lg:z-20",
   base: "relative h-[32px] px-4 flex items-center text-sm font-bold last:rounded-br-xl",
   open: "bg-[#B4262D] text-white cursor-default select-none",
   closed: "text-[#4A2A12] cursor-pointer transition-colors hover:bg-white/30 focus-visible:outline-2 focus-visible:outline-[#B4262D]",
+};
+
+// The Install button beside the tabs: small, round, white with a brown ring (like the bar's round buttons)
+export const KAREN_INSTALL = {
+  button: "w-7 h-7 rounded-full flex items-center justify-center cursor-pointer border-2 border-[#8A6A2F] bg-white text-[#3B2A14] transition-colors hover:bg-[#F6EBD2] active:bg-[#EADBB5] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B4262D]",
+  hint: "absolute right-0 top-full mt-2 z-30 w-56 rounded-lg border-2 border-[#8A6A2F] bg-white px-3 py-2 text-sm text-[#3B2A14] shadow-lg",
 };
 
 // The hanging title sign: its ropes start at the top edge of the scene, centered (Introduction only; hidden on phones)
