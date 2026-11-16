@@ -30,9 +30,9 @@ export const KAREN_TAB = {
   closed: "text-[#4A2A12] cursor-pointer transition-colors hover:bg-white/30 focus-visible:outline-2 focus-visible:outline-[#B4262D]",
 };
 
-// The Install button beside the tabs: small, round, white with a brown ring (like the bar's round buttons)
+// The Install button beside the tabs: a small white pill with a brown ring (like the bar's buttons): icon + word
 export const KAREN_INSTALL = {
-  button: "w-7 h-7 rounded-full flex items-center justify-center cursor-pointer border-2 border-[#8A6A2F] bg-white text-[#3B2A14] transition-colors hover:bg-[#F6EBD2] active:bg-[#EADBB5] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B4262D]",
+  button: "h-7 pl-2 pr-3 rounded-full flex items-center gap-1 text-sm font-bold cursor-pointer border-2 border-[#8A6A2F] bg-white text-[#3B2A14] transition-colors hover:bg-[#F6EBD2] active:bg-[#EADBB5] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B4262D]",
   hint: "absolute right-0 top-full mt-2 z-30 w-56 rounded-lg border-2 border-[#8A6A2F] bg-white px-3 py-2 text-sm text-[#3B2A14] shadow-lg",
 };
 
