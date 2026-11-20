@@ -53,23 +53,49 @@ input[type="range"].hslider::-moz-range-thumb {
   border: 3px solid #fff;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4), inset 0 -2px 3px rgba(0, 0, 0, 0.3);
 }
-/* A hand over the bead says "drag me"; while pressed it closes and the bead grows a little.
-   Only when the slider can move (not in Playback, not when turned off). */
+/* A hand over the bead says "drag me". The bead grows a little when the mouse is on it,
+   and more while pressed (the hand closes). Only when the slider can move
+   (not in Playback, not when turned off).
+   Each rule is written twice (-webkit- and -moz-): a rule that names both is dropped by every browser. */
 input[type="range"].vslider:enabled::-webkit-slider-thumb,
 input[type="range"].hslider:enabled::-webkit-slider-thumb {
   cursor: grab;
+  transition: transform 0.15s; /* smooth grow */
 }
 input[type="range"].vslider:enabled::-moz-range-thumb,
 input[type="range"].hslider:enabled::-moz-range-thumb {
   cursor: grab;
+  transition: transform 0.15s;
+}
+/* Hover: mouse only (on phones a tap would leave it big) */
+@media (hover: hover) {
+  input[type="range"].vslider:enabled::-webkit-slider-thumb:hover,
+  input[type="range"].hslider:enabled::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+  }
+  input[type="range"].vslider:enabled::-moz-range-thumb:hover,
+  input[type="range"].hslider:enabled::-moz-range-thumb:hover {
+    transform: scale(1.2);
+  }
 }
 input[type="range"].vslider:enabled:active::-webkit-slider-thumb,
 input[type="range"].hslider:enabled:active::-webkit-slider-thumb {
   cursor: grabbing;
-  transform: scale(1.08);
+  transform: scale(1.35);
 }
 input[type="range"].vslider:enabled:active::-moz-range-thumb,
 input[type="range"].hslider:enabled:active::-moz-range-thumb {
   cursor: grabbing;
-  transform: scale(1.08);
+  transform: scale(1.35);
+}
+/* "Reduce motion" setting: the size changes at once, with no animation */
+@media (prefers-reduced-motion: reduce) {
+  input[type="range"].vslider:enabled::-webkit-slider-thumb,
+  input[type="range"].hslider:enabled::-webkit-slider-thumb {
+    transition: none;
+  }
+  input[type="range"].vslider:enabled::-moz-range-thumb,
+  input[type="range"].hslider:enabled::-moz-range-thumb {
+    transition: none;
+  }
 }
