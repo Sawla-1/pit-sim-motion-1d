@@ -46,20 +46,24 @@ export const KAREN_PAGE = {
   strip: "absolute inset-x-0 bottom-0 -z-10 h-[112px] w-full max-w-none pointer-events-none",
 };
 
-// The bottom bar: a woven mat behind white buttons with a brown ring (Reset All: red ring).
-// The round buttons (pins, prev / next) are dark wood with gold icons (Stitch look).
+// Dark wood (Stitch look): light brown at the top to dark brown at the bottom, gold edge, light-gold text
+const WOOD = "border-2 border-[#D97706]/40 bg-[linear-gradient(180deg,#6C4122_0%,#4B2B13_50%,#341C0C_100%)] text-[#FDE68A] shadow-[inset_0_1px_1px_rgba(255,255,255,0.25),0_3px_6px_rgba(0,0,0,0.35)]";
+// Mouse on it: brighter and a little bigger. Pressed: a little smaller. "Reduce motion": no animation.
+const PRESSABLE = "transition motion-reduce:transition-none enabled:hover:brightness-125 enabled:hover:scale-108 enabled:active:scale-95";
+
+// The bottom bar (Stitch look): a woven mat behind dark wood buttons with gold text; Reset All is solid red
 export const KAREN_BAR = {
   box: "relative isolate w-full max-w-[800px] lg:max-w-[1000px] xl:max-w-[1150px] flex flex-wrap items-center justify-between gap-x-2 sm:gap-x-6 gap-y-2 px-3 sm:px-9 py-[18px] [@media(max-height:600px)]:py-[10px]",
   // Charts tab, laptops: tighter side padding and gaps, so all the buttons fit in one row from 1024px wide
   compact: "lg:px-4 lg:gap-x-3",
   mat: "absolute inset-0 -z-10 h-full w-full max-w-none pointer-events-none", // behind the buttons, whatever their order
-  word: "my-1 h-10 px-3 sm:px-4 rounded-full flex items-center gap-2 text-sm font-bold cursor-pointer transition-colors disabled:opacity-40 disabled:cursor-not-allowed",
-  clear: "border-[3px] border-[#8A6A2F] bg-white text-[#3B2A14] enabled:hover:bg-[#F6EBD2]",
-  reset: "border-2 border-[#B4262D] bg-white text-[#B4262D] enabled:hover:bg-[#FBE9EA]",
-  round: "w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center cursor-pointer border-2 border-[#D97706]/40 bg-[linear-gradient(180deg,#6C4122_0%,#4B2B13_50%,#341C0C_100%)] text-[#FDE68A] shadow-[inset_0_1px_1px_rgba(255,255,255,0.25),0_3px_6px_rgba(0,0,0,0.35)] transition motion-reduce:transition-none enabled:hover:brightness-125 enabled:hover:scale-108 enabled:active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed",
-  modeBox: "flex gap-1 p-1 rounded-full border-[3px] border-[#8A6A2F] bg-white",
-  modeOn: "bg-[#B4262D] text-white",
-  modeOff: "text-[#3B2A14]",
+  word: "my-1 h-10 px-3 sm:px-4 rounded-full flex items-center gap-2 text-sm font-bold cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed",
+  clear: `${WOOD} ${PRESSABLE}`, // Clear Data and Formula
+  reset: `border-2 border-[#F59E0B]/50 bg-[#B4262D] text-[#FEF3C7] shadow-[inset_0_1px_1px_rgba(255,255,255,0.25),0_3px_6px_rgba(0,0,0,0.35)] ${PRESSABLE}`,
+  round: `w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center cursor-pointer ${WOOD} ${PRESSABLE} disabled:opacity-40 disabled:cursor-not-allowed`,
+  modeBox: `flex gap-1 p-1 rounded-full ${WOOD}`,
+  modeOn: "bg-[#B4262D] text-[#FEF3C7]",
+  modeOff: "text-[#FDE68A]",
   drum: "relative w-[108px] h-[82px] -my-[17px] shrink-0 cursor-pointer transition hover:brightness-110 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B4262D]",
 };
 

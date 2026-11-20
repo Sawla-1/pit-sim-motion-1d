@@ -21,13 +21,13 @@ const RefreshIcon = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="
 
 // One part of the Record / Playback switch. A real radio input (hidden from
 // view) keeps keyboard and screen reader support; the label is what you see.
-// Chosen = solid red, white text. Not chosen = plain text on white; a soft cream on hover.
+// Chosen = solid red, light text. Not chosen = gold text on wood; a soft light patch on hover.
 function ModeOption({ value, label, icon, iconOff = "", title, hint, selectedMode, disabled, onModeChange }) {
   return (
-    <label title={title} className={`relative px-4 h-8 flex items-center gap-2 rounded-full text-sm font-bold transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[#3B2A14] ${
+    <label title={title} className={`relative px-4 h-8 flex items-center gap-2 rounded-full text-sm font-bold transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[#FDE68A] ${
       selectedMode === value
         ? KAREN_BAR.modeOn
-        : `${KAREN_BAR.modeOff} ${disabled ? "" : "hover:bg-[#F6EBD2]"}`
+        : `${KAREN_BAR.modeOff} ${disabled ? "" : "hover:bg-white/15"}`
     } ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}>
       <input
         type="radio"
@@ -105,7 +105,7 @@ function Controls({
             onClick={onFormulaClick}
             aria-pressed={formulaOpen}
             title="Type a position formula x(t)"
-            className={`${KAREN_BAR.word} ${KAREN_BAR.clear} ${formulaOpen ? "ring-2 ring-[#8A6A2F]" : ""}`}
+            className={`${KAREN_BAR.word} ${KAREN_BAR.clear} ${formulaOpen ? "ring-2 ring-[#FDE68A]" : ""}`}
           >
             <FormulaIcon />
             Formula
@@ -163,7 +163,7 @@ function Controls({
             </button>
           </div>
 
-          {/* Mode switch: one white pill, two parts */}
+          {/* Mode switch: one wood pill, two parts */}
           <div className={KAREN_BAR.modeBox}>
             <ModeOption value="record" label="Record" icon={<RecordDot />} iconOff="text-[#B4262D]" title="Make new data" selectedMode={data.selectedMode} onModeChange={onModeChange} />
             <ModeOption value="playback" label="Playback" icon={<SmallPlay />} title={noRecording ? "Record something first" : "Replay what you recorded"} hint={data.selectedMode === "record" && !noRecording && !playing && !playbackTried} selectedMode={data.selectedMode} onModeChange={onModeChange} disabled={noRecording} />
