@@ -75,13 +75,12 @@ export const KAREN_BAR = {
   modeOption: "relative px-4 h-8 flex items-center gap-2 rounded-full text-sm font-bold transition-colors max-sm:h-[26px] max-sm:px-2.5 max-sm:text-xs max-sm:gap-1.5",
   modeOn: "bg-[#B4262D] text-[#FEF3C7]",
   modeOff: "text-[#FDE68A]",
-  // The drum. Phones and tablets: 80% (86 x 66px). Laptops: full size (108 x 82px).
-  drum: "relative w-[86px] h-[66px] -my-[14px] lg:w-[108px] lg:h-[82px] lg:-my-[17px] shrink-0 cursor-pointer transition hover:brightness-110 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B4262D]",
-  // Phones and tablets: the drum's red centre drawn on top at its full 32px, so only the gold ring and
-  // the horns get smaller. (Laptops: the drum is full size, so its own red centre is used.)
-  drumRed: "absolute left-1/2 top-[32px] size-8 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#7E1A1F] bg-[#B4262D] lg:hidden",
-  // The Play / Pause icon on the red centre (32px down at 80%, 40px down at full size)
-  drumIcon: "absolute left-1/2 top-[32px] lg:top-[40px] -translate-x-1/2 -translate-y-1/2 text-white",
+  // The drum: 80% of the art's size (86 x 66px) on every screen
+  drum: "relative w-[86px] h-[66px] -my-[14px] shrink-0 cursor-pointer transition hover:brightness-110 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B4262D]",
+  // The drum's red centre drawn on top at its full 32px, so only the gold ring and the horns get smaller
+  drumRed: "absolute left-1/2 top-[32px] size-8 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#7E1A1F] bg-[#B4262D]",
+  // The Play / Pause icon on the red centre
+  drumIcon: "absolute left-1/2 top-[32px] -translate-x-1/2 -translate-y-1/2 text-white",
 };
 
 // The time box (Stitch look): a beige box with a brown edge in the scene's top corner, dark text
