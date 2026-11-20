@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { evaluateNumber } from "../utils/evaluateFormula";
-import { KAREN_INPUT } from "../styles/karenStyles";
+import { KAREN_INPUT, KAREN_NUMBER } from "../styles/karenStyles";
 
 // One input panel: name, number box + unit, slider. Charts tab: vertical
 // slider beside its chart. Intro tab (horizontal): left-right slider.
@@ -28,36 +28,36 @@ function PhysicsInput({ id, label, symbol, unit, value, min, max, color, disable
     </label>
   );
 
-  // The number box (or, read-only, the plain number), used by both layouts.
-  // `look` = extra classes for the phone line on the Intro tab.
-  const number = (look = "") =>
-    readOnly ? (
-      // Same size and place as the box, so nothing moves when the mode changes.
-      // aria-live="off": screen readers would otherwise read out every change (60 a second)
-      <output id={id} aria-live="off" className={`w-[72px] h-8 px-2 flex items-center justify-end text-base font-semibold text-gray-800 ${look}`}>
-        {shown}
-      </output>
-    ) : (
-      <input
-        id={id}
-        type="text"
-        value={text}
-        disabled={disabled}
-        onFocus={(e) => {
-          setDraft(shown);
-          e.target.select();
-        }}
-        onChange={(e) => setDraft(e.target.value)}
-        onBlur={(e) => commit(e.target.value)}
-        onKeyDown={(e) => { if (e.key === "Enter") e.target.blur(); }}
-        className={`w-[72px] h-8 px-2 border border-gray-400 rounded text-base font-semibold text-right bg-white text-gray-800 shadow-sm focus:outline-none focus:border-gray-700 focus:shadow-[0_0_0_3px_rgba(55,65,81,0.18)] disabled:opacity-50 disabled:cursor-not-allowed ${look}`}
-      />
-    );
-
-  const unitText = (look = "") => (
-    <span className={`w-[34px] text-base font-semibold ${look}`} style={{ color }}>
-      {unit}
-    </span>
+  // The number box, used by both layouts: the number (or, read-only, the plain number)
+  // and the unit, inside one beige box.
+  const numberBox = (
+    <div className={KAREN_NUMBER.box}>
+      {readOnly ? (
+        // Same size and place as the typing box, so nothing moves when the mode changes.
+        // aria-live="off": screen readers would otherwise read out every change (60 a second)
+        <output id={id} aria-live="off" className={KAREN_NUMBER.number}>
+          {shown}
+        </output>
+      ) : (
+        <input
+          id={id}
+          type="text"
+          value={text}
+          disabled={disabled}
+          onFocus={(e) => {
+            setDraft(shown);
+            e.target.select();
+          }}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={(e) => commit(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") e.target.blur(); }}
+          className={KAREN_NUMBER.number}
+        />
+      )}
+      <span className={KAREN_NUMBER.unit} style={{ color }}>
+        {unit}
+      </span>
+    </div>
   );
 
   const slider = (className) => (
@@ -92,10 +92,7 @@ function PhysicsInput({ id, label, symbol, unit, value, min, max, color, disable
           <span className="sm:hidden">+</span>
           {max}
         </span>
-        <div className={KAREN_INPUT.box}>
-          {number(KAREN_INPUT.number)}
-          {unitText(KAREN_INPUT.unit)}
-        </div>
+        <div className={KAREN_INPUT.box}>{numberBox}</div>
       </div>
     );
   }
@@ -107,12 +104,7 @@ function PhysicsInput({ id, label, symbol, unit, value, min, max, color, disable
       {/* flex-1 + min-w-0: same width in every row, so all 3 sliders line up */}
       <div className="flex-1 min-w-0 flex flex-col items-start gap-2 [@media(max-height:600px)]:gap-1.5">
         {nameLabel}
-        <div className="self-end">
-          <div className="flex items-center gap-2 whitespace-nowrap">
-            {number()}
-            {unitText()}
-          </div>
-        </div>
+        <div className="self-end">{numberBox}</div>
       </div>
       {/* The slider starts and ends where the plot does: 13px from the row edge
           (panel padding 12 + 1, or on short screens 6 + 7) */}

@@ -70,9 +70,17 @@ export const KAREN_BAR = {
 // The time box (Stitch look): a beige box with a brown edge in the scene's top corner, dark text
 export const KAREN_TIME = "absolute top-2 left-2 lg:left-auto lg:right-2 z-10 h-9 min-w-[96px] px-3 flex items-center justify-center rounded-md border-2 border-[#82542A] bg-[#EBD9BC] shadow-sm font-mono text-xl font-bold text-[#1C1917]";
 
+// The number box (Stitch look), on every screen and both tabs: beige, thin brown edge,
+// number + unit inside. The digits stay 16px, so iPhones don't zoom in.
+export const KAREN_NUMBER = {
+  box: "flex items-center gap-1 whitespace-nowrap h-7 sm:h-8 px-2 rounded-md border border-[#78350F]/40 bg-[#EBE1CE] shadow-inner focus-within:ring-2 focus-within:ring-[#78350F]/40",
+  number: "w-[42px] sm:w-[46px] bg-transparent text-right font-mono text-base font-bold text-[#1C1917] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed",
+  unit: "text-xs sm:text-sm font-bold",
+};
+
 // The Intro tab's 3 sliders. Phones (Stitch look): one line each, and the 3 lines share
-// columns so the bars line up: ● name (x) | -10 | bar | +10 | beige box with the unit inside.
-// Tablets and laptops: unchanged (name + box, the bar under them, -10 / 10 under its ends).
+// columns so the bars line up: ● name (x) | -10 | bar | +10 | number box.
+// Tablets and laptops: name + box, the bar under them, -10 / 10 under its ends.
 const INPUT_END = "font-mono text-[10px] font-semibold text-stone-600 sm:font-sans sm:text-sm sm:font-normal sm:leading-none sm:text-gray-600 sm:row-start-3"; // -10 and +10
 export const KAREN_INPUT = {
   // Phones: one grid with 5 columns. sm and up: side by side, as before.
@@ -85,10 +93,7 @@ export const KAREN_INPUT = {
   min: `${INPUT_END} sm:col-start-1`,
   max: `${INPUT_END} sm:col-start-2 sm:justify-self-end`,
   slider: "sm:col-span-2 sm:row-start-2",
-  // Phones: a beige box with the number and the unit inside. The digits stay 16px, so iPhones don't zoom in.
-  box: "flex items-center gap-1 whitespace-nowrap h-7 px-2 rounded-md border border-[#78350F]/40 bg-[#EBE1CE] shadow-inner focus-within:ring-2 focus-within:ring-[#78350F]/40 sm:gap-2 sm:h-auto sm:px-0 sm:rounded-none sm:border-0 sm:bg-transparent sm:shadow-none sm:focus-within:ring-0 sm:col-start-2 sm:row-start-1 sm:justify-self-end",
-  number: "max-sm:w-[42px] max-sm:h-auto max-sm:p-0 max-sm:border-0 max-sm:rounded-none max-sm:bg-transparent max-sm:shadow-none max-sm:font-mono max-sm:font-bold max-sm:text-[#1C1917] max-sm:focus:shadow-none",
-  unit: "max-sm:w-auto max-sm:text-xs max-sm:font-bold",
+  box: "sm:col-start-2 sm:row-start-1 sm:justify-self-end", // only where the box sits; its look is KAREN_NUMBER
 };
 
 export const KAREN_RULER = {
