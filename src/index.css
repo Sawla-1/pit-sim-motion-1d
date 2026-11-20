@@ -26,22 +26,43 @@ input[type="range"].hslider {
   border-radius: 3px;
   cursor: pointer;
 }
+/* The handle is a round bead (Stitch look): a light spot at the top-left on the slider's own color */
 input[type="range"].vslider::-webkit-slider-thumb,
 input[type="range"].hslider::-webkit-slider-thumb {
   appearance: none;
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: currentColor;
+  background: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.5), transparent 60%), currentColor;
   border: 3px solid #fff;
-  box-shadow: 0 1px 4px rgba(31, 41, 55, 0.3);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4), inset 0 -2px 3px rgba(0, 0, 0, 0.3);
 }
 input[type="range"].vslider::-moz-range-thumb,
 input[type="range"].hslider::-moz-range-thumb {
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: currentColor;
+  background: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.5), transparent 60%), currentColor;
   border: 3px solid #fff;
-  box-shadow: 0 1px 4px rgba(31, 41, 55, 0.3);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4), inset 0 -2px 3px rgba(0, 0, 0, 0.3);
+}
+/* A hand over the bead says "drag me"; while pressed it closes and the bead grows a little.
+   Only when the slider can move (not in Playback, not when turned off). */
+input[type="range"].vslider:enabled::-webkit-slider-thumb,
+input[type="range"].hslider:enabled::-webkit-slider-thumb {
+  cursor: grab;
+}
+input[type="range"].vslider:enabled::-moz-range-thumb,
+input[type="range"].hslider:enabled::-moz-range-thumb {
+  cursor: grab;
+}
+input[type="range"].vslider:enabled:active::-webkit-slider-thumb,
+input[type="range"].hslider:enabled:active::-webkit-slider-thumb {
+  cursor: grabbing;
+  transform: scale(1.08);
+}
+input[type="range"].vslider:enabled:active::-moz-range-thumb,
+input[type="range"].hslider:enabled:active::-moz-range-thumb {
+  cursor: grabbing;
+  transform: scale(1.08);
 }
