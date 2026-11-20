@@ -303,7 +303,7 @@ function App() {
     <PhysicsInput
       key={key} id={key} label={label} unit={unit}
       value={simulation[key]} min={-10} max={10}
-      color={SERIES_COLORS[key].color} track={SERIES_COLORS[key].track}
+      color={SERIES_COLORS[key].color}
       disabled={playing}
       readOnly={!isRecording} // Playback: only look; change things in Record
       horizontal={!isCharts}

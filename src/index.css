@@ -12,19 +12,26 @@ input[type="range"].vslider {
   appearance: none;
   writing-mode: vertical-lr;
   direction: rtl;
-  width: 6px;
+  width: 7px;
   height: 100%;
   margin: 0 7px;
-  border-radius: 3px;
+  border-radius: 9999px;
   cursor: pointer;
+  /* The bar (Stitch look): beige with a thin brown edge, a little pressed in */
+  background: #D4C2A7;
+  border: 1px solid #AA9070;
+  box-shadow: inset 0 1px 2px rgba(60, 40, 20, 0.3);
 }
-/* Horizontal slider (Intro tab): same handle as the vertical one */
+/* Horizontal slider (Intro tab): same bar and handle as the vertical one */
 input[type="range"].hslider {
   appearance: none;
   width: 100%;
-  height: 6px;
-  border-radius: 3px;
+  height: 7px;
+  border-radius: 9999px;
   cursor: pointer;
+  background: #D4C2A7;
+  border: 1px solid #AA9070;
+  box-shadow: inset 0 1px 2px rgba(60, 40, 20, 0.3);
 }
 /* The handle is a round bead (Stitch look): a light spot at the top-left on the slider's own color */
 input[type="range"].vslider::-webkit-slider-thumb,

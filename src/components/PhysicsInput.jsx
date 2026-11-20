@@ -7,7 +7,7 @@ import { evaluateNumber } from "../utils/evaluateFormula";
 // shows the live value. No effect is needed to keep the two in sync.
 // readOnly (Playback: only look at the result): the number is plain text in the
 // same spot, and the slider still moves with the value but can't be dragged.
-function PhysicsInput({ id, label, unit, value, min, max, color, track, disabled, readOnly = false, onChange, horizontal = false }) {
+function PhysicsInput({ id, label, unit, value, min, max, color, disabled, readOnly = false, onChange, horizontal = false }) {
   const [draft, setDraft] = useState(null); // null = not typing right now
   const shown = String(Math.round(value * 100) / 100); // 2 decimals
   const text = draft ?? shown;
@@ -69,7 +69,7 @@ function PhysicsInput({ id, label, unit, value, min, max, color, track, disabled
       onChange={(e) => onChange(Number(e.target.value))}
       // Read-only: locked but not greyed (it still shows the value). Disabled: greyed.
       className={`${className} ${readOnly ? "cursor-default" : "disabled:opacity-50 disabled:cursor-not-allowed"}`}
-      style={{ color, background: track }}
+      style={{ color }}
     />
   );
 
