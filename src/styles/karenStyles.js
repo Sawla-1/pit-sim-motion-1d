@@ -98,6 +98,9 @@ export const KAREN_INPUT = {
   max: `${INPUT_END} sm:col-start-2 sm:justify-self-end`,
   slider: "sm:col-span-2 sm:row-start-2",
   box: "sm:col-start-2 sm:row-start-1 sm:justify-self-end", // only where the box sits; its look is KAREN_NUMBER
+  // Charts tab, phones only: one line above each chart. Each line is its own grid, so fixed
+  // column sizes make the 3 lines line up (the name and box columns can still grow).
+  chartLine: "w-full grid grid-cols-[minmax(7.5rem,max-content)_max-content_1fr_max-content_minmax(6rem,max-content)] items-center gap-x-1.5 sm:hidden",
 };
 
 export const KAREN_RULER = {
