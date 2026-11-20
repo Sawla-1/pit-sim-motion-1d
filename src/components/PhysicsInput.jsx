@@ -28,10 +28,10 @@ function PhysicsInput({ id, label, symbol, unit, value, min, max, color, disable
     </label>
   );
 
-  // The number box, used by both layouts: the number (or, read-only, the plain number)
-  // and the unit, inside one beige box.
+  // The number box, used by both layouts: the number and the unit inside one beige box.
+  // Read-only (Playback): the plain number and unit in the same place, with no box.
   const numberBox = (
-    <div className={KAREN_NUMBER.box}>
+    <div className={`${KAREN_NUMBER.box} ${readOnly ? KAREN_NUMBER.plain : KAREN_NUMBER.editable}`}>
       {readOnly ? (
         // Same size and place as the typing box, so nothing moves when the mode changes.
         // aria-live="off": screen readers would otherwise read out every change (60 a second)

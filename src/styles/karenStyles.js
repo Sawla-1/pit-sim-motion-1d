@@ -73,7 +73,11 @@ export const KAREN_TIME = "absolute top-2 left-2 lg:left-auto lg:right-2 z-10 h-
 // The number box (Stitch look), on every screen and both tabs: beige, thin brown edge,
 // number + unit inside. The digits stay 16px, so iPhones don't zoom in.
 export const KAREN_NUMBER = {
-  box: "flex items-center gap-1 whitespace-nowrap h-7 sm:h-8 px-2 rounded-md border border-[#78350F]/40 bg-[#EBE1CE] shadow-inner focus-within:ring-2 focus-within:ring-[#78350F]/40",
+  box: "flex items-center gap-1 whitespace-nowrap h-7 sm:h-8 px-2 rounded-md border",
+  // Record: the beige box you type in
+  editable: "border-[#78350F]/40 bg-[#EBE1CE] shadow-inner focus-within:ring-2 focus-within:ring-[#78350F]/40",
+  // Playback (read-only): no box, just the number + unit, in the same place
+  plain: "border-transparent",
   number: "w-[42px] sm:w-[46px] bg-transparent text-right font-mono text-base font-bold text-[#1C1917] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed",
   unit: "text-xs sm:text-sm font-bold",
 };
