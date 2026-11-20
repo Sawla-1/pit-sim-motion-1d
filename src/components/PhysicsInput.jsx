@@ -77,21 +77,17 @@ function PhysicsInput({ id, label, symbol, unit, value, min, max, color, disable
     />
   );
 
-  // The one line (Stitch look): ● name (x) | -10 | bar | +10 | number box.
-  // Intro tab: on every screen (wider screens move the parts, see KAREN_INPUT.row).
+  // The one line (Stitch look). Phones: name (x) | bar | number box.
+  // Intro tab: on every screen (wider screens move the parts and show -10 / 10, see KAREN_INPUT).
   // Charts tab: phones only (KAREN_INPUT.chartLine).
   const line = (className, inputId) => (
     <div className={className}>
       <label htmlFor={inputId} className={KAREN_INPUT.name} style={{ color }}>
-        <span className={KAREN_INPUT.dot} style={{ background: color }} />
         {label} <span className={KAREN_INPUT.symbol}>({symbol})</span>
       </label>
       <span className={KAREN_INPUT.min}>{min}</span>
       {slider(`hslider ${KAREN_INPUT.slider}`)}
-      <span className={KAREN_INPUT.max}>
-        <span className="sm:hidden">+</span>
-        {max}
-      </span>
+      <span className={KAREN_INPUT.max}>{max}</span>
       <div className={KAREN_INPUT.box}>{numberBox(inputId)}</div>
     </div>
   );

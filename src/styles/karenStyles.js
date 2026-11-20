@@ -73,34 +73,36 @@ export const KAREN_TIME = "absolute top-2 left-2 lg:left-auto lg:right-2 z-10 h-
 // The number box (Stitch look), on every screen and both tabs: beige, thin brown edge,
 // number + unit inside. The digits stay 16px, so iPhones don't zoom in.
 export const KAREN_NUMBER = {
-  box: "flex items-center gap-1 whitespace-nowrap h-7 sm:h-8 px-2 rounded-md border",
+  // Phones: very little padding and space, so the bar gets more room
+  box: "flex items-center gap-px sm:gap-1 whitespace-nowrap h-7 sm:h-8 px-0.5 sm:px-2 rounded-md border",
   // Record: the beige box you type in
   editable: "border-[#78350F]/40 bg-[#EBE1CE] shadow-inner focus-within:ring-2 focus-within:ring-[#78350F]/40",
   // Playback (read-only): no box, just the number + unit, in the same place
   plain: "border-transparent",
-  number: "w-[42px] sm:w-[46px] bg-transparent text-right font-mono text-base font-bold text-[#1C1917] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed",
-  unit: "text-xs sm:text-sm font-bold",
+  // Room for 7 characters ("-123.45"). Phones: slim digits that still keep the same width (no wiggle).
+  // Tablets and laptops: typewriter digits.
+  number: "w-[60px] sm:w-[62px] bg-transparent text-right font-sans tabular-nums sm:font-mono text-base font-bold text-[#1C1917] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed",
+  unit: "text-[9px] sm:text-sm font-bold",
 };
 
 // The Intro tab's 3 sliders. Phones (Stitch look): one line each, and the 3 lines share
-// columns so the bars line up: ● name (x) | -10 | bar | +10 | number box.
+// columns so the bars line up: name (x) | bar | number box.
 // Tablets and laptops: name + box, the bar under them, -10 / 10 under its ends.
-const INPUT_END = "font-mono text-[10px] font-semibold text-stone-600 sm:font-sans sm:text-sm sm:font-normal sm:leading-none sm:text-gray-600 sm:row-start-3"; // -10 and +10
+const INPUT_END = "hidden sm:block sm:text-sm sm:leading-none sm:text-gray-600 sm:row-start-3"; // -10 and 10: not on phones (longer bar)
 export const KAREN_INPUT = {
-  // Phones: one grid with 5 columns. sm and up: side by side, as before.
-  area: "shrink-0 grid grid-cols-[max-content_max-content_1fr_max-content_max-content] items-center gap-x-1.5 gap-y-2.5 px-4 py-3 sm:flex sm:flex-row sm:gap-2 sm:px-[72px] sm:py-2",
+  // Phones: one grid with 3 columns. sm and up: side by side, as before.
+  area: "shrink-0 grid grid-cols-[max-content_1fr_max-content] items-center gap-x-1.5 gap-y-2.5 px-3 py-3 sm:flex sm:flex-row sm:gap-2 sm:px-[72px] sm:py-2",
   // One value. Phones: one line using the area's columns. sm and up: 2 columns, 3 lines.
-  row: "col-span-5 grid grid-cols-subgrid items-center sm:flex-1 sm:min-w-0 sm:grid-cols-[1fr_auto] sm:gap-2 sm:p-3",
-  name: "flex items-center gap-1.5 whitespace-nowrap text-[13px] font-bold sm:text-base sm:col-start-1 sm:row-start-1",
-  dot: "size-2.5 shrink-0 rounded-full border border-[#451A03] sm:hidden", // phones only
-  symbol: "text-[11px] text-stone-700 sm:hidden", // (x) (v) (a): phones only
+  row: "col-span-3 grid grid-cols-subgrid items-center sm:flex-1 sm:min-w-0 sm:grid-cols-[1fr_auto] sm:gap-2 sm:p-3",
+  name: "flex items-center gap-1 whitespace-nowrap text-xs font-bold sm:text-base sm:col-start-1 sm:row-start-1",
+  symbol: "text-[10px] text-stone-700 sm:hidden", // (x) (v) (a): phones only
   min: `${INPUT_END} sm:col-start-1`,
   max: `${INPUT_END} sm:col-start-2 sm:justify-self-end`,
   slider: "sm:col-span-2 sm:row-start-2",
   box: "sm:col-start-2 sm:row-start-1 sm:justify-self-end", // only where the box sits; its look is KAREN_NUMBER
   // Charts tab, phones only: one line above each chart. Each line is its own grid, so fixed
   // column sizes make the 3 lines line up (the name and box columns can still grow).
-  chartLine: "w-full grid grid-cols-[minmax(7.5rem,max-content)_max-content_1fr_max-content_minmax(6rem,max-content)] items-center gap-x-1.5 sm:hidden",
+  chartLine: "w-full grid grid-cols-[minmax(6rem,max-content)_1fr_minmax(90px,max-content)] items-center gap-x-1.5 sm:hidden",
 };
 
 export const KAREN_RULER = {
