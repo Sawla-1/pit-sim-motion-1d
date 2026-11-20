@@ -73,16 +73,17 @@ export const KAREN_TIME = "absolute top-2 left-2 lg:left-auto lg:right-2 z-10 h-
 // The number box (Stitch look), on every screen and both tabs: beige, thin brown edge,
 // number + unit inside. The digits stay 16px, so iPhones don't zoom in.
 export const KAREN_NUMBER = {
-  // Phones: very little padding and space, so the bar gets more room
-  box: "flex items-center gap-px sm:gap-1 whitespace-nowrap h-7 sm:h-8 px-0.5 sm:px-2 rounded-md border",
+  // Phones: a fixed 87px box with very little padding and space, so the bar gets more room
+  box: "flex items-center gap-px sm:gap-1 whitespace-nowrap h-7 sm:h-8 px-0.5 sm:px-2 w-[87px] sm:w-auto rounded-md border",
   // Record: the beige box you type in
   editable: "border-[#78350F]/40 bg-[#EBE1CE] shadow-inner focus-within:ring-2 focus-within:ring-[#78350F]/40",
   // Playback (read-only): no box, just the number + unit, in the same place
   plain: "border-transparent",
-  // Room for 7 characters ("-123.45"). Phones: slim digits that still keep the same width (no wiggle).
-  // Tablets and laptops: typewriter digits.
-  number: "w-[60px] sm:w-[62px] bg-transparent text-right font-sans tabular-nums sm:font-mono text-base font-bold text-[#1C1917] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed",
-  unit: "text-[9px] sm:text-sm font-bold",
+  // Phones: the number gets the room the unit leaves ("-123.45" fits next to m and m/s; next to
+  // m/s² up to "-99.99"), with slim digits that still keep the same width (no wiggle).
+  // Tablets and laptops: room for 7 characters, typewriter digits.
+  number: "flex-1 min-w-0 sm:flex-none sm:w-[62px] bg-transparent text-right font-sans tabular-nums sm:font-mono text-base font-bold text-[#1C1917] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed",
+  unit: "text-xs sm:text-sm font-bold",
 };
 
 // The Intro tab's 3 sliders. Phones (Stitch look): one line each, and the 3 lines share
@@ -95,14 +96,14 @@ export const KAREN_INPUT = {
   // One value. Phones: one line using the area's columns. sm and up: 2 columns, 3 lines.
   row: "col-span-3 grid grid-cols-subgrid items-center sm:flex-1 sm:min-w-0 sm:grid-cols-[1fr_auto] sm:gap-2 sm:p-3",
   name: "flex items-center gap-1 whitespace-nowrap text-xs font-bold sm:text-base sm:col-start-1 sm:row-start-1",
-  symbol: "text-[10px] text-stone-700 sm:hidden", // (x) (v) (a): phones only
+  symbol: "text-xs text-stone-700 sm:hidden", // (x) (v) (a): phones only
   min: `${INPUT_END} sm:col-start-1`,
   max: `${INPUT_END} sm:col-start-2 sm:justify-self-end`,
   slider: "sm:col-span-2 sm:row-start-2",
   box: "sm:col-start-2 sm:row-start-1 sm:justify-self-end", // only where the box sits; its look is KAREN_NUMBER
-  // Charts tab, phones only: one line above each chart. Each line is its own grid, so fixed
-  // column sizes make the 3 lines line up (the name and box columns can still grow).
-  chartLine: "w-full grid grid-cols-[minmax(6rem,max-content)_1fr_minmax(90px,max-content)] items-center gap-x-1.5 sm:hidden",
+  // Charts tab, phones only: one line above each chart. Each line is its own grid; a fixed
+  // name column (it can still grow) and the fixed-width box make the 3 lines line up.
+  chartLine: "w-full grid grid-cols-[minmax(6rem,max-content)_1fr_max-content] items-center gap-x-1.5 sm:hidden",
 };
 
 export const KAREN_RULER = {
