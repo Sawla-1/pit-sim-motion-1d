@@ -10,7 +10,6 @@ export const KAREN_ART = {
   bottomStrip: `${ART}/bottom-background.svg`,
   barBackground: `${ART}/bar-background-tall.svg`, // a copy of bar-background.svg whose height stretches (one or two rows of buttons)
   drum: `${ART}/drum-horns-empty.svg`, // the drum without its ▶: our Play/Pause icon goes on top
-  tabBackground: `${ART}/tab-background-short.svg`, // a shorter copy of tab-background.svg (37px tall, the strip is 32px)
   boyStanding: `${ART}/boy-standing.svg`,
   boyWalking: `${ART}/boy-side-walking.svg`, // the art faces right
 };
@@ -20,14 +19,16 @@ export const KAREN_ART = {
 export const KAREN_SCENE_PLACEHOLDER =
   "bg-[linear-gradient(to_bottom,#5E9ED6_0%,#D6E9EF_55%,#6E9E48_62%,#46703A_100%)]";
 
-// The two view tabs: a woven mat behind them; the open tab is red
+// The two view tabs (Stitch look): the open tab is red, the other is light yellow.
+// Phones/tablets: they sit on the scene's top edge, so their top corners are round.
+// Laptops: they hang from the scene's top-left corner, so their bottom corners are round.
 export const KAREN_TAB = {
   // The tabs and the Install button, side by side. Phones/tablets: a row above the scene.
   // Laptops: floats on the scene's top-left corner, so it uses no height.
   row: "flex items-center gap-3 self-start lg:absolute lg:top-0 lg:left-0 lg:z-20",
-  base: "relative h-[32px] px-4 flex items-center text-sm font-bold last:rounded-br-xl",
-  open: "bg-[#B4262D] text-white cursor-default select-none",
-  closed: "text-[#4A2A12] cursor-pointer transition-colors hover:bg-white/30 focus-visible:outline-2 focus-visible:outline-[#B4262D]",
+  base: "h-[32px] px-4 flex items-center text-sm font-bold border border-b-0 rounded-t-lg lg:border-t-0 lg:border-b lg:rounded-t-none lg:rounded-b-lg",
+  open: "bg-[#B4262D] border-[#8A1C22] text-white cursor-default select-none",
+  closed: "bg-[#FBE28E] border-[#D8B966] text-[#6E1C17] cursor-pointer transition-colors hover:bg-[#F7D877] focus-visible:outline-2 focus-visible:outline-[#B4262D]",
 };
 
 // The Install button beside the tabs: a small white pill with a brown ring (like the bar's buttons): icon + word

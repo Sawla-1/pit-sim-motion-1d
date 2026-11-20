@@ -340,7 +340,7 @@ function App() {
         <div className={KAREN_TAB.row}>
           <Tabs
             tabs={[
-              { id: "intro", label: "Introduction" },
+              { id: "intro", label: "Intro" },
               { id: "charts", label: "Charts" },
             ]}
             selected={tab}
