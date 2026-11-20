@@ -7,7 +7,6 @@ export const KAREN_ART = {
   bambooRight: `${ART}/bamboo-right.svg`,
   titleBanner: `${ART}/title-banner.svg`,
   bottomStrip: `${ART}/bottom-background.svg`,
-  barBackground: `${ART}/bar-background-tall.svg`, // a copy of bar-background.svg whose height stretches (one or two rows of buttons)
   drum: `${ART}/drum-horns-empty.svg`, // the drum without its ▶: our Play/Pause icon goes on top
   boyStanding: `${ART}/boy-standing.svg`,
   boyWalking: `${ART}/boy-side-walking.svg`, // the art faces right
@@ -43,7 +42,10 @@ export const KAREN_BANNER = "absolute top-0 left-1/2 -translate-x-1/2 hidden sm:
 export const KAREN_PAGE = {
   bg: "bg-[#F5F9F3]",
   stickyBg: "max-lg:bg-[#F5F9F3]",
-  strip: "absolute inset-x-0 bottom-0 -z-10 h-[112px] w-full max-w-none pointer-events-none",
+  strip: "absolute inset-x-0 bottom-0 -z-10 h-[112px] w-full max-w-none pointer-events-none max-lg:hidden", // laptops only
+  // Around the bottom bar. Phones and tablets: none, so the bar is full width on the screen's bottom edge.
+  // Laptops: room at the sides, and a gap under it (more on tall screens).
+  barWrap: "lg:px-4 lg:pb-2 lg:[@media(min-height:700px)]:pb-8",
 };
 
 // Dark wood (Stitch look): light brown at the top to dark brown at the bottom, gold edge, light-gold text
@@ -51,20 +53,35 @@ const WOOD = "border-2 border-[#D97706]/40 bg-[linear-gradient(180deg,#6C4122_0%
 // Mouse on it: brighter and a little bigger. Pressed: a little smaller. "Reduce motion": no animation.
 const PRESSABLE = "transition motion-reduce:transition-none enabled:hover:brightness-125 enabled:hover:scale-108 enabled:active:scale-95";
 
-// The bottom bar (Stitch look): a woven mat behind dark wood buttons with gold text; Reset All is solid red
+// The bottom bar (Stitch look): woven rattan (.karen-rattan in index.css) behind dark wood buttons with
+// gold text; Reset All is solid red.
+// Phones and tablets: full width with a dark line on top, 2 rows (round buttons + drum, then the rest).
+// Laptops: a rounded pill with a dark edge, one row.
 export const KAREN_BAR = {
-  box: "relative isolate w-full max-w-[800px] lg:max-w-[1000px] xl:max-w-[1150px] flex flex-wrap items-center justify-between gap-x-2 sm:gap-x-6 gap-y-2 px-3 sm:px-9 py-[18px] [@media(max-height:600px)]:py-[10px]",
-  // Charts tab, laptops: tighter side padding and gaps, so all the buttons fit in one row from 1024px wide
+  box: "karen-rattan relative isolate w-full flex flex-wrap items-center gap-y-2 max-lg:justify-center max-lg:border-t-2 max-lg:border-[#5C3716] max-lg:py-3.5 max-lg:gap-y-2.5 max-sm:px-2 max-sm:gap-x-[5px] sm:max-lg:px-6 sm:max-lg:gap-x-3 lg:max-w-[1000px] xl:max-w-[1150px] lg:justify-between lg:py-[18px] lg:[@media(max-height:600px)]:py-[10px] lg:rounded-full lg:border-2 lg:border-[#5C3716]",
+  // Laptops: side padding and gaps. The Charts tab uses `compact` instead, so all the buttons fit
+  // in one row from 1024px wide.
+  roomy: "lg:px-9 lg:gap-x-6",
   compact: "lg:px-4 lg:gap-x-3",
-  mat: "absolute inset-0 -z-10 h-full w-full max-w-none pointer-events-none", // behind the buttons, whatever their order
-  word: "my-1 h-10 px-3 sm:px-4 rounded-full flex items-center gap-2 text-sm font-bold cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed",
+  // Phones: smaller row-2 buttons, so Record/Playback, Formula, Clear and Reset fit in one row
+  word: "my-1 h-10 px-3 sm:px-4 rounded-full flex items-center gap-2 text-sm font-bold cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed max-sm:my-0 max-sm:h-8 max-sm:px-2.5 max-sm:text-xs max-sm:gap-1",
+  // Phones: Clear Data and Reset All show only their icon (the words stay for screen readers)
+  iconOnly: "max-sm:w-8 max-sm:px-0 max-sm:justify-center",
   clear: `${WOOD} ${PRESSABLE}`, // Clear Data and Formula
   reset: `border-2 border-[#F59E0B]/50 bg-[#B4262D] text-[#FEF3C7] shadow-[inset_0_1px_1px_rgba(255,255,255,0.25),0_3px_6px_rgba(0,0,0,0.35)] ${PRESSABLE}`,
   round: `w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center cursor-pointer ${WOOD} ${PRESSABLE} disabled:opacity-40 disabled:cursor-not-allowed`,
-  modeBox: `flex gap-1 p-1 rounded-full ${WOOD}`,
+  modeBox: `flex gap-1 p-1 rounded-full ${WOOD} max-lg:order-2 max-sm:p-0.5`,
+  // One part of the mode switch (phones: smaller)
+  modeOption: "relative px-4 h-8 flex items-center gap-2 rounded-full text-sm font-bold transition-colors max-sm:h-[26px] max-sm:px-2.5 max-sm:text-xs max-sm:gap-1.5",
   modeOn: "bg-[#B4262D] text-[#FEF3C7]",
   modeOff: "text-[#FDE68A]",
-  drum: "relative w-[108px] h-[82px] -my-[17px] shrink-0 cursor-pointer transition hover:brightness-110 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B4262D]",
+  // The drum. Phones and tablets: 80% (86 x 66px). Laptops: full size (108 x 82px).
+  drum: "relative w-[86px] h-[66px] -my-[14px] lg:w-[108px] lg:h-[82px] lg:-my-[17px] shrink-0 cursor-pointer transition hover:brightness-110 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B4262D]",
+  // Phones and tablets: the drum's red centre drawn on top at its full 32px, so only the gold ring and
+  // the horns get smaller. (Laptops: the drum is full size, so its own red centre is used.)
+  drumRed: "absolute left-1/2 top-[32px] size-8 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#7E1A1F] bg-[#B4262D] lg:hidden",
+  // The Play / Pause icon on the red centre (32px down at 80%, 40px down at full size)
+  drumIcon: "absolute left-1/2 top-[32px] lg:top-[40px] -translate-x-1/2 -translate-y-1/2 text-white",
 };
 
 // The time box (Stitch look): a beige box with a brown edge in the scene's top corner, dark text

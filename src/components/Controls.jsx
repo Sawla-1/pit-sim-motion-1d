@@ -24,7 +24,7 @@ const RefreshIcon = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="
 // Chosen = solid red, light text. Not chosen = gold text on wood; a soft light patch on hover.
 function ModeOption({ value, label, icon, iconOff = "", title, hint, selectedMode, disabled, onModeChange }) {
   return (
-    <label title={title} className={`relative px-4 h-8 flex items-center gap-2 rounded-full text-sm font-bold transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[#FDE68A] ${
+    <label title={title} className={`${KAREN_BAR.modeOption} has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[#FDE68A] ${
       selectedMode === value
         ? KAREN_BAR.modeOn
         : `${KAREN_BAR.modeOff} ${disabled ? "" : "hover:bg-white/15"}`
@@ -83,37 +83,37 @@ function Controls({
   const pinAction = pinCount === 0 ? "Pin A" : pinCount === 1 ? "Pin B" : "Clear pins";
 
   return (
-    // The woven toolbar: Clear Data | prev / play / next + mode | Reset All
-    // Phones and tablets (under 1024px): the middle group takes the first row; Clear and Reset share the second.
-    // The mat behind stretches to any number of rows. (App.jsx places it)
-    // Fills the page width, up to 800px (1000px on laptops, 1150px on large screens, to fit the Formula
-    // and Pin buttons), so Clear and Reset sit at the two ends.
-    <div className={`${KAREN_BAR.box} ${compact ? KAREN_BAR.compact : ""}`}>
-        <img src={KAREN_ART.barBackground} alt="" aria-hidden="true" className={KAREN_BAR.mat} />
-        {/* Left group: Clear Data + Formula (one block, so the bar keeps its 3 parts) */}
-        <div className="flex items-center gap-2">
+    // The rattan toolbar. Laptops (one row): Clear Data + Formula | prev / play / next + mode | Reset All.
+    // Phones and tablets (under 1024px): row 1 = pins, prev / play / next; row 2 = mode, Formula,
+    // Clear Data, Reset All. The two groups below are "contents" there, so CSS order can move each
+    // button; the order in this code stays the same. (App.jsx places the bar.)
+    <div className={`${KAREN_BAR.box} ${compact ? KAREN_BAR.compact : KAREN_BAR.roomy}`}>
+        {/* Left group: Clear Data + Formula (laptops: one block, so the bar keeps its 3 parts) */}
+        <div className="flex items-center gap-2 max-lg:contents">
           <button
             onClick={onClearRecordedData}
             disabled={noRecording}
-            className={`${KAREN_BAR.word} ${KAREN_BAR.clear}`}
+            title="Clear Data"
+            className={`${KAREN_BAR.word} ${KAREN_BAR.clear} ${KAREN_BAR.iconOnly} max-lg:order-4`}
           >
             <TrashIcon />
-            Clear Data
+            <span className="max-sm:sr-only">Clear Data</span>
           </button>
           {/* Opens / closes the formula panel. Pressed look (ring) while it is open. */}
           <button
             onClick={onFormulaClick}
             aria-pressed={formulaOpen}
             title="Type a position formula x(t)"
-            className={`${KAREN_BAR.word} ${KAREN_BAR.clear} ${formulaOpen ? "ring-2 ring-[#FDE68A]" : ""}`}
+            className={`${KAREN_BAR.word} ${KAREN_BAR.clear} max-lg:order-3 ${formulaOpen ? "ring-2 ring-[#FDE68A]" : ""}`}
           >
             <FormulaIcon />
             Formula
           </button>
         </div>
 
-        <div className="order-first w-full lg:order-none lg:w-auto flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
-          <div className="flex items-center gap-1 sm:gap-3">
+        <div className="order-first w-full lg:order-none lg:w-auto flex flex-wrap items-center justify-center gap-x-4 gap-y-2 max-lg:contents">
+          {/* Phones and tablets: row 1 on its own */}
+          <div className="flex items-center gap-1 sm:gap-3 max-lg:order-1 max-lg:w-full max-lg:justify-center max-sm:gap-2.5">
             <button
               onClick={onTogglePin}
               disabled={isPinned && pinCount < 2}
@@ -139,7 +139,8 @@ function Controls({
               className={KAREN_BAR.drum}
             >
               <img src={KAREN_ART.drum} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full pointer-events-none" />
-              <span className="absolute left-1/2 top-[40px] -translate-x-1/2 -translate-y-1/2 text-white">
+              <span aria-hidden="true" className={KAREN_BAR.drumRed} />
+              <span className={KAREN_BAR.drumIcon}>
                 {playing ? <PauseIcon /> : <PlayIcon />}
               </span>
             </button>
@@ -178,10 +179,11 @@ function Controls({
             simulation.velocity === 0 &&
             simulation.acceleration === 0
           }
-          className={`${KAREN_BAR.word} ${KAREN_BAR.reset}`}
+          title="Reset All"
+          className={`${KAREN_BAR.word} ${KAREN_BAR.reset} ${KAREN_BAR.iconOnly} max-lg:order-5`}
         >
           <RefreshIcon />
-          Reset All
+          <span className="max-sm:sr-only">Reset All</span>
         </button>
     </div>
   );

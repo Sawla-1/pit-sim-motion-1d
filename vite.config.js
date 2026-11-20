@@ -39,8 +39,6 @@ export default defineConfig({
       workbox: {
         // Only the files the page really uses are saved on the device
         globPatterns: ['index.html', 'logo-64.png', 'karen-intro-svgs/*.svg'],
-        // A picture copy the page never loads
-        globIgnores: ['karen-intro-svgs/bar-background.svg'],
         // Answer only for this simulation's own page (another one may share the site later)
         navigateFallback: null,
         // A new version takes over quietly once it has downloaded. The open page is

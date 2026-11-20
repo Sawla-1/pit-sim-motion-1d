@@ -414,9 +414,10 @@ function App() {
         <div className={KAREN_INPUT.area}>{inputs}</div>
       )}
 
-      {/* Bottom: the toolbar pill, 8px gap under it. Centered on the page on both tabs (laptops: one row). */}
-      <div className={`relative z-[6] shrink-0 flex justify-center px-2 sm:px-4 pb-2 [@media(min-height:700px)]:pb-8 max-lg:mt-auto max-lg:sticky max-lg:bottom-0 max-lg:z-20 ${KAREN_PAGE.stickyBg}`}>
-        {/* The rice-field strip behind the bar (it sticks with the bar on phones) */}
+      {/* Bottom: the toolbar. Phones and tablets: full width on the screen's bottom edge.
+          Laptops: a pill centered on the page (one row), with a gap under it. */}
+      <div className={`relative z-[6] shrink-0 flex justify-center ${KAREN_PAGE.barWrap} max-lg:mt-auto max-lg:sticky max-lg:bottom-0 max-lg:z-20 ${KAREN_PAGE.stickyBg}`}>
+        {/* The rice-field strip behind the bar (laptops only) */}
         <img src={KAREN_ART.bottomStrip} alt="" aria-hidden="true" className={KAREN_PAGE.strip} />
         <Controls
           simulation={simulation}
