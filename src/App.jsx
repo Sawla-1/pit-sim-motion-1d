@@ -374,11 +374,8 @@ function App() {
           />
         </div>
 
-        {/* Time on a woven mat in the scene's top corner: phones/tablets top-left (mat flipped), laptops top-right */}
-        <div className={KAREN_TIME.box}>
-          <img src={KAREN_ART.timeBackground} alt="" aria-hidden="true" className={KAREN_TIME.mat} />
-          <div className={KAREN_TIME.text}>{formatNumber(simulation.time, 1)} s</div>
-        </div>
+        {/* Time in the scene's top corner: phones/tablets top-left, laptops top-right */}
+        <div className={KAREN_TIME}>{formatNumber(simulation.time, 1)} s</div>
 
         {/* Mode badge, only while playing: phones/tablets top-right, laptops middle */}
         {playing && (

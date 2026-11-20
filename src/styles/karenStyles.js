@@ -5,7 +5,6 @@ export const KAREN_ART = {
   scene: `${ART}/scene-intro.svg`,
   bambooLeft: `${ART}/bamboo-left.svg`,
   bambooRight: `${ART}/bamboo-right.svg`,
-  timeBackground: `${ART}/time-background.svg`,
   titleBanner: `${ART}/title-banner.svg`,
   bottomStrip: `${ART}/bottom-background.svg`,
   barBackground: `${ART}/bar-background-tall.svg`, // a copy of bar-background.svg whose height stretches (one or two rows of buttons)
@@ -63,12 +62,8 @@ export const KAREN_BAR = {
   drum: "relative w-[108px] h-[82px] -my-[17px] shrink-0 cursor-pointer transition hover:brightness-110 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B4262D]",
 };
 
-// The time box: a woven mat in the scene's top corner, with dark text
-export const KAREN_TIME = {
-  box: "absolute top-1.5 lg:top-0 left-0 lg:left-auto lg:right-0 z-10 h-[56px] min-w-[132px]",
-  mat: "absolute inset-0 h-full w-full max-w-none -scale-x-100 lg:scale-x-100 pointer-events-none",
-  text: "relative h-[51px] flex items-center justify-center px-4 font-mono text-2xl font-bold text-[#2A1608]",
-};
+// The time box (Stitch look): a beige box with a brown edge in the scene's top corner, dark text
+export const KAREN_TIME = "absolute top-2 left-2 lg:left-auto lg:right-2 z-10 h-12 min-w-[120px] px-4 flex items-center justify-center rounded-md border-2 border-[#82542A] bg-[#EBD9BC] shadow-sm font-mono text-2xl font-bold text-[#1C1917]";
 
 export const KAREN_RULER = {
   ground: "#B9C74A", // bamboo body (used when there is no gradient)
