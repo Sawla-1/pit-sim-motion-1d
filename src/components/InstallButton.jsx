@@ -21,7 +21,7 @@ function InstallButton({ mode, onInstall }) {
         className={KAREN_INSTALL.button}
       >
         {/* Arrow down into a tray: "download" */}
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="16" height="16" className="text-[#78350F]" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M12 4v11" />
           <path d="M7 11l5 5 5-5" />
           <path d="M5 20h14" />

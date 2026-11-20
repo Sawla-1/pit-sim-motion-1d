@@ -31,10 +31,10 @@ export const KAREN_TAB = {
   closed: "bg-[#FBE28E] border-[#D8B966] text-[#6E1C17] cursor-pointer transition-colors hover:bg-[#F7D877] focus-visible:outline-2 focus-visible:outline-[#B4262D]",
 };
 
-// The Install button beside the tabs: a small white pill with a brown ring (like the bar's buttons): icon + word
+// The Install button beside the tabs (Stitch look): a small beige box with a thin brown edge: icon + word
 export const KAREN_INSTALL = {
-  button: "h-7 pl-2 pr-3 rounded-full flex items-center gap-1 text-sm font-bold cursor-pointer border-2 border-[#8A6A2F] bg-white text-[#3B2A14] transition-colors hover:bg-[#F6EBD2] active:bg-[#EADBB5] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B4262D]",
-  hint: "absolute right-0 top-full mt-2 z-30 w-56 rounded-lg border-2 border-[#8A6A2F] bg-white px-3 py-2 text-sm text-[#3B2A14] shadow-lg",
+  button: "h-7 pl-2 pr-3 rounded-md flex items-center gap-1 text-sm font-bold cursor-pointer border border-[#78350F]/30 bg-[#EBD9BC] text-[#292524] transition-colors hover:bg-[#CFB794] active:bg-[#BFA47E] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B4262D]",
+  hint: "absolute right-0 top-full mt-2 z-30 w-56 rounded-md border border-[#78350F]/30 bg-[#EBD9BC] px-3 py-2 text-sm text-[#3B2A14] shadow-lg",
 };
 
 // The hanging title sign: its ropes start at the top edge of the scene, centered (Introduction only; hidden on phones)
