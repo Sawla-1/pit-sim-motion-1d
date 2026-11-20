@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { evaluateNumber } from "../utils/evaluateFormula";
+import { KAREN_INPUT } from "../styles/karenStyles";
 
 // One input panel: name, number box + unit, slider. Charts tab: vertical
 // slider beside its chart. Intro tab (horizontal): left-right slider.
@@ -7,7 +8,7 @@ import { evaluateNumber } from "../utils/evaluateFormula";
 // shows the live value. No effect is needed to keep the two in sync.
 // readOnly (Playback: only look at the result): the number is plain text in the
 // same spot, and the slider still moves with the value but can't be dragged.
-function PhysicsInput({ id, label, unit, value, min, max, color, disabled, readOnly = false, onChange, horizontal = false }) {
+function PhysicsInput({ id, label, symbol, unit, value, min, max, color, disabled, readOnly = false, onChange, horizontal = false }) {
   const [draft, setDraft] = useState(null); // null = not typing right now
   const shown = String(Math.round(value * 100) / 100); // 2 decimals
   const text = draft ?? shown;
@@ -27,34 +28,36 @@ function PhysicsInput({ id, label, unit, value, min, max, color, disabled, readO
     </label>
   );
 
-  const numberBox = (
-    <div className="flex items-center gap-2 whitespace-nowrap">
-      {readOnly ? (
-        // Same size and place as the box, so nothing moves when the mode changes.
-        // aria-live="off": screen readers would otherwise read out every change (60 a second)
-        <output id={id} aria-live="off" className="w-[72px] h-8 px-2 flex items-center justify-end text-base font-semibold text-gray-800">
-          {shown}
-        </output>
-      ) : (
-        <input
-          id={id}
-          type="text"
-          value={text}
-          disabled={disabled}
-          onFocus={(e) => {
-            setDraft(shown);
-            e.target.select();
-          }}
-          onChange={(e) => setDraft(e.target.value)}
-          onBlur={(e) => commit(e.target.value)}
-          onKeyDown={(e) => { if (e.key === "Enter") e.target.blur(); }}
-          className="w-[72px] h-8 px-2 border border-gray-400 rounded text-base font-semibold text-right bg-white text-gray-800 shadow-sm focus:outline-none focus:border-gray-700 focus:shadow-[0_0_0_3px_rgba(55,65,81,0.18)] disabled:opacity-50 disabled:cursor-not-allowed"
-        />
-      )}
-      <span className="w-[34px] text-base font-semibold" style={{ color }}>
-        {unit}
-      </span>
-    </div>
+  // The number box (or, read-only, the plain number), used by both layouts.
+  // `look` = extra classes for the phone line on the Intro tab.
+  const number = (look = "") =>
+    readOnly ? (
+      // Same size and place as the box, so nothing moves when the mode changes.
+      // aria-live="off": screen readers would otherwise read out every change (60 a second)
+      <output id={id} aria-live="off" className={`w-[72px] h-8 px-2 flex items-center justify-end text-base font-semibold text-gray-800 ${look}`}>
+        {shown}
+      </output>
+    ) : (
+      <input
+        id={id}
+        type="text"
+        value={text}
+        disabled={disabled}
+        onFocus={(e) => {
+          setDraft(shown);
+          e.target.select();
+        }}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={(e) => commit(e.target.value)}
+        onKeyDown={(e) => { if (e.key === "Enter") e.target.blur(); }}
+        className={`w-[72px] h-8 px-2 border border-gray-400 rounded text-base font-semibold text-right bg-white text-gray-800 shadow-sm focus:outline-none focus:border-gray-700 focus:shadow-[0_0_0_3px_rgba(55,65,81,0.18)] disabled:opacity-50 disabled:cursor-not-allowed ${look}`}
+      />
+    );
+
+  const unitText = (look = "") => (
+    <span className={`w-[34px] text-base font-semibold ${look}`} style={{ color }}>
+      {unit}
+    </span>
   );
 
   const slider = (className) => (
@@ -75,16 +78,23 @@ function PhysicsInput({ id, label, unit, value, min, max, color, disabled, readO
 
   if (horizontal) {
     return (
-      // Name + box on one line, slider under it, min / max under its ends
-      <div className="flex-1 min-w-0 flex flex-col gap-2 p-3">
-        <div className="flex items-center justify-between gap-2">
-          {nameLabel}
-          {numberBox}
-        </div>
-        {slider("hslider")}
-        <div className="flex justify-between text-sm leading-none text-gray-600">
-          <span>{min}</span>
-          <span>{max}</span>
+      // Phones: one line (Stitch look): ● name (x) | -10 | bar | +10 | [number unit].
+      // Wider screens: name + box, the bar under them, -10 / 10 under its ends.
+      // Same parts for both; only CSS moves them (see KAREN_INPUT), so nothing jumps on first load.
+      <div className={KAREN_INPUT.row}>
+        <label htmlFor={id} className={KAREN_INPUT.name} style={{ color }}>
+          <span className={KAREN_INPUT.dot} style={{ background: color }} />
+          {label} <span className={KAREN_INPUT.symbol}>({symbol})</span>
+        </label>
+        <span className={KAREN_INPUT.min}>{min}</span>
+        {slider(`hslider ${KAREN_INPUT.slider}`)}
+        <span className={KAREN_INPUT.max}>
+          <span className="sm:hidden">+</span>
+          {max}
+        </span>
+        <div className={KAREN_INPUT.box}>
+          {number(KAREN_INPUT.number)}
+          {unitText(KAREN_INPUT.unit)}
         </div>
       </div>
     );
@@ -97,7 +107,12 @@ function PhysicsInput({ id, label, unit, value, min, max, color, disabled, readO
       {/* flex-1 + min-w-0: same width in every row, so all 3 sliders line up */}
       <div className="flex-1 min-w-0 flex flex-col items-start gap-2 [@media(max-height:600px)]:gap-1.5">
         {nameLabel}
-        <div className="self-end">{numberBox}</div>
+        <div className="self-end">
+          <div className="flex items-center gap-2 whitespace-nowrap">
+            {number()}
+            {unitText()}
+          </div>
+        </div>
       </div>
       {/* The slider starts and ends where the plot does: 13px from the row edge
           (panel padding 12 + 1, or on short screens 6 + 7) */}

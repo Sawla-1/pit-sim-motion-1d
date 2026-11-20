@@ -70,6 +70,27 @@ export const KAREN_BAR = {
 // The time box (Stitch look): a beige box with a brown edge in the scene's top corner, dark text
 export const KAREN_TIME = "absolute top-2 left-2 lg:left-auto lg:right-2 z-10 h-9 min-w-[96px] px-3 flex items-center justify-center rounded-md border-2 border-[#82542A] bg-[#EBD9BC] shadow-sm font-mono text-xl font-bold text-[#1C1917]";
 
+// The Intro tab's 3 sliders. Phones (Stitch look): one line each, and the 3 lines share
+// columns so the bars line up: ● name (x) | -10 | bar | +10 | beige box with the unit inside.
+// Tablets and laptops: unchanged (name + box, the bar under them, -10 / 10 under its ends).
+const INPUT_END = "font-mono text-[10px] font-semibold text-stone-600 sm:font-sans sm:text-sm sm:font-normal sm:leading-none sm:text-gray-600 sm:row-start-3"; // -10 and +10
+export const KAREN_INPUT = {
+  // Phones: one grid with 5 columns. sm and up: side by side, as before.
+  area: "shrink-0 grid grid-cols-[max-content_max-content_1fr_max-content_max-content] items-center gap-x-1.5 gap-y-2.5 px-4 py-3 sm:flex sm:flex-row sm:gap-2 sm:px-[72px] sm:py-2",
+  // One value. Phones: one line using the area's columns. sm and up: 2 columns, 3 lines.
+  row: "col-span-5 grid grid-cols-subgrid items-center sm:flex-1 sm:min-w-0 sm:grid-cols-[1fr_auto] sm:gap-2 sm:p-3",
+  name: "flex items-center gap-1.5 whitespace-nowrap text-[13px] font-bold sm:text-base sm:col-start-1 sm:row-start-1",
+  dot: "size-2.5 shrink-0 rounded-full border border-[#451A03] sm:hidden", // phones only
+  symbol: "text-[11px] text-stone-700 sm:hidden", // (x) (v) (a): phones only
+  min: `${INPUT_END} sm:col-start-1`,
+  max: `${INPUT_END} sm:col-start-2 sm:justify-self-end`,
+  slider: "sm:col-span-2 sm:row-start-2",
+  // Phones: a beige box with the number and the unit inside. The digits stay 16px, so iPhones don't zoom in.
+  box: "flex items-center gap-1 whitespace-nowrap h-7 px-2 rounded-md border border-[#78350F]/40 bg-[#EBE1CE] shadow-inner focus-within:ring-2 focus-within:ring-[#78350F]/40 sm:gap-2 sm:h-auto sm:px-0 sm:rounded-none sm:border-0 sm:bg-transparent sm:shadow-none sm:focus-within:ring-0 sm:col-start-2 sm:row-start-1 sm:justify-self-end",
+  number: "max-sm:w-[42px] max-sm:h-auto max-sm:p-0 max-sm:border-0 max-sm:rounded-none max-sm:bg-transparent max-sm:shadow-none max-sm:font-mono max-sm:font-bold max-sm:text-[#1C1917] max-sm:focus:shadow-none",
+  unit: "max-sm:w-auto max-sm:text-xs max-sm:font-bold",
+};
+
 export const KAREN_RULER = {
   ground: "#B9C74A", // bamboo body (used when there is no gradient)
   gradient: ["#F2F5C6", "#D9E27A", "#B9C74A", "#9DAE35", "#76881F"], // top to bottom, like round bamboo

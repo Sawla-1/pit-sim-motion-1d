@@ -8,7 +8,7 @@ import Tabs from "./components/Tabs";
 import FormulaPanel from "./components/FormulaPanel";
 import InstallButton from "./components/InstallButton";
 import { SERIES_COLORS } from "./styles/seriesColors";
-import { KAREN_ART, KAREN_BANNER, KAREN_PAGE, KAREN_RULER, KAREN_SCENE_PLACEHOLDER, KAREN_TAB, KAREN_TIME } from "./styles/karenStyles";
+import { KAREN_ART, KAREN_BANNER, KAREN_PAGE, KAREN_RULER, KAREN_SCENE_PLACEHOLDER, KAREN_TAB, KAREN_TIME, KAREN_INPUT } from "./styles/karenStyles";
 import { useSimulationLoop } from "./hooks/useSimulationLoop";
 import { resolvePlaybackState, findScrubTime } from "./engine/recordPlayback";
 import { calculatePhysicsStep, calculateDragStep } from "./engine/kinematics1d";
@@ -24,9 +24,9 @@ const FORMULA_TOOK_OVER = "Formula stopped. You took control.";
 const START_STATE = { position: 0, velocity: 0, acceleration: 0, time: 0 };
 // The 3 quantities, in screen order. `key` is the field name in the simulation state.
 const QUANTITIES = [
-  { key: "position", label: "Position", unit: "m" },
-  { key: "velocity", label: "Velocity", unit: "m/s" },
-  { key: "acceleration", label: "Acceleration", unit: "m/s²" },
+  { key: "position", label: "Position", symbol: "x", unit: "m" },
+  { key: "velocity", label: "Velocity", symbol: "v", unit: "m/s" },
+  { key: "acceleration", label: "Acceleration", symbol: "a", unit: "m/s²" },
 ];
 
 function App() {
@@ -299,9 +299,9 @@ function App() {
 
   // Charts tab: the 3 inputs are beside their charts (Charts puts each in its row).
   // Intro tab: they sit in one row under the scene.
-  const inputs = QUANTITIES.map(({ key, label, unit }) => (
+  const inputs = QUANTITIES.map(({ key, label, symbol, unit }) => (
     <PhysicsInput
-      key={key} id={key} label={label} unit={unit}
+      key={key} id={key} label={label} symbol={symbol} unit={unit}
       value={simulation[key]} min={-10} max={10}
       color={SERIES_COLORS[key].color}
       disabled={playing}
@@ -410,8 +410,8 @@ function App() {
           />
         </div>
       ) : (
-        // Middle: the 3 sliders side by side (phones: one under the other)
-        <div className="shrink-0 flex flex-col sm:flex-row gap-2 px-4 sm:px-[72px] py-2">{inputs}</div>
+        // Middle: the 3 sliders side by side (phones: one line each, see KAREN_INPUT)
+        <div className={KAREN_INPUT.area}>{inputs}</div>
       )}
 
       {/* Bottom: the toolbar pill, 8px gap under it. Centered on the page on both tabs (laptops: one row). */}
