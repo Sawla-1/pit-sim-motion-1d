@@ -63,7 +63,7 @@ export const KAREN_BAR = {
 };
 
 // The time box (Stitch look): a beige box with a brown edge in the scene's top corner, dark text
-export const KAREN_TIME = "absolute top-2 left-2 lg:left-auto lg:right-2 z-10 h-12 min-w-[120px] px-4 flex items-center justify-center rounded-md border-2 border-[#82542A] bg-[#EBD9BC] shadow-sm font-mono text-2xl font-bold text-[#1C1917]";
+export const KAREN_TIME = "absolute top-2 left-2 lg:left-auto lg:right-2 z-10 h-9 min-w-[96px] px-3 flex items-center justify-center rounded-md border-2 border-[#82542A] bg-[#EBD9BC] shadow-sm font-mono text-xl font-bold text-[#1C1917]";
 
 export const KAREN_RULER = {
   ground: "#B9C74A", // bamboo body (used when there is no gradient)
