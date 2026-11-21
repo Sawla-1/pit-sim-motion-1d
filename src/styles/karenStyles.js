@@ -19,12 +19,12 @@ export const KAREN_SCENE_PLACEHOLDER =
 
 // The two view tabs (Stitch look): the open tab is red, the other is light yellow.
 // Phones/tablets: they sit on the scene's top edge, so their top corners are round.
-// Laptops: they hang from the scene's top-left corner, so their bottom corners are round.
+// Laptops and phones turned sideways: they hang from the scene's top-left corner, so their bottom corners are round.
 export const KAREN_TAB = {
   // The tabs and the Install button, side by side. Phones/tablets: a row above the scene.
-  // Laptops: floats on the scene's top-left corner, so it uses no height.
-  row: "flex items-center gap-3 self-start lg:absolute lg:top-0 lg:left-0 lg:z-20",
-  base: "h-[32px] px-4 flex items-center text-sm font-bold border border-b-0 rounded-t-lg lg:border-t-0 lg:border-b lg:rounded-t-none lg:rounded-b-lg",
+  // Laptops and phones turned sideways: floats on the scene's top-left corner, so it uses no height.
+  row: "flex items-center gap-3 self-start lg:absolute lg:top-0 lg:left-0 lg:z-20 sideways:absolute sideways:top-0 sideways:left-0 sideways:z-20",
+  base: "h-[32px] px-4 flex items-center text-sm font-bold border border-b-0 rounded-t-lg lg:border-t-0 lg:border-b lg:rounded-t-none lg:rounded-b-lg sideways:border-t-0 sideways:border-b sideways:rounded-t-none sideways:rounded-b-lg",
   open: "bg-[#B4262D] border-[#8A1C22] text-white cursor-default select-none",
   closed: "bg-[#FBE28E] border-[#D8B966] text-[#6E1C17] cursor-pointer transition-colors hover:bg-[#F7D877] focus-visible:outline-2 focus-visible:outline-[#B4262D]",
 };
@@ -35,8 +35,9 @@ export const KAREN_INSTALL = {
   hint: "absolute right-0 top-full mt-2 z-30 w-56 rounded-md border border-[#78350F]/30 bg-[#EBD9BC] px-3 py-2 text-sm text-[#3B2A14] shadow-lg",
 };
 
-// The hanging title sign: its ropes start at the top edge of the scene, centered (Introduction only; hidden on phones)
-export const KAREN_BANNER = "absolute top-0 left-1/2 -translate-x-1/2 hidden sm:block w-[300px] h-[88px] [@media(max-height:600px)]:w-[200px] [@media(max-height:600px)]:h-[59px] pointer-events-none";
+// The hanging title sign: its ropes start at the top edge of the scene, centered (Introduction only; hidden on phones).
+// Short laptop screens: 200px. Phones turned sideways: 150px, so it stays clear of the Install button.
+export const KAREN_BANNER = "absolute top-0 left-1/2 -translate-x-1/2 hidden sm:block w-[300px] h-[88px] lg:[@media(max-height:600px)]:w-[200px] lg:[@media(max-height:600px)]:h-[59px] sideways:w-[150px] sideways:h-[44px] pointer-events-none";
 
 // The page behind everything under the scene: light cream, with the rice-field strip along the bottom
 export const KAREN_PAGE = {
@@ -88,8 +89,9 @@ export const KAREN_BAR = {
   drumIcon: "absolute left-1/2 top-[32px] -translate-x-1/2 -translate-y-1/2 text-white",
 };
 
-// The time box (Stitch look): a beige box with a brown edge in the scene's top corner, dark text
-export const KAREN_TIME = "absolute top-2 left-2 lg:left-auto lg:right-2 z-10 h-9 min-w-[96px] px-3 flex items-center justify-center rounded-md border-2 border-[#82542A] bg-[#EBD9BC] shadow-sm font-mono text-xl font-bold text-[#1C1917]";
+// The time box (Stitch look): a beige box with a brown edge in the scene's top corner, dark text.
+// Phones/tablets: top-left. Laptops and phones turned sideways: top-right (the tabs are top-left).
+export const KAREN_TIME = "absolute top-2 left-2 lg:left-auto lg:right-2 sideways:left-auto sideways:right-2 z-10 h-9 min-w-[96px] px-3 flex items-center justify-center rounded-md border-2 border-[#82542A] bg-[#EBD9BC] shadow-sm font-mono text-xl font-bold text-[#1C1917]";
 
 // The number box (Stitch look), on every screen and both tabs: beige, thin brown edge,
 // number + unit inside. The digits stay 16px, so iPhones don't zoom in.
