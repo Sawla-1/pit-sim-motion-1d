@@ -113,7 +113,8 @@ export const KAREN_NUMBER = {
 const INPUT_END = "hidden sm:block sideways:hidden sm:text-sm sm:leading-none sm:text-gray-600 sm:row-start-3"; // -10 and 10: not on phones (longer bar), and not on phones turned sideways (no room)
 export const KAREN_INPUT = {
   // Phones: one grid with 3 columns. sm and up: side by side, as before.
-  area: "shrink-0 grid grid-cols-[max-content_1fr_max-content] items-center gap-x-1.5 gap-y-2.5 px-3 py-3 sm:flex sm:flex-row sm:gap-2 sm:px-[72px] sm:py-2",
+  // Phone turned sideways: less room on the left (36px), so the right input clears the bamboo basket
+  area: "shrink-0 grid grid-cols-[max-content_1fr_max-content] items-center gap-x-1.5 gap-y-2.5 px-3 py-3 sm:flex sm:flex-row sm:gap-2 sm:px-[72px] sideways:pl-9 sm:py-2",
   // One value. Phones: one line using the area's columns. sm and up: 2 columns, 3 lines.
   row: "col-span-3 grid grid-cols-subgrid items-center sm:flex-1 sm:min-w-0 sm:grid-cols-[1fr_auto] sm:gap-2 sm:p-3 sideways:py-1",
   name: "flex items-center gap-1 whitespace-nowrap text-xs font-bold sm:text-base sm:col-start-1 sm:row-start-1",
