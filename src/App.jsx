@@ -331,8 +331,8 @@ function App() {
       )}
       {/* Top: tab row, then the scene (with the time). Charts tab: short scene. Intro: tall
           (laptops: fills the space left). Phones/tablets: the tab row is above the scene, so its top-left corner
-          is square. Laptops: the tabs float on the scene's corner. */}
-      <div className={`w-full flex flex-col lg:relative ${
+          is square. Laptops and phones turned sideways: the tabs float on the scene's corner. */}
+      <div className={`w-full flex flex-col lg:relative sideways:relative ${
         isCharts
           ? "shrink-0"
           : "flex-1 min-h-[260px] [@media(max-height:600px)]:min-h-[150px] lg:min-h-0"
@@ -348,7 +348,7 @@ function App() {
           />
           <InstallButton mode={install} onInstall={openInstallBox} />
         </div>
-        <div className={`relative w-full rounded-b-lg rounded-tr-lg lg:rounded-lg ${
+        <div className={`relative w-full rounded-b-lg rounded-tr-lg lg:rounded-lg sideways:rounded-lg ${
           isCharts
             ? "bg-blue-50 h-[125px] [@media(max-height:600px)]:h-[112px]"
             : `${KAREN_SCENE_PLACEHOLDER} flex-1 min-h-0`
@@ -374,12 +374,13 @@ function App() {
           />
         </div>
 
-        {/* Time in the scene's top corner: phones/tablets top-left, laptops top-right */}
+        {/* Time in the scene's top corner: phones/tablets top-left, laptops and phones turned sideways top-right */}
         <div className={KAREN_TIME}>{formatNumber(simulation.time, 1)} s</div>
 
-        {/* Mode badge, only while playing: phones/tablets top-right, laptops middle */}
+        {/* Mode badge, only while playing: phones/tablets top-right, laptops middle,
+            phones turned sideways under the time box (the middle has the sign) */}
         {playing && (
-          <span role="status" className={`absolute top-3 right-8 lg:right-auto lg:left-1/2 lg:-translate-x-1/2 z-10 flex items-center gap-2 text-sm font-bold uppercase tracking-widest ${
+          <span role="status" className={`absolute top-3 right-8 lg:right-auto lg:left-1/2 lg:-translate-x-1/2 sideways:top-12 sideways:right-2 z-10 flex items-center gap-2 text-sm font-bold uppercase tracking-widest ${
             isRecording ? "text-red-600" : "text-blue-600"
           }`}>
             <span className="relative flex h-3 w-3">
