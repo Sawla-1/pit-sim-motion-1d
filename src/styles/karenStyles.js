@@ -65,14 +65,16 @@ export const KAREN_BAR = {
   // in one row from 1024px wide.
   roomy: "lg:px-9 lg:gap-x-6",
   compact: "lg:px-4 lg:gap-x-3",
-  // Phones: smaller row-2 buttons, so Record/Playback, Formula, Clear and Reset fit in one row
-  word: "my-1 sideways:my-0 h-10 px-3 sm:px-4 rounded-full flex items-center gap-2 text-sm font-bold cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed max-sm:my-0 max-sm:h-8 max-sm:px-2.5 max-sm:text-xs max-sm:gap-1",
+  // Formula, Clear Data and Reset All: icon + word. Phones show only the icon (see iconOnly), so
+  // they need no phone padding here (it would squeeze the icon)
+  word: "my-1 sideways:my-0 h-10 px-3 sm:px-4 rounded-full flex items-center gap-2 text-sm font-bold cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed max-sm:my-0 max-sm:h-9",
   // Phone turned sideways: Formula, Clear Data and Reset All show only their icon, so one row fits
   iconSideways: "sideways:w-9 sideways:h-9 sideways:px-0 sideways:justify-center",
-  // Phone turned sideways: every round button's icon is 20px, so they match and are easy to see
-  icon: "sideways:size-5",
-  // Phones: Clear Data and Reset All show only their icon (the words stay for screen readers)
-  iconOnly: "max-sm:w-8 max-sm:px-0 max-sm:justify-center",
+  // Phones (upright or sideways): every round button's icon is 20px, so they match and are easy to see
+  icon: "max-sm:size-5 sideways:size-5",
+  // Phones: Formula, Clear Data and Reset All show only their icon in a 36px circle, like the other
+  // round buttons (the words stay for screen readers)
+  iconOnly: "max-sm:w-9 max-sm:px-0 max-sm:justify-center",
   clear: `${WOOD} ${PRESSABLE}`, // Clear Data and Formula
   reset: `border-2 border-[#F59E0B]/50 bg-[#B4262D] text-[#FEF3C7] shadow-[inset_0_1px_1px_rgba(255,255,255,0.25),0_3px_6px_rgba(0,0,0,0.35)] ${PRESSABLE}`,
   round: `w-9 h-9 sm:w-10 sm:h-10 sideways:w-9 sideways:h-9 rounded-full flex items-center justify-center cursor-pointer ${WOOD} ${PRESSABLE} disabled:opacity-40 disabled:cursor-not-allowed`,
