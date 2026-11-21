@@ -1,12 +1,17 @@
 import { useEffect, useId, useRef, useState } from "react";
-import { makeSceneView, makeBackdropView, makeRulerTicks, isCompactRuler, labelFontSize, GROUND_Y, EDGE, MIN_RANGE, EDGE_LABEL_GAP, LABEL_BASE, PIN_FLAG_HEIGHT } from "../utils/sceneMath";
+import { makeSceneView, makeBackdropView, makeRulerTicks, isCompactRuler, GROUND_Y, EDGE, MIN_RANGE, EDGE_LABEL_GAP, LABEL_BASE, PIN_FLAG_HEIGHT } from "../utils/sceneMath";
 import { formatNumber } from "../utils/formatNumber";
 import { KAREN_ART } from "../styles/karenStyles";
 import { SERIES_COLORS } from "../styles/seriesColors";
 
 const MAN_HEIGHT_TALL = 1.7; // Introduction: about 8.5% of the ruler's width, like the mockup
 const MAN_HEIGHT_SHORT = 1.2; // Charts: the scene is short, so he is smaller
-const MAN_SCALE_COMPACT = 1.5; // a short ruler (a phone held upright): he is 1.5 times taller, so he is easy to see
+// Introduction with a short ruler (a phone held upright): the man is 2.5 times taller, the bamboo
+// 2 times thicker and the numbers at least 16px, so all are easy to see. Not on Charts: that scene
+// is short, and he would reach the time box.
+const MAN_SCALE_BIG = 2.5;
+const BAMBOO_SCALE_BIG = 2;
+const LABEL_MIN_PX_BIG = 16;
 
 // The ruler look when no `look` is given (the Charts tab)
 const DEFAULT_RULER = {
@@ -36,6 +41,17 @@ const MOVING_THRESHOLD = 0.1; // m/s; at or below this he stands
 // `touch-action` on parts of an SVG, so the scroll is stopped in touchstart. It must be a real
 // listener with { passive: false } (React's touch handlers can't stop scrolling), and it sits
 // only on the man, so swipes elsewhere stay smooth. Used as a ref; returns its cleanup (React 19).
+// The same ruler look with a thicker bar: the joints grow with it, and the numbers hang lower to clear it
+function thickerRuler(look, scale) {
+  return {
+    ...look,
+    groundHeight: look.groundHeight * scale,
+    tickHeight: look.tickHeight * scale,
+    tickLabeledHeight: look.tickLabeledHeight * scale,
+    labelDrop: look.labelDrop + (look.groundHeight * (scale - 1)) / 2,
+  };
+}
+
 function stopScrollOnTouch(element) {
   const stop = (event) => {
     if (event.cancelable) event.preventDefault();
@@ -49,7 +65,7 @@ function stopScrollOnTouch(element) {
 // pins = [{ name, position }], tall = Introduction size, look = the ruler colours
 // backdrop = the picture behind the scene, so the ground stands on it (see makeBackdropView)
 // onManDragStart / onManDragSample(meters) / onManDragEnd = the man being dragged
-function SimulationScene({ position, velocity, pins = [], tall, look = DEFAULT_RULER, backdrop, onManDragStart, onManDragSample, onManDragEnd }) {
+function SimulationScene({ position, velocity, pins = [], tall, look: baseLook = DEFAULT_RULER, backdrop, onManDragStart, onManDragSample, onManDragEnd }) {
   const ref = useRef(null);
   const drag = useRef(null); // while dragging: the scale from the moment of the press; null = not dragging
   const [size, setSize] = useState({ width: 0, height: 0, side: 0 });
@@ -68,10 +84,13 @@ function SimulationScene({ position, velocity, pins = [], tall, look = DEFAULT_R
 
   const rulerWidth = size.width - 2 * size.side;
   const compact = isCompactRuler(rulerWidth);
-  const manHeight = (tall ? MAN_HEIGHT_TALL : MAN_HEIGHT_SHORT) * (compact ? MAN_SCALE_COMPACT : 1);
+  const big = tall && compact; // see MAN_SCALE_BIG
+  const manHeight = tall ? MAN_HEIGHT_TALL * (big ? MAN_SCALE_BIG : 1) : MAN_HEIGHT_SHORT;
+  const manWidth = manHeight * MAN_ASPECT;
+  const look = big ? thickerRuler(baseLook, BAMBOO_SCALE_BIG) : baseLook;
   const ready = size.width > 0 && size.height > 0;
   const view = !ready ? null
-    : backdrop ? makeBackdropView(size.width, size.height, manHeight, backdrop, size.side)
+    : backdrop ? makeBackdropView(size.width, size.height, { manHeight, manWidth, backdrop, side: size.side, labelMinPx: big ? LABEL_MIN_PX_BIG : undefined })
     : makeSceneView(size.width, size.height, manHeight);
 
   // The ruler spans -range..range with 0 in the center, and follows the man both ways.
@@ -89,9 +108,9 @@ function SimulationScene({ position, velocity, pins = [], tall, look = DEFAULT_R
   });
 
   // A ruler number hanging from `drop` below the ground line. The size is in world units,
-  // so on narrow screens it grows to stay readable (see labelFontSize).
+  // so on narrow screens it grows to stay readable (the view picks it).
   // paint-order draws the outline first, so only its outer half shows.
-  const labelSize = labelFontSize(rulerWidth);
+  const labelSize = view?.labelSize ?? LABEL_BASE;
   const rulerText = (key, worldX, drop, text, color) => (
     <text
       key={key}
@@ -124,7 +143,6 @@ function SimulationScene({ position, velocity, pins = [], tall, look = DEFAULT_R
   // He stands when he is (nearly) still and walks when he moves. Both pictures are always
   // in the page and only one is shown, so switching never waits for a download.
   // Only the walking picture turns: he walks left when his speed is 0 or less (the art faces right).
-  const manWidth = manHeight * MAN_ASPECT;
   const isStanding = Math.abs(velocity) <= MOVING_THRESHOLD;
   // Dragging must START on the man (the handlers are only on his pictures), but once started it
   // follows the mouse or finger anywhere on the page, even over the charts or the controls, same

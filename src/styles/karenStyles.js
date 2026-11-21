@@ -16,8 +16,9 @@ export const KAREN_ART = {
 // line goes: 96 picture px above its bottom edge, on the meadow in front of the village (like a
 // 1366 x 768 laptop). The ruler and the boy stand there on every screen.
 export const KAREN_BACKDROP = { width: 1280, height: 530, groundUp: 96 };
-// Room kept free at the left and right of the Introduction ruler: phones 24px; sm and up 72px (the bamboo)
-export const KAREN_SCENE_SIDES = "[--side:24px] sm:[--side:72px]";
+// Room kept free at the left and right of the Introduction ruler: phones 8px (no bamboo, so the
+// ruler can be long); sm and up 72px (the bamboo)
+export const KAREN_SCENE_SIDES = "[--side:8px] sm:[--side:72px]";
 
 // The scene's own colours (from scene-intro.svg): sky to meadow. Shown behind the
 // Introduction scene until its picture arrives, so a slow connection shows no empty box.
