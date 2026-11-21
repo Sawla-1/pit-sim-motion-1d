@@ -56,23 +56,28 @@ const PRESSABLE = "transition motion-reduce:transition-none enabled:hover:bright
 // The bottom bar (Stitch look): woven rattan (.karen-rattan in index.css) behind dark wood buttons with
 // gold text; Reset All is solid red.
 // Phones and tablets: full width with a dark line on top, 2 rows (round buttons + drum, then the rest).
+// Phone turned sideways (short screen): one row, so the sliders still fit above it.
 // Laptops: a rounded pill with a dark edge, one row.
 export const KAREN_BAR = {
-  box: "karen-rattan relative isolate w-full flex flex-wrap items-center gap-y-2 max-lg:justify-center max-lg:border-t-2 max-lg:border-[#5C3716] max-lg:py-3.5 max-lg:gap-y-2.5 max-sm:px-2 max-sm:gap-x-[5px] sm:max-lg:px-6 sm:max-lg:gap-x-3 lg:max-w-[1000px] xl:max-w-[1150px] lg:justify-between lg:py-[18px] lg:[@media(max-height:600px)]:py-[10px] lg:rounded-full lg:border-2 lg:border-[#5C3716]",
+  box: "karen-rattan relative isolate w-full flex flex-wrap items-center gap-y-2 max-lg:justify-center max-lg:border-t-2 max-lg:border-[#5C3716] max-lg:py-3.5 max-lg:gap-y-2.5 max-sm:px-2 max-sm:gap-x-[5px] sm:max-lg:px-6 sm:max-lg:gap-x-3 sideways:gap-x-2 lg:max-w-[1000px] xl:max-w-[1150px] lg:justify-between lg:py-[18px] lg:[@media(max-height:600px)]:py-[10px] lg:rounded-full lg:border-2 lg:border-[#5C3716]",
   // Laptops: side padding and gaps. The Charts tab uses `compact` instead, so all the buttons fit
   // in one row from 1024px wide.
   roomy: "lg:px-9 lg:gap-x-6",
   compact: "lg:px-4 lg:gap-x-3",
   // Phones: smaller row-2 buttons, so Record/Playback, Formula, Clear and Reset fit in one row
-  word: "my-1 h-10 px-3 sm:px-4 rounded-full flex items-center gap-2 text-sm font-bold cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed max-sm:my-0 max-sm:h-8 max-sm:px-2.5 max-sm:text-xs max-sm:gap-1",
+  word: "my-1 sideways:my-0 h-10 px-3 sm:px-4 rounded-full flex items-center gap-2 text-sm font-bold cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed max-sm:my-0 max-sm:h-8 max-sm:px-2.5 max-sm:text-xs max-sm:gap-1",
+  // Phone turned sideways: Formula, Clear Data and Reset All show only their icon, so one row fits
+  iconSideways: "sideways:w-9 sideways:h-9 sideways:px-0 sideways:justify-center",
+  // Phone turned sideways: every round button's icon is 20px, so they match and are easy to see
+  icon: "sideways:size-5",
   // Phones: Clear Data and Reset All show only their icon (the words stay for screen readers)
   iconOnly: "max-sm:w-8 max-sm:px-0 max-sm:justify-center",
   clear: `${WOOD} ${PRESSABLE}`, // Clear Data and Formula
   reset: `border-2 border-[#F59E0B]/50 bg-[#B4262D] text-[#FEF3C7] shadow-[inset_0_1px_1px_rgba(255,255,255,0.25),0_3px_6px_rgba(0,0,0,0.35)] ${PRESSABLE}`,
-  round: `w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center cursor-pointer ${WOOD} ${PRESSABLE} disabled:opacity-40 disabled:cursor-not-allowed`,
-  modeBox: `flex gap-1 p-1 rounded-full ${WOOD} max-lg:order-2 max-sm:p-0.5`,
+  round: `w-9 h-9 sm:w-10 sm:h-10 sideways:w-9 sideways:h-9 rounded-full flex items-center justify-center cursor-pointer ${WOOD} ${PRESSABLE} disabled:opacity-40 disabled:cursor-not-allowed`,
+  modeBox: `flex gap-1 p-1 rounded-full ${WOOD} max-lg:order-2 sideways:order-1 max-sm:p-0.5 sideways:p-0.5`,
   // One part of the mode switch (phones: smaller)
-  modeOption: "relative px-4 h-8 flex items-center gap-2 rounded-full text-sm font-bold transition-colors max-sm:h-[26px] max-sm:px-2.5 max-sm:text-xs max-sm:gap-1.5",
+  modeOption: "relative px-4 h-8 flex items-center gap-2 rounded-full text-sm font-bold transition-colors max-sm:h-[26px] max-sm:px-2.5 max-sm:text-xs max-sm:gap-1.5 sideways:h-[26px] sideways:px-2.5 sideways:text-xs sideways:gap-1.5",
   modeOn: "bg-[#B4262D] text-[#FEF3C7]",
   modeOff: "text-[#FDE68A]",
   // The drum: 80% of the art's size (86 x 66px) on every screen
@@ -105,12 +110,12 @@ export const KAREN_NUMBER = {
 // The Intro tab's 3 sliders. Phones (Stitch look): one line each, and the 3 lines share
 // columns so the bars line up: name (x) | bar | number box.
 // Tablets and laptops: name + box, the bar under them, -10 / 10 under its ends.
-const INPUT_END = "hidden sm:block sm:text-sm sm:leading-none sm:text-gray-600 sm:row-start-3"; // -10 and 10: not on phones (longer bar)
+const INPUT_END = "hidden sm:block sideways:hidden sm:text-sm sm:leading-none sm:text-gray-600 sm:row-start-3"; // -10 and 10: not on phones (longer bar), and not on phones turned sideways (no room)
 export const KAREN_INPUT = {
   // Phones: one grid with 3 columns. sm and up: side by side, as before.
   area: "shrink-0 grid grid-cols-[max-content_1fr_max-content] items-center gap-x-1.5 gap-y-2.5 px-3 py-3 sm:flex sm:flex-row sm:gap-2 sm:px-[72px] sm:py-2",
   // One value. Phones: one line using the area's columns. sm and up: 2 columns, 3 lines.
-  row: "col-span-3 grid grid-cols-subgrid items-center sm:flex-1 sm:min-w-0 sm:grid-cols-[1fr_auto] sm:gap-2 sm:p-3",
+  row: "col-span-3 grid grid-cols-subgrid items-center sm:flex-1 sm:min-w-0 sm:grid-cols-[1fr_auto] sm:gap-2 sm:p-3 sideways:py-1",
   name: "flex items-center gap-1 whitespace-nowrap text-xs font-bold sm:text-base sm:col-start-1 sm:row-start-1",
   symbol: "text-xs text-stone-700 sm:hidden", // (x) (v) (a): phones only
   min: `${INPUT_END} sm:col-start-1`,
