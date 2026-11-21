@@ -36,12 +36,18 @@ export function makeRulerTicks(range) {
   return { ticks, showEdge };
 }
 
+// The top of the pin flags and the bottom of the ruler numbers, for a ruler this wide (px)
+function contentTopBottom(rulerWidth, manHeight) {
+  const top = GROUND_Y + manHeight + PIN_FLAG_HEIGHT; // top of the pin flags (the pole is as tall as the man)
+  const bottom = CONTENT_BOTTOM - (labelFontSize(rulerWidth) - LABEL_REFERENCE); // room for taller numbers
+  return { top, bottom };
+}
+
 // Makes the ruler, the pins and the man fit inside the scene on any screen size.
 // Returns the zoom (pixels per world unit) and the world→pixel functions.
 // World: 0 is the centre, y goes UP. Pixels: y goes DOWN, so toY flips it.
 export function makeSceneView(width, height, manHeight) {
-  const top = GROUND_Y + manHeight + PIN_FLAG_HEIGHT; // top of the pin flags (the pole is as tall as the man)
-  const bottom = CONTENT_BOTTOM - (labelFontSize(width) - LABEL_REFERENCE); // room for taller numbers
+  const { top, bottom } = contentTopBottom(width, manHeight);
   const centerY = (top + bottom) / 2; // the content sits below y=0, so centre on it
   const zoom = Math.min(width / (2 * FIT_HALF_WIDTH), height / (top - bottom)); // pixels per world unit
 
@@ -49,5 +55,28 @@ export function makeSceneView(width, height, manHeight) {
     zoom,
     toX: (worldX) => width / 2 + worldX * zoom,
     toY: (worldY) => height / 2 - (worldY - centerY) * zoom,
+  };
+}
+
+// Like makeSceneView, but the ground line stands on a backdrop picture that covers the scene
+// (object-fit: cover, pinned to the bottom). So the man is on the same spot of the picture on
+// every screen. backdrop = { width, height, groundUp }: the picture's size, and how high above
+// its bottom edge the ground goes (in the picture's own pixels). side = room kept free at the
+// left and right (px), for example for the bamboo.
+export function makeBackdropView(width, height, manHeight, backdrop, side) {
+  const scale = Math.max(width / backdrop.width, height / backdrop.height); // as object-fit: cover
+  const groundPx = height - backdrop.groundUp * scale; // from the top
+  const rulerWidth = width - 2 * side;
+  const { top, bottom } = contentTopBottom(rulerWidth, manHeight);
+  const zoom = Math.min(
+    rulerWidth / (2 * FIT_HALF_WIDTH), // the ruler fits between the sides
+    groundPx / (top - GROUND_Y), // the man and the pin flags fit above the ground
+    (height - groundPx) / (GROUND_Y - bottom), // the numbers fit below it
+  );
+
+  return {
+    zoom,
+    toX: (worldX) => width / 2 + worldX * zoom,
+    toY: (worldY) => groundPx - (worldY - GROUND_Y) * zoom,
   };
 }

@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
-import { makeSceneView, makeRulerTicks, labelFontSize, GROUND_Y, EDGE, MIN_RANGE, EDGE_LABEL_GAP, LABEL_BASE, PIN_FLAG_HEIGHT } from "../utils/sceneMath";
+import { makeSceneView, makeBackdropView, makeRulerTicks, labelFontSize, GROUND_Y, EDGE, MIN_RANGE, EDGE_LABEL_GAP, LABEL_BASE, PIN_FLAG_HEIGHT } from "../utils/sceneMath";
 import { formatNumber } from "../utils/formatNumber";
 import { KAREN_ART } from "../styles/karenStyles";
 import { SERIES_COLORS } from "../styles/seriesColors";
@@ -46,17 +46,20 @@ function stopScrollOnTouch(element) {
 // The scene (ruler, pins and the man) drawn with SVG. Props:
 // position, velocity = the man (meters, meters per second)
 // pins = [{ name, position }], tall = Introduction size, look = the ruler colours
+// backdrop = the picture behind the scene, so the ground stands on it (see makeBackdropView)
 // onManDragStart / onManDragSample(meters) / onManDragEnd = the man being dragged
-function SimulationScene({ position, velocity, pins = [], tall, look = DEFAULT_RULER, onManDragStart, onManDragSample, onManDragEnd }) {
+function SimulationScene({ position, velocity, pins = [], tall, look = DEFAULT_RULER, backdrop, onManDragStart, onManDragSample, onManDragEnd }) {
   const ref = useRef(null);
   const drag = useRef(null); // while dragging: the scale from the moment of the press; null = not dragging
-  const [size, setSize] = useState({ width: 0, height: 0 });
+  const [size, setSize] = useState({ width: 0, height: 0, side: 0 });
   const gradientId = useId(); // each scene needs its own gradient id
 
-  // Keep `size` equal to the real size on screen (needed to turn meters into pixels)
+  // Keep `size` equal to the real size on screen (needed to turn meters into pixels).
+  // side = room to keep free at the left and right: the CSS variable --side (0 if it is not set)
   useEffect(() => {
     const observer = new ResizeObserver(([entry]) => {
-      setSize({ width: entry.contentRect.width, height: entry.contentRect.height });
+      const side = parseFloat(getComputedStyle(entry.target).getPropertyValue("--side")) || 0;
+      setSize({ width: entry.contentRect.width, height: entry.contentRect.height, side });
     });
     observer.observe(ref.current);
     return () => observer.disconnect();
@@ -64,7 +67,9 @@ function SimulationScene({ position, velocity, pins = [], tall, look = DEFAULT_R
 
   const manHeight = tall ? MAN_HEIGHT_TALL : MAN_HEIGHT_SHORT;
   const ready = size.width > 0 && size.height > 0;
-  const view = ready ? makeSceneView(size.width, size.height, manHeight) : null;
+  const view = !ready ? null
+    : backdrop ? makeBackdropView(size.width, size.height, manHeight, backdrop, size.side)
+    : makeSceneView(size.width, size.height, manHeight);
 
   // The ruler spans -range..range with 0 in the center, and follows the man both ways.
   // Pins count too, so a pin is never off the ruler.
@@ -83,7 +88,7 @@ function SimulationScene({ position, velocity, pins = [], tall, look = DEFAULT_R
   // A ruler number hanging from `drop` below the ground line. The size is in world units,
   // so on narrow screens it grows to stay readable (see labelFontSize).
   // paint-order draws the outline first, so only its outer half shows.
-  const labelSize = labelFontSize(size.width);
+  const labelSize = labelFontSize(size.width - 2 * size.side);
   const rulerText = (key, worldX, drop, text, color) => (
     <text
       key={key}

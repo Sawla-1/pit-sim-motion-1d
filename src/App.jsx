@@ -8,7 +8,7 @@ import Tabs from "./components/Tabs";
 import FormulaPanel from "./components/FormulaPanel";
 import InstallButton from "./components/InstallButton";
 import { SERIES_COLORS } from "./styles/seriesColors";
-import { KAREN_ART, KAREN_BANNER, KAREN_PAGE, KAREN_RULER, KAREN_SCENE_PLACEHOLDER, KAREN_TAB, KAREN_TIME, KAREN_INPUT } from "./styles/karenStyles";
+import { KAREN_ART, KAREN_BACKDROP, KAREN_SCENE_SIDES, KAREN_BANNER, KAREN_PAGE, KAREN_RULER, KAREN_SCENE_PLACEHOLDER, KAREN_TAB, KAREN_TIME, KAREN_INPUT } from "./styles/karenStyles";
 import { useSimulationLoop } from "./hooks/useSimulationLoop";
 import { resolvePlaybackState, findScrubTime } from "./engine/recordPlayback";
 import { calculatePhysicsStep, calculateDragStep } from "./engine/kinematics1d";
@@ -360,14 +360,16 @@ function App() {
             <img src={KAREN_ART.titleBanner} alt="Karen" className={KAREN_BANNER} />
           </>
         )}
-        {/* Fills the scene box, so the scene always gets a real height (Introduction: side room for the bamboo) */}
-        <div className={`absolute rounded-[inherit] ${isCharts ? "inset-0" : "inset-x-6 sm:inset-x-[72px] top-[50%] [@media(max-height:600px)]:top-[25%] bottom-[2%]"}`}>
+        {/* Fills the scene box. Introduction: the ground stands on the picture's meadow (KAREN_BACKDROP),
+            with room at the sides for the bamboo (KAREN_SCENE_SIDES) */}
+        <div className={`absolute inset-0 rounded-[inherit] ${isCharts ? "" : KAREN_SCENE_SIDES}`}>
           <SimulationScene
             position={simulation.position}
             velocity={simulation.velocity}
             pins={isCharts ? pins : []}
             tall={!isCharts}
             look={isCharts ? undefined : KAREN_RULER}
+            backdrop={isCharts ? undefined : KAREN_BACKDROP}
             onManDragStart={handleManDragStart}
             onManDragSample={handleManDragSample}
             onManDragEnd={handleManDragEnd}
