@@ -8,7 +8,7 @@ import Tabs from "./components/Tabs";
 import FormulaPanel from "./components/FormulaPanel";
 import InstallButton from "./components/InstallButton";
 import { SERIES_COLORS } from "./styles/seriesColors";
-import { KAREN_ART, KAREN_BACKDROP, KAREN_SCENE_SIDES, KAREN_BANNER, KAREN_PAGE, KAREN_RULER, KAREN_SCENE_PLACEHOLDER, KAREN_TAB, KAREN_TIME, KAREN_INPUT } from "./styles/karenStyles";
+import { KAREN_ART, KAREN_BACKDROP, KAREN_SCENE_FIT, KAREN_BANNER, KAREN_PAGE, KAREN_RULER, KAREN_SCENE_PLACEHOLDER, KAREN_TAB, KAREN_TIME, KAREN_TOP_ROW, KAREN_INPUT } from "./styles/karenStyles";
 import { useSimulationLoop } from "./hooks/useSimulationLoop";
 import { resolvePlaybackState, findScrubTime } from "./engine/recordPlayback";
 import { calculatePhysicsStep, calculateDragStep } from "./engine/kinematics1d";
@@ -311,6 +311,18 @@ function App() {
     />
   ));
 
+  // The pulsing dot that shows the mode while playing: red = recording, blue = playing back
+  const statusDot = (
+    <span aria-hidden="true" className="relative flex h-3 w-3">
+      <span className={`absolute inline-flex h-full w-full rounded-full opacity-75 motion-safe:animate-ping ${
+        isRecording ? "bg-red-500" : "bg-blue-500"
+      }`} />
+      <span className={`relative inline-flex h-3 w-3 rounded-full ${
+        isRecording ? "bg-red-600 shadow-[0_0_10px_rgba(220,38,38,0.7)]" : "bg-blue-600 shadow-[0_0_10px_rgba(37,99,235,0.7)]"
+      }`} />
+    </span>
+  );
+
   // The panel's message line (an error, if any, is shown first by the panel)
   const formulaStatus = () => {
     if (activeFormula && playing) return { text: `Running: x(t) = ${activeFormula.text}`, running: true };
@@ -361,8 +373,8 @@ function App() {
           </>
         )}
         {/* Fills the scene box. Introduction: the ground stands on the picture's meadow (KAREN_BACKDROP),
-            with room at the sides for the bamboo (KAREN_SCENE_SIDES) */}
-        <div className={`absolute inset-0 rounded-[inherit] ${isCharts ? "" : KAREN_SCENE_SIDES}`}>
+            with room at the sides for the bamboo (KAREN_SCENE_FIT) */}
+        <div className={`absolute inset-0 rounded-[inherit] ${isCharts ? "" : KAREN_SCENE_FIT}`}>
           <SimulationScene
             position={simulation.position}
             velocity={simulation.velocity}
@@ -376,26 +388,23 @@ function App() {
           />
         </div>
 
-        {/* Time in the scene's top corner: phones/tablets top-left, laptops and phones turned sideways top-right */}
-        <div className={KAREN_TIME}>{formatNumber(simulation.time, 1)} s</div>
-
-        {/* Mode badge, only while playing: phones/tablets top-right, laptops middle,
-            phones turned sideways under the time box (the middle has the sign) */}
-        {playing && (
-          <span role="status" className={`absolute top-3 right-8 lg:right-auto lg:left-1/2 lg:-translate-x-1/2 sideways:top-12 sideways:right-2 z-10 flex items-center gap-2 text-sm font-bold uppercase tracking-widest ${
-            isRecording ? "text-red-600" : "text-blue-600"
-          }`}>
-            <span className="relative flex h-3 w-3">
-              <span className={`absolute inline-flex h-full w-full rounded-full opacity-75 motion-safe:animate-ping ${
-                isRecording ? "bg-red-500" : "bg-blue-500"
-              }`} />
-              <span className={`relative inline-flex h-3 w-3 rounded-full ${
-                isRecording ? "bg-red-600 shadow-[0_0_10px_rgba(220,38,38,0.7)]" : "bg-blue-600 shadow-[0_0_10px_rgba(37,99,235,0.7)]"
-              }`} />
+        {/* The top row: the mode badge (only while playing) and the time box at the right end */}
+        <div className={KAREN_TOP_ROW}>
+          {/* Mode badge: laptops left of the time box; tablets at the left end. Phones: only for screen
+              readers; the words would block the boy, so the dot is in the time box instead */}
+          {playing && (
+            <span role="status" className={`flex items-center gap-2 text-sm font-bold uppercase tracking-widest max-lg:mr-auto max-sm:sr-only sideways:sr-only ${
+              isRecording ? "text-red-600" : "text-blue-600"
+            }`}>
+              {statusDot}
+              {isRecording ? "Recording" : "Playing back"}
             </span>
-            {isRecording ? "Recording" : "Playing back"}
-          </span>
-        )}
+          )}
+          <div className={KAREN_TIME}>
+            {playing && <span className="hidden max-sm:flex sideways:flex mr-1.5">{statusDot}</span>}
+            {formatNumber(simulation.time, 1)} s
+          </div>
+        </div>
         </div>
       </div>
 

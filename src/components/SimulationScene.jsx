@@ -6,11 +6,13 @@ import { SERIES_COLORS } from "../styles/seriesColors";
 
 const MAN_HEIGHT_TALL = 1.7; // Introduction: about 8.5% of the ruler's width, like the mockup
 const MAN_HEIGHT_SHORT = 1.2; // Charts: the scene is short, so he is smaller
-// Introduction with a short ruler (a phone held upright): the man is 2.5 times taller, the bamboo
-// 2 times thicker and the numbers at least 16px, so all are easy to see. Not on Charts: that scene
-// is short, and he would reach the time box.
+// A short ruler (a phone held upright): the man is bigger (Introduction 2.5 times, Charts 1.9 times),
+// the ruler 2 times thicker, the pins 2 times bigger and the numbers at least 16px, so all are easy
+// to see. On Charts the ruler then sits at the bottom of its short scene, so the man and the pin
+// flags stay clear of the time box (1.9 is the most that fits on a 430px phone).
 const MAN_SCALE_BIG = 2.5;
-const BAMBOO_SCALE_BIG = 2;
+const MAN_SCALE_BIG_CHARTS = 1.9;
+const RULER_SCALE_BIG = 2;
 const LABEL_MIN_PX_BIG = 16;
 
 // The ruler look when no `look` is given (the Charts tab)
@@ -33,25 +35,38 @@ const PIN_POLE_WIDTH = 0.04;
 const PIN_FLAG_WIDTH = 0.5;
 const PIN_LETTER_SIZE = 0.3; // fits inside the flag
 const PIN_DOT_RADIUS = 0.08; // the dot where the pole meets the ground
+const PIN_SCALE_BIG = 2; // a short ruler: the flag, letter, pole and dot are 2 times bigger (see MAN_SCALE_BIG)
 
 const MAN_ASPECT = 30 / 44; // the boy art is 30 wide and 44 tall
 const MOVING_THRESHOLD = 0.1; // m/s; at or below this he stands
+
+// How far the lowest part of the ruler (the bar or a long stick) reaches below the ground line
+const rulerLowest = (look) => Math.max(look.groundHeight / 2, look.tickDrop + look.tickLabeledHeight / 2);
+
+// The same ruler look with the sticks across the line (like the bamboo joints) instead of hanging
+// below it: the numbers move up by as much as the sticks did
+function sticksAcrossLine(look) {
+  const across = { ...look, tickDrop: 0 };
+  return { ...across, labelDrop: look.labelDrop + rulerLowest(across) - rulerLowest(look) };
+}
+
+// The same ruler look, `scale` times thicker: the bar and the sticks grow, and the numbers move
+// down by as much as the lowest part did, so they keep the same gap
+function thickerRuler(look, scale) {
+  const thick = {
+    ...look,
+    groundHeight: look.groundHeight * scale,
+    tickHeight: look.tickHeight * scale,
+    tickLabeledHeight: look.tickLabeledHeight * scale,
+    tickDrop: look.tickDrop * scale,
+  };
+  return { ...thick, labelDrop: look.labelDrop + rulerLowest(thick) - rulerLowest(look) };
+}
 
 // Phones: a finger that starts on the man must drag him, not scroll the page. Chrome ignores
 // `touch-action` on parts of an SVG, so the scroll is stopped in touchstart. It must be a real
 // listener with { passive: false } (React's touch handlers can't stop scrolling), and it sits
 // only on the man, so swipes elsewhere stay smooth. Used as a ref; returns its cleanup (React 19).
-// The same ruler look with a thicker bar: the joints grow with it, and the numbers hang lower to clear it
-function thickerRuler(look, scale) {
-  return {
-    ...look,
-    groundHeight: look.groundHeight * scale,
-    tickHeight: look.tickHeight * scale,
-    tickLabeledHeight: look.tickLabeledHeight * scale,
-    labelDrop: look.labelDrop + (look.groundHeight * (scale - 1)) / 2,
-  };
-}
-
 function stopScrollOnTouch(element) {
   const stop = (event) => {
     if (event.cancelable) event.preventDefault();
@@ -68,15 +83,19 @@ function stopScrollOnTouch(element) {
 function SimulationScene({ position, velocity, pins = [], tall, look: baseLook = DEFAULT_RULER, backdrop, onManDragStart, onManDragSample, onManDragEnd }) {
   const ref = useRef(null);
   const drag = useRef(null); // while dragging: the scale from the moment of the press; null = not dragging
-  const [size, setSize] = useState({ width: 0, height: 0, side: 0 });
+  const [size, setSize] = useState({ width: 0, height: 0, side: 0, manScale: 1, groundAtBottom: false });
   const gradientId = useId(); // each scene needs its own gradient id
 
   // Keep `size` equal to the real size on screen (needed to turn meters into pixels).
-  // side = room to keep free at the left and right: the CSS variable --side (0 if it is not set)
+  // side = room to keep free at the left and right: the CSS variable --side (0 if it is not set).
+  // manScale = how much bigger to draw the man: the CSS variable --man-scale (1 if it is not set).
   useEffect(() => {
     const observer = new ResizeObserver(([entry]) => {
-      const side = parseFloat(getComputedStyle(entry.target).getPropertyValue("--side")) || 0;
-      setSize({ width: entry.contentRect.width, height: entry.contentRect.height, side });
+      const css = getComputedStyle(entry.target);
+      const side = parseFloat(css.getPropertyValue("--side")) || 0;
+      const manScale = parseFloat(css.getPropertyValue("--man-scale")) || 1;
+      const groundAtBottom = css.getPropertyValue("--ground-at-bottom").trim() === "1";
+      setSize({ width: entry.contentRect.width, height: entry.contentRect.height, side, manScale, groundAtBottom });
     });
     observer.observe(ref.current);
     return () => observer.disconnect();
@@ -84,14 +103,24 @@ function SimulationScene({ position, velocity, pins = [], tall, look: baseLook =
 
   const rulerWidth = size.width - 2 * size.side;
   const compact = isCompactRuler(rulerWidth);
-  const big = tall && compact; // see MAN_SCALE_BIG
-  const manHeight = tall ? MAN_HEIGHT_TALL * (big ? MAN_SCALE_BIG : 1) : MAN_HEIGHT_SHORT;
+  // A short ruler gets the phone look (see MAN_SCALE_BIG); otherwise the CSS may ask for a bigger man
+  const manScale = !compact ? size.manScale : tall ? MAN_SCALE_BIG : MAN_SCALE_BIG_CHARTS;
+  const manHeight = (tall ? MAN_HEIGHT_TALL : MAN_HEIGHT_SHORT) * manScale;
   const manWidth = manHeight * MAN_ASPECT;
-  const look = big ? thickerRuler(baseLook, BAMBOO_SCALE_BIG) : baseLook;
+  const look = compact ? thickerRuler(sticksAcrossLine(baseLook), RULER_SCALE_BIG) : baseLook;
+  const pinScale = compact ? PIN_SCALE_BIG : 1;
+  const flagWidth = PIN_FLAG_WIDTH * pinScale;
+  const flagHeight = PIN_FLAG_HEIGHT * pinScale;
+  const poleWidth = PIN_POLE_WIDTH * pinScale;
+  const fit = {
+    labelMinPx: compact ? LABEL_MIN_PX_BIG : undefined,
+    extraBottom: look.labelDrop - baseLook.labelDrop, // the numbers hang lower under a thicker ruler
+    flagHeight, // the pin flags stand on top of the poles
+  };
   const ready = size.width > 0 && size.height > 0;
   const view = !ready ? null
-    : backdrop ? makeBackdropView(size.width, size.height, { manHeight, manWidth, backdrop, side: size.side, labelMinPx: big ? LABEL_MIN_PX_BIG : undefined })
-    : makeSceneView(size.width, size.height, manHeight);
+    : backdrop ? makeBackdropView(size.width, size.height, { ...fit, manHeight, manWidth, backdrop, side: size.side, alignBottom: size.groundAtBottom })
+    : makeSceneView(size.width, size.height, manHeight, { ...fit, alignBottom: compact });
 
   // The ruler spans -range..range with 0 in the center, and follows the man both ways.
   // Pins count too, so a pin is never off the ruler.
@@ -136,7 +165,7 @@ function SimulationScene({ position, velocity, pins = [], tall, look: baseLook =
   const pinSpot = (pin, index) => {
     const x = toWorldX(pin.position);
     const side = index === 0 ? -1 : 1;
-    return { x, flagX: x + side * (PIN_POLE_WIDTH / 2 + PIN_FLAG_WIDTH / 2) };
+    return { x, flagX: x + side * (poleWidth / 2 + flagWidth / 2) };
   };
 
   // The man: his feet stand on the ground line and his middle is over his position.
@@ -217,8 +246,8 @@ function SimulationScene({ position, velocity, pins = [], tall, look: baseLook =
             const poleTop = GROUND_Y + manHeight;
             return (
               <g key={pin.name}>
-                <rect x={view.toX(x - PIN_POLE_WIDTH / 2)} y={view.toY(poleTop)} width={PIN_POLE_WIDTH * view.zoom} height={manHeight * view.zoom} fill={PIN_COLOR} />
-                <rect x={view.toX(flagX - PIN_FLAG_WIDTH / 2)} y={view.toY(poleTop + PIN_FLAG_HEIGHT)} width={PIN_FLAG_WIDTH * view.zoom} height={PIN_FLAG_HEIGHT * view.zoom} fill={PIN_COLOR} />
+                <rect x={view.toX(x - poleWidth / 2)} y={view.toY(poleTop)} width={poleWidth * view.zoom} height={manHeight * view.zoom} fill={PIN_COLOR} />
+                <rect x={view.toX(flagX - flagWidth / 2)} y={view.toY(poleTop + flagHeight)} width={flagWidth * view.zoom} height={flagHeight * view.zoom} fill={PIN_COLOR} />
               </g>
             );
           })}
@@ -228,8 +257,8 @@ function SimulationScene({ position, velocity, pins = [], tall, look: baseLook =
             <text
               key={`letter-${pin.name}`}
               x={view.toX(pinSpot(pin, index).flagX)}
-              y={view.toY(GROUND_Y + manHeight + PIN_FLAG_HEIGHT / 2)}
-              fontSize={PIN_LETTER_SIZE * view.zoom}
+              y={view.toY(GROUND_Y + manHeight + flagHeight / 2)}
+              fontSize={PIN_LETTER_SIZE * pinScale * view.zoom}
               fill="white"
               textAnchor="middle"
               dominantBaseline="central"
@@ -304,8 +333,8 @@ function SimulationScene({ position, velocity, pins = [], tall, look: baseLook =
             const cy = view.toY(GROUND_Y);
             return (
               <g key={`dot-${pin.name}`}>
-                <circle cx={cx} cy={cy} r={PIN_DOT_RADIUS * view.zoom} fill={PIN_COLOR} />
-                <circle cx={cx} cy={cy} r={PIN_DOT_RADIUS * 0.6 * view.zoom} fill="white" />
+                <circle cx={cx} cy={cy} r={PIN_DOT_RADIUS * pinScale * view.zoom} fill={PIN_COLOR} />
+                <circle cx={cx} cy={cy} r={PIN_DOT_RADIUS * 0.6 * pinScale * view.zoom} fill="white" />
               </g>
             );
           })}
