@@ -31,26 +31,26 @@ export const KAREN_SCENE_PLACEHOLDER =
   "bg-[linear-gradient(to_bottom,#5E9ED6_0%,#D6E9EF_55%,#6E9E48_62%,#46703A_100%)]";
 
 // The two view tabs (Stitch look): the open tab is red, the other is light yellow.
-// Phones/tablets: they sit on the scene's top edge, so their top corners are round.
-// Laptops and phones turned sideways: they hang from the scene's top-left corner, so their bottom corners are round.
+// They hang from the scene's top-left corner, so their bottom corners are round.
 export const KAREN_TAB = {
-  // The tabs and the Install button, side by side. Phones/tablets: a row above the scene.
-  // Laptops and phones turned sideways: floats on the scene's top-left corner, so it uses no height.
-  row: "flex items-center gap-3 self-start lg:absolute lg:top-0 lg:left-0 lg:z-20 sideways:absolute sideways:top-0 sideways:left-0 sideways:z-20",
-  base: "h-[32px] px-4 flex items-center text-sm font-bold border border-b-0 rounded-t-lg lg:border-t-0 lg:border-b lg:rounded-t-none lg:rounded-b-lg sideways:border-t-0 sideways:border-b sideways:rounded-t-none sideways:rounded-b-lg",
+  // The tabs and the Install button, side by side, floating on the scene's top-left corner (uses no height)
+  row: "absolute top-0 left-0 z-20 flex items-center gap-3",
+  base: "h-[32px] px-4 flex items-center text-sm font-bold border border-t-0 rounded-b-lg",
   open: "bg-[#B4262D] border-[#8A1C22] text-white cursor-default select-none",
   closed: "bg-[#FBE28E] border-[#D8B966] text-[#6E1C17] cursor-pointer transition-colors hover:bg-[#F7D877] focus-visible:outline-2 focus-visible:outline-[#B4262D]",
 };
 
 // The Install button beside the tabs (Stitch look): a small beige box with a thin brown edge: icon + word
 export const KAREN_INSTALL = {
-  button: "h-7 pl-2 pr-3 rounded-md flex items-center gap-1 text-sm font-bold cursor-pointer border border-[#78350F]/30 bg-[#EBD9BC] text-[#292524] transition-colors hover:bg-[#CFB794] active:bg-[#BFA47E] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B4262D]",
+  button: "h-7 pl-2 pr-3 max-[360px]:pr-2 rounded-md flex items-center gap-1 text-sm font-bold cursor-pointer border border-[#78350F]/30 bg-[#EBD9BC] text-[#292524] transition-colors hover:bg-[#CFB794] active:bg-[#BFA47E] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B4262D]",
+  // The word "Install": hidden on phones narrower than 360px, so the tabs and the time box fit
+  word: "max-[360px]:hidden",
   hint: "absolute right-0 top-full mt-2 z-30 w-56 rounded-md border border-[#78350F]/30 bg-[#EBD9BC] px-3 py-2 text-sm text-[#3B2A14] shadow-lg",
 };
 
 // The hanging title sign: its ropes start at the top edge of the scene, centered (Introduction only; hidden on phones).
-// Short laptop screens: 200px. Phones turned sideways: 150px, so it stays clear of the Install button.
-export const KAREN_BANNER = "absolute top-0 left-1/2 -translate-x-1/2 hidden sm:block w-[300px] h-[88px] lg:[@media(max-height:600px)]:w-[200px] lg:[@media(max-height:600px)]:h-[59px] sideways:w-[150px] sideways:h-[44px] pointer-events-none";
+// Short laptop screens: 200px. Tablets and phones turned sideways: 150px, so it stays clear of the Install button.
+export const KAREN_BANNER = "absolute top-0 left-1/2 -translate-x-1/2 hidden sm:block w-[300px] h-[88px] lg:[@media(max-height:600px)]:w-[200px] lg:[@media(max-height:600px)]:h-[59px] max-lg:w-[150px] max-lg:h-[44px] pointer-events-none";
 
 // The page behind everything under the scene: light cream, with the rice-field strip along the bottom
 export const KAREN_PAGE = {
@@ -105,8 +105,7 @@ export const KAREN_BAR = {
 };
 
 // The row across the top of the scene: the mode badge and the time box. The time box is at the right
-// end on every screen (laptops and phones turned sideways have the tabs at the top-left). Taps go
-// through it to the scene and the tabs.
+// end on every screen (the tabs are at the top-left). Taps go through it to the scene and the tabs.
 export const KAREN_TOP_ROW = "absolute top-2 inset-x-2 z-10 flex items-center justify-end gap-3 pointer-events-none";
 // The time box (Stitch look): a beige box with a brown edge, dark text.
 // Phones (upright or sideways): smaller (28px tall, 16px numbers), so the boy has more room.

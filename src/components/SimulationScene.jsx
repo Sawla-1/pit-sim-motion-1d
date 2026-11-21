@@ -6,12 +6,10 @@ import { SERIES_COLORS } from "../styles/seriesColors";
 
 const MAN_HEIGHT_TALL = 1.7; // Introduction: about 8.5% of the ruler's width, like the mockup
 const MAN_HEIGHT_SHORT = 1.2; // Charts: the scene is short, so he is smaller
-// A short ruler (a phone held upright): the man is bigger (Introduction 2.5 times, Charts 1.9 times),
-// the ruler 2 times thicker, the pins 2 times bigger and the numbers at least 16px, so all are easy
-// to see. On Charts the ruler then sits at the bottom of its short scene, so the man and the pin
-// flags stay clear of the time box (1.9 is the most that fits on a 430px phone).
+// A short ruler (a phone held upright): the man is 2.5 times bigger, the ruler 2 times thicker,
+// the pins 2 times bigger and the numbers at least 16px, so all are easy to see. On Charts the
+// ruler then sits at the bottom of its short scene (the tabs and the time box are in a strip above it).
 const MAN_SCALE_BIG = 2.5;
-const MAN_SCALE_BIG_CHARTS = 1.9;
 const RULER_SCALE_BIG = 2;
 const LABEL_MIN_PX_BIG = 16;
 
@@ -104,7 +102,7 @@ function SimulationScene({ position, velocity, pins = [], tall, look: baseLook =
   const rulerWidth = size.width - 2 * size.side;
   const compact = isCompactRuler(rulerWidth);
   // A short ruler gets the phone look (see MAN_SCALE_BIG); otherwise the CSS may ask for a bigger man
-  const manScale = !compact ? size.manScale : tall ? MAN_SCALE_BIG : MAN_SCALE_BIG_CHARTS;
+  const manScale = compact ? MAN_SCALE_BIG : size.manScale;
   const manHeight = (tall ? MAN_HEIGHT_TALL : MAN_HEIGHT_SHORT) * manScale;
   const manWidth = manHeight * MAN_ASPECT;
   const look = compact ? thickerRuler(sticksAcrossLine(baseLook), RULER_SCALE_BIG) : baseLook;
