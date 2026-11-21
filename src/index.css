@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* "sideways:" = a phone turned sideways: 640 to 1023px wide and at most 600px tall */
+@custom-variant sideways (@media (40rem <= width < 64rem) and (max-height: 600px));
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
     sans-serif;
