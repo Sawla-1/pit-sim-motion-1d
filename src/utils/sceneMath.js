@@ -4,6 +4,8 @@ import { niceStep } from "./niceStep";
 export const EDGE = 10; // half-width of the ruler picture in world units; the picture never changes size
 export const MIN_RANGE = 10; // meters shown on each side of 0 while the man is near the middle
 const MAX_LABELS_PER_SIDE = 6;
+const COMPACT_LABELS_PER_SIDE = 2; // a short ruler: -10, -5, 0, 5, 10
+const COMPACT_RULER_PX = 450; // a ruler narrower than this on screen (a phone held upright) is short
 const MIN_EDGE_GAP = 0.2; // world units; any closer and the edge stick doubles up with the last stick
 export const EDGE_LABEL_GAP = 0.8; // world units; a regular label closer than this to the edge label would overlap it, so it is hidden
 export const GROUND_Y = -0.6; // height of the ground line; the man's and the pins' feet stand on it
@@ -21,12 +23,17 @@ export function labelFontSize(sceneWidth) {
   return Math.max(LABEL_BASE, LABEL_MIN_PX / pixelsPerUnit);
 }
 
-// The ruler sticks for a ruler that shows -range..range meters.
+// A short ruler on screen (a phone held upright) gets fewer numbers and a bigger man
+export function isCompactRuler(rulerWidth) {
+  return rulerWidth < COMPACT_RULER_PX;
+}
+
+// The ruler sticks for a ruler that shows -range..range meters (compact: fewer numbers).
 // ticks = [{ value (meters), labeled }]: a long stick with a number every `step`,
 // and a short stick halfway between. showEdge = the ruler's last stick falls short
 // of the picture's edge, so draw an extra end mark there.
-export function makeRulerTicks(range) {
-  const halfStep = niceStep(range, MAX_LABELS_PER_SIDE) / 2;
+export function makeRulerTicks(range, compact) {
+  const halfStep = niceStep(range, compact ? COMPACT_LABELS_PER_SIDE : MAX_LABELS_PER_SIDE) / 2;
   const halfSteps = Math.floor(range / halfStep); // how many halfSteps fit from 0 to the edge
   const ticks = Array.from({ length: halfSteps * 2 + 1 }, (_, i) => {
     const n = i - halfSteps;

@@ -1,11 +1,12 @@
 import { useEffect, useId, useRef, useState } from "react";
-import { makeSceneView, makeBackdropView, makeRulerTicks, labelFontSize, GROUND_Y, EDGE, MIN_RANGE, EDGE_LABEL_GAP, LABEL_BASE, PIN_FLAG_HEIGHT } from "../utils/sceneMath";
+import { makeSceneView, makeBackdropView, makeRulerTicks, isCompactRuler, labelFontSize, GROUND_Y, EDGE, MIN_RANGE, EDGE_LABEL_GAP, LABEL_BASE, PIN_FLAG_HEIGHT } from "../utils/sceneMath";
 import { formatNumber } from "../utils/formatNumber";
 import { KAREN_ART } from "../styles/karenStyles";
 import { SERIES_COLORS } from "../styles/seriesColors";
 
 const MAN_HEIGHT_TALL = 1.7; // Introduction: about 8.5% of the ruler's width, like the mockup
 const MAN_HEIGHT_SHORT = 1.2; // Charts: the scene is short, so he is smaller
+const MAN_SCALE_COMPACT = 1.5; // a short ruler (a phone held upright): he is 1.5 times taller, so he is easy to see
 
 // The ruler look when no `look` is given (the Charts tab)
 const DEFAULT_RULER = {
@@ -65,7 +66,9 @@ function SimulationScene({ position, velocity, pins = [], tall, look = DEFAULT_R
     return () => observer.disconnect();
   }, []);
 
-  const manHeight = tall ? MAN_HEIGHT_TALL : MAN_HEIGHT_SHORT;
+  const rulerWidth = size.width - 2 * size.side;
+  const compact = isCompactRuler(rulerWidth);
+  const manHeight = (tall ? MAN_HEIGHT_TALL : MAN_HEIGHT_SHORT) * (compact ? MAN_SCALE_COMPACT : 1);
   const ready = size.width > 0 && size.height > 0;
   const view = !ready ? null
     : backdrop ? makeBackdropView(size.width, size.height, manHeight, backdrop, size.side)
@@ -74,7 +77,7 @@ function SimulationScene({ position, velocity, pins = [], tall, look = DEFAULT_R
   // The ruler spans -range..range with 0 in the center, and follows the man both ways.
   // Pins count too, so a pin is never off the ruler.
   const range = Math.max(MIN_RANGE, Math.abs(position), ...pins.map((p) => Math.abs(p.position)));
-  const { ticks, showEdge } = makeRulerTicks(range);
+  const { ticks, showEdge } = makeRulerTicks(range, compact);
   const toWorldX = (meters) => (meters / range) * EDGE; // sticks, labels, pins and the man all use this
 
   // A stick, centred on its spot just below the ground line (world units → pixels)
@@ -88,7 +91,7 @@ function SimulationScene({ position, velocity, pins = [], tall, look = DEFAULT_R
   // A ruler number hanging from `drop` below the ground line. The size is in world units,
   // so on narrow screens it grows to stay readable (see labelFontSize).
   // paint-order draws the outline first, so only its outer half shows.
-  const labelSize = labelFontSize(size.width - 2 * size.side);
+  const labelSize = labelFontSize(rulerWidth);
   const rulerText = (key, worldX, drop, text, color) => (
     <text
       key={key}
