@@ -104,10 +104,13 @@ export const KAREN_BAR = {
   drumIcon: "absolute left-1/2 top-[32px] -translate-x-1/2 -translate-y-1/2 text-white",
 };
 
-// The time box (Stitch look): a beige box with a brown edge in the scene's top-right corner on every
-// screen (laptops and phones turned sideways have the tabs at the top-left), dark text.
+// The row across the top of the scene: the mode badge and the time box. The time box is at the right
+// end on every screen (laptops and phones turned sideways have the tabs at the top-left). Taps go
+// through it to the scene and the tabs.
+export const KAREN_TOP_ROW = "absolute top-2 inset-x-2 z-10 flex items-center justify-end gap-3 pointer-events-none";
+// The time box (Stitch look): a beige box with a brown edge, dark text.
 // Phones (upright or sideways): smaller (28px tall, 16px numbers), so the boy has more room.
-export const KAREN_TIME = "absolute top-2 right-2 z-10 h-9 min-w-[96px] px-3 flex items-center justify-center rounded-md border-2 border-[#82542A] bg-[#EBD9BC] shadow-sm font-mono text-xl font-bold text-[#1C1917] max-sm:h-7 max-sm:min-w-[72px] max-sm:px-2 max-sm:text-base sideways:h-7 sideways:min-w-[72px] sideways:px-2 sideways:text-base";
+export const KAREN_TIME = "h-9 min-w-[96px] px-3 flex items-center justify-center rounded-md border-2 border-[#82542A] bg-[#EBD9BC] shadow-sm font-mono text-xl font-bold text-[#1C1917] max-sm:h-7 max-sm:min-w-[72px] max-sm:px-2 max-sm:text-base sideways:h-7 sideways:min-w-[72px] sideways:px-2 sideways:text-base";
 
 // The number box (Stitch look), on every screen and both tabs: beige, thin brown edge,
 // number + unit inside. The digits stay 16px, so iPhones don't zoom in.

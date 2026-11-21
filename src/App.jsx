@@ -8,7 +8,7 @@ import Tabs from "./components/Tabs";
 import FormulaPanel from "./components/FormulaPanel";
 import InstallButton from "./components/InstallButton";
 import { SERIES_COLORS } from "./styles/seriesColors";
-import { KAREN_ART, KAREN_BACKDROP, KAREN_SCENE_FIT, KAREN_BANNER, KAREN_PAGE, KAREN_RULER, KAREN_SCENE_PLACEHOLDER, KAREN_TAB, KAREN_TIME, KAREN_INPUT } from "./styles/karenStyles";
+import { KAREN_ART, KAREN_BACKDROP, KAREN_SCENE_FIT, KAREN_BANNER, KAREN_PAGE, KAREN_RULER, KAREN_SCENE_PLACEHOLDER, KAREN_TAB, KAREN_TIME, KAREN_TOP_ROW, KAREN_INPUT } from "./styles/karenStyles";
 import { useSimulationLoop } from "./hooks/useSimulationLoop";
 import { resolvePlaybackState, findScrubTime } from "./engine/recordPlayback";
 import { calculatePhysicsStep, calculateDragStep } from "./engine/kinematics1d";
@@ -388,22 +388,23 @@ function App() {
           />
         </div>
 
-        {/* Time in the scene's top-right corner. Phones: while playing, the mode's dot sits in the time box (see the badge) */}
-        <div className={KAREN_TIME}>
-          {playing && <span className="hidden max-sm:flex sideways:flex mr-1.5">{statusDot}</span>}
-          {formatNumber(simulation.time, 1)} s
+        {/* The top row: the mode badge (only while playing) and the time box at the right end */}
+        <div className={KAREN_TOP_ROW}>
+          {/* Mode badge: laptops left of the time box; tablets at the left end. Phones: only for screen
+              readers; the words would block the boy, so the dot is in the time box instead */}
+          {playing && (
+            <span role="status" className={`flex items-center gap-2 text-sm font-bold uppercase tracking-widest max-lg:mr-auto max-sm:sr-only sideways:sr-only ${
+              isRecording ? "text-red-600" : "text-blue-600"
+            }`}>
+              {statusDot}
+              {isRecording ? "Recording" : "Playing back"}
+            </span>
+          )}
+          <div className={KAREN_TIME}>
+            {playing && <span className="hidden max-sm:flex sideways:flex mr-1.5">{statusDot}</span>}
+            {formatNumber(simulation.time, 1)} s
+          </div>
         </div>
-
-        {/* Mode badge, only while playing: tablets top-left, laptops middle. Phones: only for screen
-            readers; the words would block the boy, so the dot is in the time box */}
-        {playing && (
-          <span role="status" className={`absolute top-3 left-3 lg:left-1/2 lg:-translate-x-1/2 max-sm:sr-only sideways:sr-only z-10 flex items-center gap-2 text-sm font-bold uppercase tracking-widest ${
-            isRecording ? "text-red-600" : "text-blue-600"
-          }`}>
-            {statusDot}
-            {isRecording ? "Recording" : "Playing back"}
-          </span>
-        )}
         </div>
       </div>
 
