@@ -70,7 +70,7 @@ export const KAREN_BAR = {
   iconSideways: "sideways:w-9 sideways:h-9 sideways:px-0 sideways:justify-center",
   // Phone turned sideways: every round button's icon is 20px, so they match and are easy to see
   icon: "sideways:size-5",
-  // Phones: Clear Data and Reset All show only their icon (the words stay for screen readers)
+  // Phones: Formula, Clear Data and Reset All show only their icon (the words stay for screen readers)
   iconOnly: "max-sm:w-8 max-sm:px-0 max-sm:justify-center",
   clear: `${WOOD} ${PRESSABLE}`, // Clear Data and Formula
   reset: `border-2 border-[#F59E0B]/50 bg-[#B4262D] text-[#FEF3C7] shadow-[inset_0_1px_1px_rgba(255,255,255,0.25),0_3px_6px_rgba(0,0,0,0.35)] ${PRESSABLE}`,
