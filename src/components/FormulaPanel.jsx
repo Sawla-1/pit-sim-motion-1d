@@ -3,9 +3,12 @@ import { useRef, useState } from "react";
 // Keeps a value between 0 and max (if max is below 0, the panel sits at 0)
 const clamp = (value, max) => Math.max(0, Math.min(value, max));
 
-// First spot: just right of the input column, above the toolbar.
-// The user can drag it anywhere afterward.
-const startPosition = () => ({ x: 200, y: Math.max(8, window.innerHeight - 290) });
+// First spot: just right of the input column, above the toolbar. On a narrow phone it
+// moves left, so the whole panel is on the screen. The user can drag it anywhere afterward.
+const startPosition = () => {
+  const width = Math.min(300, window.innerWidth - 16); // same as the panel's CSS width below
+  return { x: Math.min(200, window.innerWidth - width - 8), y: Math.max(8, window.innerHeight - 290) };
+};
 
 const GripIcon = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.8" /><circle cx="15" cy="6" r="1.8" /><circle cx="9" cy="12" r="1.8" /><circle cx="15" cy="12" r="1.8" /><circle cx="9" cy="18" r="1.8" /><circle cx="15" cy="18" r="1.8" /></svg>;
 const CloseIcon = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>;
