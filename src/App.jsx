@@ -341,10 +341,9 @@ function App() {
           <img src={KAREN_ART.bambooRight} alt="" aria-hidden="true" className="hidden sm:block absolute right-[-12px] top-0 w-[84px] h-full z-[5] pointer-events-none" />
         </>
       )}
-      {/* Top: tab row, then the scene (with the time). Charts tab: short scene. Intro: tall
-          (laptops: fills the space left). Phones/tablets: the tab row is above the scene, so its top-left corner
-          is square. Laptops and phones turned sideways: the tabs float on the scene's corner. */}
-      <div className={`w-full flex flex-col lg:relative sideways:relative ${
+      {/* Top: the scene (with the time), with the tabs floating on its top-left corner.
+          Charts tab: short scene. Intro: tall (laptops: fills the space left). */}
+      <div className={`relative w-full flex flex-col ${
         isCharts
           ? "shrink-0"
           : "flex-1 min-h-[260px] [@media(max-height:600px)]:min-h-[150px] lg:min-h-0"
@@ -360,9 +359,10 @@ function App() {
           />
           <InstallButton mode={install} onInstall={openInstallBox} />
         </div>
-        <div className={`relative w-full rounded-b-lg rounded-tr-lg lg:rounded-lg sideways:rounded-lg ${
+        <div className={`relative w-full rounded-lg ${
           isCharts
-            ? "bg-blue-50 h-[125px] [@media(max-height:600px)]:h-[112px]"
+            // Phones/tablets: 32px more on top for the tabs (box-content: the padding adds to the height)
+            ? "bg-blue-50 h-[125px] [@media(max-height:600px)]:h-[112px] box-content max-lg:pt-8"
             : `${KAREN_SCENE_PLACEHOLDER} flex-1 min-h-0`
         }`}>
         {/* Introduction only: the scene picture, and the hanging title sign at the top (behind the boy) */}
@@ -372,9 +372,10 @@ function App() {
             <img src={KAREN_ART.titleBanner} alt="Karen" className={KAREN_BANNER} />
           </>
         )}
-        {/* Fills the scene box. Introduction: the ground stands on the picture's meadow (KAREN_BACKDROP),
+        {/* Fills the scene box. Charts on phones/tablets: below the 32px strip with the tabs.
+            Introduction: the ground stands on the picture's meadow (KAREN_BACKDROP),
             with room at the sides for the bamboo (KAREN_SCENE_FIT) */}
-        <div className={`absolute inset-0 rounded-[inherit] ${isCharts ? "" : KAREN_SCENE_FIT}`}>
+        <div className={`absolute inset-0 rounded-[inherit] ${isCharts ? "max-lg:top-8" : KAREN_SCENE_FIT}`}>
           <SimulationScene
             position={simulation.position}
             velocity={simulation.velocity}
@@ -390,10 +391,10 @@ function App() {
 
         {/* The top row: the mode badge (only while playing) and the time box at the right end */}
         <div className={KAREN_TOP_ROW}>
-          {/* Mode badge: laptops left of the time box; tablets at the left end. Phones: only for screen
-              readers; the words would block the boy, so the dot is in the time box instead */}
+          {/* Mode badge: laptops left of the time box. Phones and tablets: only for screen readers (the
+              words would block the boy or the title sign), so the dot is in the time box instead */}
           {playing && (
-            <span role="status" className={`flex items-center gap-2 text-sm font-bold uppercase tracking-widest max-lg:mr-auto max-sm:sr-only sideways:sr-only ${
+            <span role="status" className={`flex items-center gap-2 text-sm font-bold uppercase tracking-widest max-lg:sr-only ${
               isRecording ? "text-red-600" : "text-blue-600"
             }`}>
               {statusDot}
@@ -401,7 +402,7 @@ function App() {
             </span>
           )}
           <div className={KAREN_TIME}>
-            {playing && <span className="hidden max-sm:flex sideways:flex mr-1.5">{statusDot}</span>}
+            {playing && <span className="hidden max-lg:flex mr-1.5">{statusDot}</span>}
             {formatNumber(simulation.time, 1)} s
           </div>
         </div>

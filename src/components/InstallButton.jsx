@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { KAREN_INSTALL } from "../styles/karenStyles";
 
-// A small button with a word, "Install": it installs the page as an app (home-screen icon, works offline).
+// A small button with a word, "Install" (phones narrower than 360px: the icon only): it installs the
+// page as an app (home-screen icon, works offline).
 //   mode "prompt": a click opens the browser's own install box (onInstall)
 //   mode "hint":   iPhone/iPad cannot do that, so a click shows how to do it by hand
 //   mode "none":   nothing is drawn
@@ -26,7 +27,7 @@ function InstallButton({ mode, onInstall }) {
           <path d="M7 11l5 5 5-5" />
           <path d="M5 20h14" />
         </svg>
-        Install
+        <span className={KAREN_INSTALL.word}>Install</span>
       </button>
       {mode === "hint" && hintOpen && (
         <p role="status" className={KAREN_INSTALL.hint}>
