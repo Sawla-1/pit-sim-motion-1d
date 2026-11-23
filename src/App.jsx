@@ -10,7 +10,7 @@ import InstallButton from "./components/InstallButton";
 import { SERIES_COLORS } from "./styles/seriesColors";
 import { KAREN_ART, KAREN_BACKDROP, KAREN_SCENE_FIT, KAREN_BANNER, KAREN_PAGE, KAREN_RULER, KAREN_SCENE_PLACEHOLDER, KAREN_TAB, KAREN_TIME, KAREN_TOP_ROW, KAREN_INPUT } from "./styles/karenStyles";
 import { useSimulationLoop } from "./hooks/useSimulationLoop";
-import { resolvePlaybackState, findScrubTime } from "./engine/recordPlayback";
+import { resolvePlaybackState } from "./engine/recordPlayback";
 import { calculatePhysicsStep, calculateDragStep } from "./engine/kinematics1d";
 import { compileFormula } from "./utils/evaluateFormula";
 import { calculateFormulaStep } from "./engine/formulaMotion";
@@ -58,15 +58,12 @@ function App() {
   // Record: make data (values can change). Playback: only look at it.
   const isRecording = data.selectedMode === "record";
 
-  // The drag of the man that is going on, or null. One of:
-  //   Record (drag him and record it): { mode: "record", mouseX, photos, released }
-  //     mouseX = where the mouse is right now (meters)
-  //     photos = the mouse photos that calculateDragStep keeps
-  //     released = he was let go: the loop stops him in its next frame (see onDragStep).
-  //       Not in the let-go handler: a change made there could be overwritten by the loop's next frame.
-  //   Playback (drag him to move time, record nothing): { mode: "scrub", time, direction }
-  //     the time we moved to last (not the render's simulation.time, which can lag a
-  //     move behind) and which way time went (+1 / -1)
+  // The drag of the man that is going on, or null. Only in Record (Playback only looks,
+  // so he can't be dragged there): { mouseX, photos, released }
+  //   mouseX = where the mouse is right now (meters)
+  //   photos = the mouse photos that calculateDragStep keeps
+  //   released = he was let go: the loop stops him in its next frame (see onDragStep).
+  //     Not in the let-go handler: a change made there could be overwritten by the loop's next frame.
   // A mode switch, Clear Data or Reset All in the middle of a drag (e.g. a second
   // finger tapping a button) ends the drag: they set it back to null.
   const drag = useRef(null);
@@ -136,7 +133,7 @@ function App() {
   // One frame of Record mode. The man is moved by the mouse (drag), by a
   // formula, or by plain physics, checked in this order.
   const onRecordStep = (sim, frameTime) => {
-    if (drag.current?.mode === "record") return onDragStep(sim, frameTime);
+    if (drag.current) return onDragStep(sim, frameTime);
     if (activeFormula) return onFormulaStep(sim, frameTime);
     return calculatePhysicsStep(sim, frameTime);
   };
@@ -229,7 +226,7 @@ function App() {
   // There is some pin that we are not standing on
   const canGoToPin = pins.some((p) => p !== pinAtNow);
 
-  // Jump to a time in the recording (chart drag, frame buttons, pins, dragging the man)
+  // Jump to a time in the recording (chart drag, frame buttons, pins)
   const handleSeek = (newTime) => {
     setSimulation(resolvePlaybackState(data.recordedData, newTime).simulation);
   };
@@ -256,41 +253,30 @@ function App() {
     }
   };
 
+  // Dragging the man (Record only: the scene doesn't let him be dragged in Playback)
   const handleManDragStart = () => {
-    if (!isRecording) {
-      // Playback: only look, so move time; record nothing
-      drag.current = { mode: "scrub", time: simulation.time, direction: 1 };
-      setPlaying(false); // he is held, so playback must not move him on
-      return;
-    }
     if (activeFormula) stopFormula(FORMULA_TOOK_OVER);
     // A new note (an old let-go must not stop this drag). Until the mouse moves, he stays where he is.
-    drag.current = { mode: "record", mouseX: simulation.position, photos: [], released: false };
+    drag.current = { mouseX: simulation.position, photos: [], released: false };
     setPlaying(true);
   };
 
-  // Called on every mouse move while dragging.
-  // Playback: move time to where he was at that spot. Record: only remember where
-  // the mouse is; onDragStep above takes one photo of it per frame and does the maths.
+  // Called on every mouse move while dragging. Only remember where the mouse is;
+  // onDragStep above takes one photo of it per frame and does the maths.
+  // null = the drag was ended already (e.g. a mode switch), so nothing to do.
   const handleManDragSample = (meters) => {
-    const d = drag.current;
-    if (d?.mode === "scrub") {
-      drag.current = { mode: "scrub", ...findScrubTime(data.recordedData, d.time, meters, d.direction) };
-      handleSeek(drag.current.time);
-    } else if (d?.mode === "record") {
-      d.mouseX = meters;
-    }
+    if (drag.current) drag.current.mouseX = meters;
   };
 
   const handleManDragEnd = () => {
     const d = drag.current;
-    if (d?.mode === "record" && playing) {
+    if (d && playing) {
       d.released = true; // the loop stops him in its next frame
       return;
     }
-    // Scrub, or Record while paused (e.g. the 10-minute limit): the loop isn't running, so end the drag here
+    // Paused (e.g. the 10-minute limit): the loop isn't running, so end the drag here
     drag.current = null;
-    if (d?.mode === "record") setSimulation((prev) => ({ ...prev, velocity: 0, acceleration: 0 }));
+    if (d) setSimulation((prev) => ({ ...prev, velocity: 0, acceleration: 0 }));
   };
 
   // ============================================================================
@@ -390,6 +376,7 @@ function App() {
             tall={!isCharts}
             look={isCharts ? undefined : KAREN_RULER}
             backdrop={isCharts ? undefined : KAREN_BACKDROP}
+            canDrag={isRecording}
             onManDragStart={handleManDragStart}
             onManDragSample={handleManDragSample}
             onManDragEnd={handleManDragEnd}
