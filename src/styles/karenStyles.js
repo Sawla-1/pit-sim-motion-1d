@@ -64,8 +64,9 @@ export const KAREN_PAGE = {
   stickyBg: "max-lg:bg-[#F5F9F3]",
   strip: "absolute inset-x-0 bottom-0 -z-10 h-[112px] w-full max-w-none pointer-events-none max-lg:hidden", // laptops only
   // Around the bottom bar. Phones and tablets: none, so the bar is full width on the screen's bottom edge.
-  // Laptops: room at the sides, and a gap under it (more on tall screens).
-  barWrap: "lg:px-4 lg:pb-2 lg:[@media(min-height:700px)]:pb-8",
+  // Laptops: room at the sides, and a gap under it (more on tall screens with a mouse; touch tablets
+  // turned sideways keep the small gap, so the charts get the room).
+  barWrap: "lg:px-4 lg:pb-2 lg:[@media(min-height:700px)_and_(pointer:fine)]:pb-8",
 };
 
 // Dark wood (Stitch look): light brown at the top to dark brown at the bottom, gold edge, light-gold text
