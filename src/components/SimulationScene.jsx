@@ -67,7 +67,8 @@ function thickerRuler(look, scale) {
   return { ...thick, labelDrop: look.labelDrop + rulerLowest(thick) - rulerLowest(look) };
 }
 
-// Phones: a finger that starts on the man must drag him, not scroll the page. Chrome ignores
+// Phones: a finger that starts on the man must drag him, not scroll the page (only while he can
+// be dragged; in Playback a swipe on him scrolls the page as anywhere else). Chrome ignores
 // `touch-action` on parts of an SVG, so the scroll is stopped in touchstart. It must be a real
 // listener with { passive: false } (React's touch handlers can't stop scrolling), and it sits
 // only on the man, so swipes elsewhere stay smooth. Used as a ref; returns its cleanup (React 19).
@@ -83,8 +84,9 @@ function stopScrollOnTouch(element) {
 // position, velocity = the man (meters, meters per second)
 // pins = [{ name, position }], tall = Introduction size, look = the ruler colours
 // backdrop = the picture behind the scene, so the ground stands on it (see makeBackdropView)
+// canDrag = the man can be dragged (Record). Playback only looks, so a press on him does nothing.
 // onManDragStart / onManDragSample(meters) / onManDragEnd = the man being dragged
-function SimulationScene({ position, velocity, pins = [], tall, look: baseLook = DEFAULT_RULER, backdrop, onManDragStart, onManDragSample, onManDragEnd }) {
+function SimulationScene({ position, velocity, pins = [], tall, look: baseLook = DEFAULT_RULER, backdrop, canDrag, onManDragStart, onManDragSample, onManDragEnd }) {
   const ref = useRef(null);
   const drag = useRef(null); // while dragging: the scale from the moment of the press; null = not dragging
   const [size, setSize] = useState({ width: 0, height: 0, side: 0, manScale: 0, groundAtBottom: false, phoneLook: false, numbersLikeCharts: false, manPinsScale: 1, uprightRuler: 0, fillRoom: false });
@@ -229,6 +231,7 @@ function SimulationScene({ position, velocity, pins = [], tall, look: baseLook =
   };
 
   const handleManPointerDown = (event) => {
+    if (!canDrag) return; // Playback: a press does nothing (and doesn't pause it)
     event.stopPropagation();
     event.preventDefault(); // stops the browser from selecting text while the mouse drags over the page
     if (drag.current || event.button !== 0) return; // already dragging (a second finger), or not the main button
@@ -361,10 +364,13 @@ function SimulationScene({ position, velocity, pins = [], tall, look: baseLook =
           </g>
 
           {/* The man, in front of the bar and the numbers (the pins' poles are behind him) */}
-          {/* touch-action for browsers that honor it on SVG; stopScrollOnTouch for Chrome */}
+          {/* touch-action for browsers that honor it on SVG; stopScrollOnTouch for Chrome.
+              Playback (canDrag false): neither, so a swipe on him scrolls the page.
+              The move and let-go handlers stay on always: a drag that began in Record and is
+              still going when Playback is tapped (a second finger) must still end here. */}
           <g
-            ref={stopScrollOnTouch}
-            style={{ touchAction: "none" }}
+            ref={canDrag ? stopScrollOnTouch : undefined}
+            style={{ touchAction: canDrag ? "none" : undefined }}
             onPointerDown={handleManPointerDown}
             onPointerMove={handleManPointerMove}
             onLostPointerCapture={handleManLostCapture}
