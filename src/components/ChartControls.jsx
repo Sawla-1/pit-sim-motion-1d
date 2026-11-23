@@ -120,7 +120,7 @@ function ScrubHint() {
 export function ChartPanel({
   label, input,
   visible, onShow, onHide,
-  showZoomControls, yControlsProps, xControls, isBottom, scrubHint, onReset, resetDisabled,
+  showZoomControls, yControlsProps, xControls, isBottom, isLast, scrubHint, onReset, resetDisabled,
   onZoomToPins, zoomToPinsDisabled,
   children, // the chart itself (a SvgChart)
 }) {
@@ -149,7 +149,8 @@ export function ChartPanel({
 
   return (
     // One row: input on the left, chart on the right (phones: input on top).
-    // Phones/tablets: fixed chart heights. Desktop: the rows share the space
+    // Phones: fixed chart heights. Tablets held upright: at least those heights, and the rows
+    // share the room left above the bottom bar (each grows the same). Desktop: the rows share the space
     // under the scene. The bottom row is exactly 18px taller: 26px of time
     // numbers (fixed in SvgChart.jsx) minus the other charts' ~8px of x tick marks.
     // So all 3 plots are the same height.
@@ -159,8 +160,12 @@ export function ChartPanel({
       // Tablets: the row has the fixed height (not just the chart), so the
       // vertical slider has a real height to fill instead of the whole screen.
       isBottom
-        ? "sm:h-[216px] lg:h-auto lg:flex-[1_1_18px] lg:min-h-[106px]"
-        : "sm:h-[170px] lg:h-auto lg:flex-1 lg:min-h-[88px]"
+        ? "sm:h-[216px] tablet-upright:h-auto lg:h-auto lg:flex-[1_1_18px] lg:min-h-[106px]"
+        : "sm:h-[170px] tablet-upright:h-auto lg:h-auto lg:flex-1 lg:min-h-[88px]"
+    } ${
+      // Tablets held upright: the lowest chart (isLast) always starts 46px taller, with room for the
+      // time numbers even before anything is recorded, so nothing moves when recording starts
+      isLast ? "tablet-upright:flex-[1_0_216px]" : "tablet-upright:flex-[1_0_170px]"
     }`}>
       {/* Bottom row: 18px under the input, so its slider ends where the plot ends */}
       <div className={`flex ${isBottom ? "sm:pb-[18px]" : ""}`}>{input}</div>

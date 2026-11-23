@@ -87,7 +87,7 @@ function stopScrollOnTouch(element) {
 function SimulationScene({ position, velocity, pins = [], tall, look: baseLook = DEFAULT_RULER, backdrop, onManDragStart, onManDragSample, onManDragEnd }) {
   const ref = useRef(null);
   const drag = useRef(null); // while dragging: the scale from the moment of the press; null = not dragging
-  const [size, setSize] = useState({ width: 0, height: 0, side: 0, manScale: 0, groundAtBottom: false, phoneLook: false, numbersLikeCharts: false, manPinsScale: 1, uprightRuler: 0 });
+  const [size, setSize] = useState({ width: 0, height: 0, side: 0, manScale: 0, groundAtBottom: false, phoneLook: false, numbersLikeCharts: false, manPinsScale: 1, uprightRuler: 0, fillRoom: false });
   const gradientId = useId(); // each scene needs its own gradient id
 
   // Keep `size` equal to the real size on screen (needed to turn meters into pixels).
@@ -108,7 +108,8 @@ function SimulationScene({ position, velocity, pins = [], tall, look: baseLook =
       // the ruler's width with this phone held upright: the screen's short side minus the sides (0 = not set)
       const uprightSide = parseFloat(css.getPropertyValue("--upright-side"));
       const uprightRuler = isNaN(uprightSide) ? 0 : Math.min(window.screen.width, window.screen.height) - 2 * uprightSide;
-      setSize({ width: entry.contentRect.width, height: entry.contentRect.height, side, manScale, groundAtBottom, phoneLook, numbersLikeCharts, manPinsScale, uprightRuler });
+      const fillRoom = css.getPropertyValue("--fill-room").trim() === "1"; // see fitScale
+      setSize({ width: entry.contentRect.width, height: entry.contentRect.height, side, manScale, groundAtBottom, phoneLook, numbersLikeCharts, manPinsScale, uprightRuler, fillRoom });
     });
     observer.observe(ref.current);
     return () => observer.disconnect();
@@ -134,9 +135,9 @@ function SimulationScene({ position, velocity, pins = [], tall, look: baseLook =
   // The view makes room for the man and the pins at their normal size, so the ruler keeps its size.
   // manWidth = the man's width: a wide man still fits at the ruler's ends.
   const ready = size.width > 0 && size.height > 0;
-  const view = !ready ? null
-    : backdrop ? makeBackdropView(size.width, size.height, { ...fit, manWidth: wantMan * MAN_ASPECT, manHeight: normalMan, backdrop, side: size.side, numbersLikeCharts: size.numbersLikeCharts, alignBottom: size.groundAtBottom })
-    : makeSceneView(size.width, size.height, normalMan, { ...fit, manWidth: wantMan * MAN_ASPECT, alignBottom: compact });
+  const viewFor = (manWidth) => !ready ? null
+    : backdrop ? makeBackdropView(size.width, size.height, { ...fit, manWidth, manHeight: normalMan, backdrop, side: size.side, numbersLikeCharts: size.numbersLikeCharts, alignBottom: size.groundAtBottom })
+    : makeSceneView(size.width, size.height, normalMan, { ...fit, manWidth, alignBottom: compact });
   // The man and the pins get smaller together if they don't fit above the ruler. With the phone look
   // the man is also never taller than MAN_MAX_PX (big tablets). Last, the CSS may make both smaller
   // (--man-pins-scale: 1024px tablets turned sideways, Introduction); the ruler keeps its size.
@@ -144,12 +145,20 @@ function SimulationScene({ position, velocity, pins = [], tall, look: baseLook =
   // (the same look, on a ruler as wide as the screen's short side).
   const uprightMan = normalMan * bigScale;
   const uprightPx = size.uprightRuler ? uprightMan * rulerZoom(size.uprightRuler, uprightMan * MAN_ASPECT) : Infinity;
-  const fitScale = size.manPinsScale * (!view ? 1 : Math.min(
-    1,
-    view.roomAbove / wantPins,
-    compact ? MAN_MAX_PX / (wantMan * view.zoom) : 1,
-    uprightPx / (wantMan * view.zoom),
+  // --fill-room (tablets held upright, Charts): they may also grow, to fill the room above the ruler.
+  const fitScaleIn = (viewToTry) => size.manPinsScale * (!viewToTry ? 1 : Math.min(
+    size.fillRoom ? Infinity : 1,
+    viewToTry.roomAbove / wantPins,
+    compact ? MAN_MAX_PX / (wantMan * viewToTry.zoom) : 1,
+    uprightPx / (wantMan * viewToTry.zoom),
   ));
+  let view = viewFor(wantMan * MAN_ASPECT);
+  let fitScale = fitScaleIn(view);
+  // --fill-room: a man who grew is wider too, so make the view again with room for his new width
+  if (fitScale > 1) {
+    view = viewFor(wantMan * fitScale * MAN_ASPECT);
+    fitScale = fitScaleIn(view);
+  }
   const poleHeight = wantPole * fitScale;
   const manHeight = wantMan * fitScale;
   const manWidth = manHeight * MAN_ASPECT;
