@@ -1,18 +1,23 @@
 import { useEffect, useId, useRef, useState } from "react";
-import { makeSceneView, makeBackdropView, makeRulerTicks, isCompactRuler, keepBigScale, GROUND_Y, EDGE, MIN_RANGE, EDGE_LABEL_GAP, LABEL_BASE, PIN_FLAG_HEIGHT } from "../utils/sceneMath";
+import { makeSceneView, makeBackdropView, makeRulerTicks, isCompactRuler, rulerZoom, GROUND_Y, EDGE, MIN_RANGE, EDGE_LABEL_GAP, LABEL_BASE, PIN_FLAG_HEIGHT } from "../utils/sceneMath";
 import { formatNumber } from "../utils/formatNumber";
 import { KAREN_ART } from "../styles/karenStyles";
 import { SERIES_COLORS } from "../styles/seriesColors";
 
 const MAN_HEIGHT_TALL = 1.7; // Introduction: about 8.5% of the ruler's width, like the mockup
 const MAN_HEIGHT_SHORT = 1.2; // Charts: the scene is short, so he is smaller
-// A short ruler (a phone held upright): the man is 2.5 times bigger, the ruler 2 times thicker,
-// the pins 2 times bigger and the numbers at least 16px, so all are easy to see. On Charts the
-// ruler then sits at the bottom of its short scene (the tabs and the time box are in a strip above it).
-// Phones and tablets: a longer ruler keeps the man and the pins at that size on screen (see keepBigScale).
-const MAN_SCALE_BIG = 2.5;
+// The phone look (phones and tablets: the CSS sets --phone-look; or any ruler under 450px): the man
+// is 2.5 times bigger (Introduction 3.75 times), the ruler 2 times thicker, the numbers 2 times bigger
+// (16 to 21px), the pins 2 times bigger, and a number only every 5 m, so all are easy to see. On
+// Charts the man is as tall as a whole pin (pole and flag), and the ruler sits at the bottom of its
+// scene (the tabs and the time box are in a strip above it).
+// The ruler always keeps its size: if the man and the pins don't fit above it, they get smaller.
+const MAN_SCALE_BIG = 2.5; // Charts (and the man there grows to the top of the pin flag)
+const MAN_SCALE_BIG_TALL = 3.75; // Introduction: 1.5 times more, its scene has room
 const RULER_SCALE_BIG = 2;
 const LABEL_MIN_PX_BIG = 16;
+const LABEL_MAX_PX_BIG = 21; // the numbers stop growing at the iPad mini size
+const MAN_MAX_PX = 195; // the phone look on big tablets: the man is never taller than this on screen
 
 // The ruler look when no `look` is given (the Charts tab)
 const DEFAULT_RULER = {
@@ -82,49 +87,76 @@ function stopScrollOnTouch(element) {
 function SimulationScene({ position, velocity, pins = [], tall, look: baseLook = DEFAULT_RULER, backdrop, onManDragStart, onManDragSample, onManDragEnd }) {
   const ref = useRef(null);
   const drag = useRef(null); // while dragging: the scale from the moment of the press; null = not dragging
-  const [size, setSize] = useState({ width: 0, height: 0, side: 0, manScale: 1, groundAtBottom: false, keepBig: false });
+  const [size, setSize] = useState({ width: 0, height: 0, side: 0, manScale: 0, groundAtBottom: false, phoneLook: false, numbersLikeCharts: false, manPinsScale: 1, uprightRuler: 0 });
   const gradientId = useId(); // each scene needs its own gradient id
 
   // Keep `size` equal to the real size on screen (needed to turn meters into pixels).
   // side = room to keep free at the left and right: the CSS variable --side (0 if it is not set).
-  // manScale = how much bigger to draw the man: the CSS variable --man-scale (1 if it is not set).
-  // keepBig = the CSS variable --keep-big is 1: the man and the pins never get smaller on a wider screen.
+  // manScale = how much bigger to draw the man: the CSS variable --man-scale (0 if it is not set: the
+  // look decides). phoneLook = the CSS variable --phone-look is 1: the phone look on any ruler.
+  // numbersLikeCharts = the CSS variable --numbers-like-charts is 1 (see makeBackdropView).
+  // manPinsScale = how big to draw the man and the pins, after they fit: the CSS variable --man-pins-scale (1 if it is not set).
   useEffect(() => {
     const observer = new ResizeObserver(([entry]) => {
       const css = getComputedStyle(entry.target);
       const side = parseFloat(css.getPropertyValue("--side")) || 0;
-      const manScale = parseFloat(css.getPropertyValue("--man-scale")) || 1;
+      const manScale = parseFloat(css.getPropertyValue("--man-scale")) || 0;
       const groundAtBottom = css.getPropertyValue("--ground-at-bottom").trim() === "1";
-      const keepBig = css.getPropertyValue("--keep-big").trim() === "1";
-      setSize({ width: entry.contentRect.width, height: entry.contentRect.height, side, manScale, groundAtBottom, keepBig });
+      const phoneLook = css.getPropertyValue("--phone-look").trim() === "1";
+      const numbersLikeCharts = css.getPropertyValue("--numbers-like-charts").trim() === "1";
+      const manPinsScale = parseFloat(css.getPropertyValue("--man-pins-scale")) || 1;
+      // the ruler's width with this phone held upright: the screen's short side minus the sides (0 = not set)
+      const uprightSide = parseFloat(css.getPropertyValue("--upright-side"));
+      const uprightRuler = isNaN(uprightSide) ? 0 : Math.min(window.screen.width, window.screen.height) - 2 * uprightSide;
+      setSize({ width: entry.contentRect.width, height: entry.contentRect.height, side, manScale, groundAtBottom, phoneLook, numbersLikeCharts, manPinsScale, uprightRuler });
     });
     observer.observe(ref.current);
     return () => observer.disconnect();
   }, []);
 
   const rulerWidth = size.width - 2 * size.side;
-  const compact = isCompactRuler(rulerWidth);
-  // How much bigger to draw the man and the pins: a short ruler gets the phone look (see MAN_SCALE_BIG),
-  // and with --keep-big a longer ruler keeps that size on screen (keepBigScale). Otherwise normal size.
-  // The CSS may also ask for a bigger man (--man-scale).
-  const bigScale = (big) => (compact || size.keepBig ? keepBigScale(rulerWidth, big) : 1);
-  const manScale = Math.max(bigScale(MAN_SCALE_BIG), size.manScale);
-  const manHeight = (tall ? MAN_HEIGHT_TALL : MAN_HEIGHT_SHORT) * manScale;
-  const manWidth = manHeight * MAN_ASPECT;
+  const compact = isCompactRuler(rulerWidth) || size.phoneLook; // the phone look (see MAN_SCALE_BIG)
+  const normalMan = tall ? MAN_HEIGHT_TALL : MAN_HEIGHT_SHORT;
+  const bigScale = tall ? MAN_SCALE_BIG_TALL : MAN_SCALE_BIG;
+  // The man and the pins as big as we would like them. The pin pole is as tall as the man would be
+  // (the CSS may set his size: --man-scale), with the flag on top.
+  const wantPole = normalMan * (size.manScale || (compact ? bigScale : 1));
+  const wantPinScale = compact ? PIN_SCALE_BIG : 1;
+  const wantPins = wantPole + PIN_FLAG_HEIGHT * wantPinScale; // a whole pin: pole and flag
+  const wantMan = compact && !tall ? wantPins : wantPole; // Charts with the phone look: as tall as a whole pin
   const look = compact ? thickerRuler(sticksAcrossLine(baseLook), RULER_SCALE_BIG) : baseLook;
-  const pinScale = bigScale(PIN_SCALE_BIG);
-  const flagWidth = PIN_FLAG_WIDTH * pinScale;
-  const flagHeight = PIN_FLAG_HEIGHT * pinScale;
-  const poleWidth = PIN_POLE_WIDTH * pinScale;
   const fit = {
     labelMinPx: compact ? LABEL_MIN_PX_BIG : undefined,
+    labelMaxPx: compact ? LABEL_MAX_PX_BIG : undefined,
+    labelBase: LABEL_BASE * (compact ? RULER_SCALE_BIG : 1), // a thicker ruler has bigger numbers
     extraBottom: look.labelDrop - baseLook.labelDrop, // the numbers hang lower under a thicker ruler
-    flagHeight, // the pin flags stand on top of the poles
   };
+  // The view makes room for the man and the pins at their normal size, so the ruler keeps its size.
+  // manWidth = the man's width: a wide man still fits at the ruler's ends.
   const ready = size.width > 0 && size.height > 0;
   const view = !ready ? null
-    : backdrop ? makeBackdropView(size.width, size.height, { ...fit, manHeight, manWidth, backdrop, side: size.side, alignBottom: size.groundAtBottom })
-    : makeSceneView(size.width, size.height, manHeight, { ...fit, alignBottom: compact });
+    : backdrop ? makeBackdropView(size.width, size.height, { ...fit, manWidth: wantMan * MAN_ASPECT, manHeight: normalMan, backdrop, side: size.side, numbersLikeCharts: size.numbersLikeCharts, alignBottom: size.groundAtBottom })
+    : makeSceneView(size.width, size.height, normalMan, { ...fit, manWidth: wantMan * MAN_ASPECT, alignBottom: compact });
+  // The man and the pins get smaller together if they don't fit above the ruler. With the phone look
+  // the man is also never taller than MAN_MAX_PX (big tablets). Last, the CSS may make both smaller
+  // (--man-pins-scale: 1024px tablets turned sideways, Introduction); the ruler keeps its size.
+  // Phones turned sideways (--upright-side): the man is never taller than with the phone held upright
+  // (the same look, on a ruler as wide as the screen's short side).
+  const uprightMan = normalMan * bigScale;
+  const uprightPx = size.uprightRuler ? uprightMan * rulerZoom(size.uprightRuler, uprightMan * MAN_ASPECT) : Infinity;
+  const fitScale = size.manPinsScale * (!view ? 1 : Math.min(
+    1,
+    view.roomAbove / wantPins,
+    compact ? MAN_MAX_PX / (wantMan * view.zoom) : 1,
+    uprightPx / (wantMan * view.zoom),
+  ));
+  const poleHeight = wantPole * fitScale;
+  const manHeight = wantMan * fitScale;
+  const manWidth = manHeight * MAN_ASPECT;
+  const pinScale = wantPinScale * fitScale;
+  const flagWidth = PIN_FLAG_WIDTH * pinScale;
+  const flagHeight = PIN_FLAG_HEIGHT * pinScale; // the pin flags stand on top of the poles
+  const poleWidth = PIN_POLE_WIDTH * pinScale;
 
   // The ruler spans -range..range with 0 in the center, and follows the man both ways.
   // Pins count too, so a pin is never off the ruler.
@@ -243,14 +275,15 @@ function SimulationScene({ position, velocity, pins = [], tall, look: baseLook =
               </linearGradient>
             </defs>
           )}
-          {/* Pins, behind the bar (so the pole's foot is hidden by it): a pole up to the man's
-              head height, and a flag on top of it. The dots come later. */}
+          {/* Pins, behind the bar (so the pole's foot is hidden by it): a pole (as tall as the man,
+              or with the phone look on Charts up to the man's shoulders), and a flag on top of it.
+              The dots come later. */}
           {pins.map((pin, index) => {
             const { x, flagX } = pinSpot(pin, index);
-            const poleTop = GROUND_Y + manHeight;
+            const poleTop = GROUND_Y + poleHeight;
             return (
               <g key={pin.name}>
-                <rect x={view.toX(x - poleWidth / 2)} y={view.toY(poleTop)} width={poleWidth * view.zoom} height={manHeight * view.zoom} fill={PIN_COLOR} />
+                <rect x={view.toX(x - poleWidth / 2)} y={view.toY(poleTop)} width={poleWidth * view.zoom} height={poleHeight * view.zoom} fill={PIN_COLOR} />
                 <rect x={view.toX(flagX - flagWidth / 2)} y={view.toY(poleTop + flagHeight)} width={flagWidth * view.zoom} height={flagHeight * view.zoom} fill={PIN_COLOR} />
               </g>
             );
@@ -261,7 +294,7 @@ function SimulationScene({ position, velocity, pins = [], tall, look: baseLook =
             <text
               key={`letter-${pin.name}`}
               x={view.toX(pinSpot(pin, index).flagX)}
-              y={view.toY(GROUND_Y + manHeight + flagHeight / 2)}
+              y={view.toY(GROUND_Y + poleHeight + flagHeight / 2)}
               fontSize={PIN_LETTER_SIZE * pinScale * view.zoom}
               fill="white"
               textAnchor="middle"

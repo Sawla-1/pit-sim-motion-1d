@@ -19,11 +19,17 @@ export const KAREN_BACKDROP = { width: 1280, height: 530, groundUp: 96 };
 // How the Introduction scene fits (read by SimulationScene):
 // --side = room kept free at the left and right of the ruler: phones 8px (no bamboo, so the ruler
 // can be long); sm and up 72px (the bamboo); phones turned sideways 40px (the bamboo is thin there).
-// --man-scale = how much bigger the boy is: phones turned sideways 1.9 (the most that stays clear of
-// the sign and the time box). Phones held upright get their sizes from SimulationScene.
+// --man-scale = how much bigger the boy is: phones turned sideways 2.85 (it stays clear of the sign
+// and the time box). Phones held upright get their sizes from SimulationScene.
 // --ground-at-bottom = 1: the ruler sits near the scene's bottom, not on the picture's meadow spot
 // (phones turned sideways: the scene is short, so this gives the boy room).
-export const KAREN_SCENE_FIT = "[--side:8px] sm:[--side:72px] sideways:[--side:40px] sideways:[--man-scale:1.9] sideways:[--ground-at-bottom:1]";
+// --numbers-like-charts = 1: the ruler numbers are as big as on the Charts tab (tablets: the bamboo
+// at the sides makes the ruler shorter, but not the numbers).
+// --man-pins-scale = 0.75: the boy at 3/4 size on 1024px tablets turned sideways (the Charts tab does
+// this with a shorter scene, see App.jsx).
+// --upright-side = the room at the sides when this phone is held upright (8px, see --side). Set only on
+// phones turned sideways: the boy is then never taller than with the phone held upright.
+export const KAREN_SCENE_FIT = "[--side:8px] sm:[--side:72px] sideways:[--side:40px] sideways:[--man-scale:2.85] sideways:[--ground-at-bottom:1] sideways:[--upright-side:8px] tablet:[--numbers-like-charts:1] tablet-1024:[--man-pins-scale:0.75]";
 
 // The scene's own colours (from scene-intro.svg): sky to meadow. Shown behind the
 // Introduction scene until its picture arrives, so a slow connection shows no empty box.

@@ -2,6 +2,11 @@
 
 /* "sideways:" = a phone turned sideways: 640 to 1023px wide and at most 600px tall */
 @custom-variant sideways (@media (40rem <= width < 64rem) and (max-height: 600px));
+/* "tablet:" = a tablet: held upright (640 to 1023px wide and taller than 600px), or turned
+   sideways (1024px+ wide with a touch screen, so laptops with a mouse are not tablets) */
+@custom-variant tablet (@media ((40rem <= width < 64rem) and (height > 600px)) or ((width >= 64rem) and (pointer: coarse)));
+/* "tablet-1024:" = a touch tablet turned sideways that is exactly 1024px wide (iPad mini, older iPads) */
+@custom-variant tablet-1024 (@media (width: 64rem) and (pointer: coarse));
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",

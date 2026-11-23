@@ -361,8 +361,12 @@ function App() {
         </div>
         <div className={`relative w-full rounded-lg ${
           isCharts
-            // Phones/tablets: 32px more on top for the tabs (box-content: the padding adds to the height)
-            ? "bg-blue-50 h-[125px] [@media(max-height:600px)]:h-[112px] box-content max-lg:pt-8"
+            // Phones/tablets: 32px more on top for the tabs (box-content: the padding adds to the height).
+            // Tablets: the scene is 1.5 times taller (188px) for the phone-size boy, and the strip on top
+            // is 44px, as tall as the time box, so the pin flags never go under it.
+            // 1024px tablets turned sideways: 153px, so the boy and the pins (they fill the room above
+            // the ruler) come out at 3/4 size, with no empty space above them.
+            ? "bg-blue-50 h-[125px] [@media(max-height:600px)]:h-[112px] tablet:h-[188px] tablet-1024:h-[153px] box-content max-lg:pt-8 tablet:pt-11"
             : `${KAREN_SCENE_PLACEHOLDER} flex-1 min-h-0`
         }`}>
         {/* Introduction only: the scene picture, and the hanging title sign at the top (behind the boy) */}
@@ -375,9 +379,8 @@ function App() {
         {/* Fills the scene box. Charts on phones/tablets: below the 32px strip with the tabs.
             Introduction: the ground stands on the picture's meadow (KAREN_BACKDROP),
             with room at the sides for the bamboo (KAREN_SCENE_FIT).
-            Phones and tablets (--keep-big): the boy and the pins never get smaller on a wider screen.
-            Laptops keep their normal size. */}
-        <div className={`absolute inset-0 rounded-[inherit] max-lg:[--keep-big:1] ${isCharts ? "max-lg:top-8" : KAREN_SCENE_FIT}`}>
+            Phones and tablets (--phone-look): the phone look (see SimulationScene). Laptops keep their normal size. */}
+        <div className={`absolute inset-0 rounded-[inherit] max-lg:[--phone-look:1] tablet:[--phone-look:1] ${isCharts ? "max-lg:top-8 tablet:top-11" : KAREN_SCENE_FIT}`}>
           <SimulationScene
             position={simulation.position}
             velocity={simulation.velocity}
