@@ -345,7 +345,8 @@ function App() {
           Charts tab: short scene. Intro: tall (laptops: fills the space left). */}
       <div className={`relative w-full flex flex-col ${
         isCharts
-          ? "shrink-0"
+          // Tablets held upright: grows 1 part (see the charts area below)
+          ? "shrink-0 tablet-upright:flex-[1_0_auto]"
           : "flex-1 min-h-[260px] [@media(max-height:600px)]:min-h-[150px] lg:min-h-0"
       }`}>
         <div className={KAREN_TAB.row}>
@@ -361,8 +362,13 @@ function App() {
         </div>
         <div className={`relative w-full rounded-lg ${
           isCharts
-            // Phones/tablets: 32px more on top for the tabs (box-content: the padding adds to the height)
-            ? "bg-blue-50 h-[125px] [@media(max-height:600px)]:h-[112px] box-content max-lg:pt-8"
+            // Phones/tablets: 32px more on top for the tabs (box-content: the padding adds to the height).
+            // Tablets: the scene is 1.5 times taller (188px) for the phone-size boy, and the strip on top
+            // is 44px, as tall as the time box, so the pin flags never go under it.
+            // 1024px tablets turned sideways: 153px, so the boy and the pins (they fill the room above
+            // the ruler) come out at 3/4 size, with no empty space above them.
+            // Tablets held upright: it also grows (from 188px) into the free space.
+            ? "bg-blue-50 h-[125px] [@media(max-height:600px)]:h-[112px] tablet:h-[188px] tablet-1024:h-[153px] tablet-upright:flex-[1_0_auto] box-content max-lg:pt-8 tablet:pt-11"
             : `${KAREN_SCENE_PLACEHOLDER} flex-1 min-h-0`
         }`}>
         {/* Introduction only: the scene picture, and the hanging title sign at the top (behind the boy) */}
@@ -374,8 +380,9 @@ function App() {
         )}
         {/* Fills the scene box. Charts on phones/tablets: below the 32px strip with the tabs.
             Introduction: the ground stands on the picture's meadow (KAREN_BACKDROP),
-            with room at the sides for the bamboo (KAREN_SCENE_FIT) */}
-        <div className={`absolute inset-0 rounded-[inherit] ${isCharts ? "max-lg:top-8" : KAREN_SCENE_FIT}`}>
+            with room at the sides for the bamboo (KAREN_SCENE_FIT).
+            Phones and tablets (--phone-look): the phone look (see SimulationScene). Laptops keep their normal size. */}
+        <div className={`absolute inset-0 rounded-[inherit] max-lg:[--phone-look:1] tablet:[--phone-look:1] ${isCharts ? "max-lg:top-8 tablet:top-11 tablet-upright:[--fill-room:1]" : KAREN_SCENE_FIT}`}>
           <SimulationScene
             position={simulation.position}
             velocity={simulation.velocity}
@@ -410,8 +417,10 @@ function App() {
       </div>
 
       {isCharts ? (
-        // Middle: charts take all the space that is left (short screens: less padding)
-        <div className="flex flex-col w-full px-4 pt-4 pb-2 [@media(max-height:600px)]:pt-2.5 max-lg:[@media(max-height:600px)]:pb-1 lg:pb-0 lg:flex-1 lg:min-h-0 lg:overflow-y-auto">
+        // Middle: charts take all the space that is left (short screens: less padding).
+        // Tablets held upright: it shares the free space with the scene, 3 parts to 1 (one part per
+        // chart), so the scene and each chart grow the same and there is no empty gap.
+        <div className="flex flex-col w-full px-4 pt-4 pb-2 [@media(max-height:600px)]:pt-2.5 max-lg:[@media(max-height:600px)]:pb-1 tablet-upright:flex-[3_0_auto] lg:pb-0 lg:flex-1 lg:min-h-0 lg:overflow-y-auto">
           <Charts
             charts={QUANTITIES}
             data={data}

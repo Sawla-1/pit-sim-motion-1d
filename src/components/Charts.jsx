@@ -65,11 +65,11 @@ function Charts({ charts, data, simulation, pins, onSeek, showScrubHint, inputs 
   // All charts share one time axis, so (like PhET) only the lowest visible
   // chart shows the time numbers and time zoom buttons. Before anything is
   // recorded there are no time numbers, so no chart gets the extra room (-1)
-  // and all three are the same height.
+  // and all three are the same height. Tablets held upright keep the room for
+  // the lowest chart anyway (ChartPanel's isLast), so nothing moves when recording starts.
   const hasRecording = data.recordedData.length > 1;
-  const bottomIndex = hasRecording
-    ? charts.map(({ key }) => !hidden[key]).lastIndexOf(true)
-    : -1;
+  const lastIndex = charts.map(({ key }) => !hidden[key]).lastIndexOf(true); // the lowest visible chart
+  const bottomIndex = hasRecording ? lastIndex : -1;
 
   // The top visible chart shows the scrub hint
   const topIndex = charts.findIndex(({ key }) => !hidden[key]);
@@ -122,6 +122,7 @@ function Charts({ charts, data, simulation, pins, onSeek, showScrubHint, inputs 
               showZoomControls={isPlayback}
               xControls={xControls}
               isBottom={isBottom}
+              isLast={index === lastIndex}
               scrubHint={showScrubHint && index === topIndex}
               onReset={() => handleReset(key, isBottom)}
               resetDisabled={isResetDisabled(key, isBottom)}

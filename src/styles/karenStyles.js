@@ -19,11 +19,17 @@ export const KAREN_BACKDROP = { width: 1280, height: 530, groundUp: 96 };
 // How the Introduction scene fits (read by SimulationScene):
 // --side = room kept free at the left and right of the ruler: phones 8px (no bamboo, so the ruler
 // can be long); sm and up 72px (the bamboo); phones turned sideways 40px (the bamboo is thin there).
-// --man-scale = how much bigger the boy is: phones turned sideways 1.9 (the most that stays clear of
-// the sign and the time box). Phones held upright get their sizes from SimulationScene.
+// --man-scale = how much bigger the boy is: phones turned sideways 2.85 (it stays clear of the sign
+// and the time box). Phones held upright get their sizes from SimulationScene.
 // --ground-at-bottom = 1: the ruler sits near the scene's bottom, not on the picture's meadow spot
 // (phones turned sideways: the scene is short, so this gives the boy room).
-export const KAREN_SCENE_FIT = "[--side:8px] sm:[--side:72px] sideways:[--side:40px] sideways:[--man-scale:1.9] sideways:[--ground-at-bottom:1]";
+// --numbers-like-charts = 1: the ruler numbers are as big as on the Charts tab (tablets: the bamboo
+// at the sides makes the ruler shorter, but not the numbers).
+// --man-pins-scale = 0.75: the boy at 3/4 size on 1024px tablets turned sideways (the Charts tab does
+// this with a shorter scene, see App.jsx).
+// --upright-side = the room at the sides when this phone is held upright (8px, see --side). Set only on
+// phones turned sideways: the boy is then never taller than with the phone held upright.
+export const KAREN_SCENE_FIT = "[--side:8px] sm:[--side:72px] sideways:[--side:40px] sideways:[--man-scale:2.85] sideways:[--ground-at-bottom:1] sideways:[--upright-side:8px] tablet:[--numbers-like-charts:1] tablet-1024:[--man-pins-scale:0.75]";
 
 // The scene's own colours (from scene-intro.svg): sky to meadow. Shown behind the
 // Introduction scene until its picture arrives, so a slow connection shows no empty box.
@@ -58,8 +64,9 @@ export const KAREN_PAGE = {
   stickyBg: "max-lg:bg-[#F5F9F3]",
   strip: "absolute inset-x-0 bottom-0 -z-10 h-[112px] w-full max-w-none pointer-events-none max-lg:hidden", // laptops only
   // Around the bottom bar. Phones and tablets: none, so the bar is full width on the screen's bottom edge.
-  // Laptops: room at the sides, and a gap under it (more on tall screens).
-  barWrap: "lg:px-4 lg:pb-2 lg:[@media(min-height:700px)]:pb-8",
+  // Laptops: room at the sides, and a gap under it (more on tall screens with a mouse; touch tablets
+  // turned sideways keep the small gap, so the charts get the room).
+  barWrap: "lg:px-4 lg:pb-2 lg:[@media(min-height:700px)_and_(pointer:fine)]:pb-8",
 };
 
 // Dark wood (Stitch look): light brown at the top to dark brown at the bottom, gold edge, light-gold text

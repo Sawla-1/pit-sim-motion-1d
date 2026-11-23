@@ -13,21 +13,27 @@ const FIT_HALF_WIDTH = 11; // ruler ±10 plus room for the man sprite and the ed
 export const PIN_FLAG_HEIGHT = 0.36;
 const CONTENT_BOTTOM = -1.25; // just below the ruler labels (when they are LABEL_REFERENCE tall)
 const BOTTOM_GAP = 2; // px between the numbers and the scene's bottom edge, when the content sits at the bottom
+const TOP_GAP = 4; // px kept free above the pin flags when the content sits at the bottom (the time box is there)
 
 export const LABEL_BASE = 0.3; // world units: the ruler number size on big screens
 const LABEL_MIN_PX = 13; // the ruler numbers are never smaller than this on screen
 const LABEL_REFERENCE = 0.25; // the number size that CONTENT_BOTTOM was made for
 
-// How tall a ruler number is, in world units, for a scene this wide (px). minPx = the smallest
-// size on screen; fitHalfWidth = the world units that fit from the centre to each side.
-function labelFontSize(sceneWidth, minPx = LABEL_MIN_PX, fitHalfWidth = FIT_HALF_WIDTH) {
-  const pixelsPerUnit = sceneWidth / (2 * fitHalfWidth);
-  return Math.max(LABEL_BASE, minPx / pixelsPerUnit);
+// How tall a ruler number is on screen (px), when one world unit is pixelsPerUnit px.
+// base = its size in world units (a thicker ruler has bigger numbers); minPx / maxPx = the smallest
+// and biggest size on screen.
+function labelPx(pixelsPerUnit, { base = LABEL_BASE, minPx = LABEL_MIN_PX, maxPx = Infinity } = {}) {
+  return Math.min(maxPx, Math.max(base * pixelsPerUnit, minPx));
 }
 
 // A short ruler on screen (a phone held upright) gets fewer numbers and a bigger man
 export function isCompactRuler(rulerWidth) {
   return rulerWidth < COMPACT_RULER_PX;
+}
+
+// Pixels per world unit when the ruler fills rulerWidth px (a wide man still fits at its ends)
+export function rulerZoom(rulerWidth, manWidth) {
+  return rulerWidth / (2 * Math.max(FIT_HALF_WIDTH, EDGE + manWidth / 2));
 }
 
 // The ruler sticks for a ruler that shows -range..range meters (compact: fewer numbers).
@@ -54,14 +60,22 @@ function contentTopBottom(labelSize, manHeight, extraBottom, flagHeight) {
 }
 
 // Makes the ruler, the pins and the man fit inside the scene on any screen size.
-// Returns the zoom (pixels per world unit), the ruler number size and the world→pixel functions.
+// Returns the zoom (pixels per world unit), the ruler number size, the world→pixel functions, and
+// roomAbove: the room from the ground line up to the top of the scene (world units).
 // World: 0 is the centre, y goes UP. Pixels: y goes DOWN, so toY flips it.
-// labelMinPx = the smallest ruler number (px); extraBottom, flagHeight: see contentTopBottom;
-// alignBottom = put the content at the bottom of the scene (the room left over goes above it).
-export function makeSceneView(width, height, manHeight, { labelMinPx = LABEL_MIN_PX, extraBottom = 0, flagHeight = PIN_FLAG_HEIGHT, alignBottom = false } = {}) {
-  const labelSize = labelFontSize(width, labelMinPx);
+// manHeight, flagHeight = the man and the pin flags at their normal size: the zoom always makes room
+// for them, so the ruler keeps its size (a bigger man must fit in roomAbove).
+// manWidth = the man's width as drawn. labelMinPx / labelMaxPx = the smallest and biggest ruler
+// number (px); labelBase = the number size on big screens (world units); extraBottom: see
+// contentTopBottom; alignBottom = put the content at the bottom of the scene (the room left over
+// goes above it, and TOP_GAP stays free at the top).
+export function makeSceneView(width, height, manHeight, { manWidth = 0, labelMinPx = LABEL_MIN_PX, labelMaxPx, labelBase = LABEL_BASE, extraBottom = 0, flagHeight = PIN_FLAG_HEIGHT, alignBottom = false } = {}) {
+  const widthZoom = rulerZoom(width, manWidth); // the ruler fits the width
+  const labelSize = labelPx(widthZoom, { base: labelBase, minPx: labelMinPx, maxPx: labelMaxPx }) / widthZoom; // world units
   const { top, bottom } = contentTopBottom(labelSize, manHeight, extraBottom, flagHeight);
-  const zoom = Math.min(width / (2 * FIT_HALF_WIDTH), height / (top - bottom)); // pixels per world unit
+  const topGap = alignBottom ? TOP_GAP : 0;
+  const bottomGap = alignBottom ? BOTTOM_GAP : 0;
+  const zoom = Math.min(widthZoom, (height - topGap - bottomGap) / (top - bottom)); // pixels per world unit
   const centerY = (top + bottom) / 2; // the content sits below y=0, so centre on it
   const toY = alignBottom
     ? (worldY) => height - BOTTOM_GAP - (worldY - bottom) * zoom
@@ -70,6 +84,7 @@ export function makeSceneView(width, height, manHeight, { labelMinPx = LABEL_MIN
   return {
     zoom,
     labelSize,
+    roomAbove: (toY(GROUND_Y) - topGap) / zoom,
     toX: (worldX) => width / 2 + worldX * zoom,
     toY,
   };
@@ -79,17 +94,21 @@ export function makeSceneView(width, height, manHeight, { labelMinPx = LABEL_MIN
 // (object-fit: cover, pinned to the bottom). So the man is on the same spot of the picture on
 // every screen. backdrop = { width, height, groundUp }: the picture's size, and how high above
 // its bottom edge the ground goes (in the picture's own pixels). side = room kept free at the
-// left and right (px), for example for the bamboo. labelMinPx, extraBottom, flagHeight, alignBottom: see makeSceneView.
-export function makeBackdropView(width, height, { manHeight, manWidth, backdrop, side, labelMinPx = LABEL_MIN_PX, extraBottom = 0, flagHeight = PIN_FLAG_HEIGHT, alignBottom = false }) {
+// left and right (px), for example for the bamboo. numbersLikeCharts: see labelZoom below.
+// manHeight, manWidth, flagHeight, the label options, extraBottom, alignBottom, and what it returns: see makeSceneView.
+export function makeBackdropView(width, height, { manHeight, manWidth, backdrop, side, numbersLikeCharts = false, labelMinPx = LABEL_MIN_PX, labelMaxPx, labelBase = LABEL_BASE, extraBottom = 0, flagHeight = PIN_FLAG_HEIGHT, alignBottom = false }) {
   const rulerWidth = width - 2 * side;
-  const fitHalfWidth = Math.max(FIT_HALF_WIDTH, EDGE + manWidth / 2); // a wide man still fits at the ruler's ends
-  const labelSize = labelFontSize(rulerWidth, labelMinPx, fitHalfWidth);
+  const widthZoom = rulerZoom(rulerWidth, manWidth); // the ruler fits between the sides
+  // numbersLikeCharts: the numbers are as big as on the Charts tab, which uses the whole width (here
+  // the bamboo at the sides and the wide man make the ruler shorter, but not the numbers)
+  const labelZoom = numbersLikeCharts ? width / (2 * FIT_HALF_WIDTH) : widthZoom;
+  const labelSize = labelPx(labelZoom, { base: labelBase, minPx: labelMinPx, maxPx: labelMaxPx }) / widthZoom; // world units
   const { top, bottom } = contentTopBottom(labelSize, manHeight, extraBottom, flagHeight);
-  const widthZoom = rulerWidth / (2 * fitHalfWidth); // the ruler fits between the sides
+  const topGap = alignBottom ? TOP_GAP : 0;
   let zoom, groundPx; // groundPx = the ground line, from the top
   if (alignBottom) {
     // The ruler near the scene's bottom (not on the picture's spot): everything fits above it
-    zoom = Math.min(widthZoom, (height - BOTTOM_GAP) / (top - bottom));
+    zoom = Math.min(widthZoom, (height - BOTTOM_GAP - topGap) / (top - bottom));
     groundPx = height - BOTTOM_GAP - (GROUND_Y - bottom) * zoom;
   } else {
     const scale = Math.max(width / backdrop.width, height / backdrop.height); // as object-fit: cover
@@ -104,6 +123,7 @@ export function makeBackdropView(width, height, { manHeight, manWidth, backdrop,
   return {
     zoom,
     labelSize,
+    roomAbove: (groundPx - topGap) / zoom,
     toX: (worldX) => width / 2 + worldX * zoom,
     toY: (worldY) => groundPx - (worldY - GROUND_Y) * zoom,
   };
