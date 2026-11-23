@@ -374,8 +374,10 @@ function App() {
         )}
         {/* Fills the scene box. Charts on phones/tablets: below the 32px strip with the tabs.
             Introduction: the ground stands on the picture's meadow (KAREN_BACKDROP),
-            with room at the sides for the bamboo (KAREN_SCENE_FIT) */}
-        <div className={`absolute inset-0 rounded-[inherit] ${isCharts ? "max-lg:top-8" : KAREN_SCENE_FIT}`}>
+            with room at the sides for the bamboo (KAREN_SCENE_FIT).
+            Phones and tablets (--keep-big): the boy and the pins never get smaller on a wider screen.
+            Laptops keep their normal size. */}
+        <div className={`absolute inset-0 rounded-[inherit] max-lg:[--keep-big:1] ${isCharts ? "max-lg:top-8" : KAREN_SCENE_FIT}`}>
           <SimulationScene
             position={simulation.position}
             velocity={simulation.velocity}

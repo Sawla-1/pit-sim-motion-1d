@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
-import { makeSceneView, makeBackdropView, makeRulerTicks, isCompactRuler, GROUND_Y, EDGE, MIN_RANGE, EDGE_LABEL_GAP, LABEL_BASE, PIN_FLAG_HEIGHT } from "../utils/sceneMath";
+import { makeSceneView, makeBackdropView, makeRulerTicks, isCompactRuler, keepBigScale, GROUND_Y, EDGE, MIN_RANGE, EDGE_LABEL_GAP, LABEL_BASE, PIN_FLAG_HEIGHT } from "../utils/sceneMath";
 import { formatNumber } from "../utils/formatNumber";
 import { KAREN_ART } from "../styles/karenStyles";
 import { SERIES_COLORS } from "../styles/seriesColors";
@@ -9,6 +9,7 @@ const MAN_HEIGHT_SHORT = 1.2; // Charts: the scene is short, so he is smaller
 // A short ruler (a phone held upright): the man is 2.5 times bigger, the ruler 2 times thicker,
 // the pins 2 times bigger and the numbers at least 16px, so all are easy to see. On Charts the
 // ruler then sits at the bottom of its short scene (the tabs and the time box are in a strip above it).
+// Phones and tablets: a longer ruler keeps the man and the pins at that size on screen (see keepBigScale).
 const MAN_SCALE_BIG = 2.5;
 const RULER_SCALE_BIG = 2;
 const LABEL_MIN_PX_BIG = 16;
@@ -81,19 +82,21 @@ function stopScrollOnTouch(element) {
 function SimulationScene({ position, velocity, pins = [], tall, look: baseLook = DEFAULT_RULER, backdrop, onManDragStart, onManDragSample, onManDragEnd }) {
   const ref = useRef(null);
   const drag = useRef(null); // while dragging: the scale from the moment of the press; null = not dragging
-  const [size, setSize] = useState({ width: 0, height: 0, side: 0, manScale: 1, groundAtBottom: false });
+  const [size, setSize] = useState({ width: 0, height: 0, side: 0, manScale: 1, groundAtBottom: false, keepBig: false });
   const gradientId = useId(); // each scene needs its own gradient id
 
   // Keep `size` equal to the real size on screen (needed to turn meters into pixels).
   // side = room to keep free at the left and right: the CSS variable --side (0 if it is not set).
   // manScale = how much bigger to draw the man: the CSS variable --man-scale (1 if it is not set).
+  // keepBig = the CSS variable --keep-big is 1: the man and the pins never get smaller on a wider screen.
   useEffect(() => {
     const observer = new ResizeObserver(([entry]) => {
       const css = getComputedStyle(entry.target);
       const side = parseFloat(css.getPropertyValue("--side")) || 0;
       const manScale = parseFloat(css.getPropertyValue("--man-scale")) || 1;
       const groundAtBottom = css.getPropertyValue("--ground-at-bottom").trim() === "1";
-      setSize({ width: entry.contentRect.width, height: entry.contentRect.height, side, manScale, groundAtBottom });
+      const keepBig = css.getPropertyValue("--keep-big").trim() === "1";
+      setSize({ width: entry.contentRect.width, height: entry.contentRect.height, side, manScale, groundAtBottom, keepBig });
     });
     observer.observe(ref.current);
     return () => observer.disconnect();
@@ -101,12 +104,15 @@ function SimulationScene({ position, velocity, pins = [], tall, look: baseLook =
 
   const rulerWidth = size.width - 2 * size.side;
   const compact = isCompactRuler(rulerWidth);
-  // A short ruler gets the phone look (see MAN_SCALE_BIG); otherwise the CSS may ask for a bigger man
-  const manScale = compact ? MAN_SCALE_BIG : size.manScale;
+  // How much bigger to draw the man and the pins: a short ruler gets the phone look (see MAN_SCALE_BIG),
+  // and with --keep-big a longer ruler keeps that size on screen (keepBigScale). Otherwise normal size.
+  // The CSS may also ask for a bigger man (--man-scale).
+  const bigScale = (big) => (compact || size.keepBig ? keepBigScale(rulerWidth, big) : 1);
+  const manScale = Math.max(bigScale(MAN_SCALE_BIG), size.manScale);
   const manHeight = (tall ? MAN_HEIGHT_TALL : MAN_HEIGHT_SHORT) * manScale;
   const manWidth = manHeight * MAN_ASPECT;
   const look = compact ? thickerRuler(sticksAcrossLine(baseLook), RULER_SCALE_BIG) : baseLook;
-  const pinScale = compact ? PIN_SCALE_BIG : 1;
+  const pinScale = bigScale(PIN_SCALE_BIG);
   const flagWidth = PIN_FLAG_WIDTH * pinScale;
   const flagHeight = PIN_FLAG_HEIGHT * pinScale;
   const poleWidth = PIN_POLE_WIDTH * pinScale;

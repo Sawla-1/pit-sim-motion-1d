@@ -30,6 +30,15 @@ export function isCompactRuler(rulerWidth) {
   return rulerWidth < COMPACT_RULER_PX;
 }
 
+// How many times bigger to draw the man or the pins on a ruler this wide (px). A short ruler: `big`
+// times (the phone look). A longer ruler: less and less, so they stay the same size on screen as on
+// the longest short ruler, until they are back to their normal size (1). So they never get smaller
+// when the screen gets wider.
+export function keepBigScale(rulerWidth, big) {
+  if (isCompactRuler(rulerWidth)) return big;
+  return Math.max(1, (big * COMPACT_RULER_PX) / rulerWidth);
+}
+
 // The ruler sticks for a ruler that shows -range..range meters (compact: fewer numbers).
 // ticks = [{ value (meters), labeled }]: a long stick with a number every `step`,
 // and a short stick halfway between. showEdge = the ruler's last stick falls short
