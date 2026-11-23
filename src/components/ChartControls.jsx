@@ -89,10 +89,11 @@ export function ChartZoomControls({
 }
 
 // Scrub hint: a hand + ↔ arrow + text that fades in and out, centered on the
-// plot. It ignores clicks, so dragging still works under it.
+// plot. It ignores clicks, so dragging still works under it. A picture only (aria-hidden):
+// Charts has one line for screen readers, so they don't hear it once per chart.
 function ScrubHint() {
   return (
-    <div role="status" className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 flex items-center gap-2 text-blue-600 drop-shadow-[0_0_3px_white] motion-safe:animate-pulse">
+    <div aria-hidden="true" className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 flex items-center gap-2 text-blue-600 drop-shadow-[0_0_3px_white] motion-safe:animate-pulse">
       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M22 14a8 8 0 0 1-8 8" />
         <path d="M18 11v-1a2 2 0 0 0-2-2a2 2 0 0 0-2 2" />
@@ -106,7 +107,10 @@ function ScrubHint() {
           <polyline points="6 8 2 12 6 16" />
           <line x1="2" y1="12" x2="22" y2="12" />
         </svg>
-        <span className="text-sm font-bold whitespace-nowrap">Drag to move time</span>
+        {/* Phones held upright (under sm = 640px): 2 lines, so it never covers the chart buttons */}
+        <span className="text-sm font-bold whitespace-nowrap text-center">
+          Drag sideways <br className="sm:hidden" />to move time
+        </span>
       </div>
     </div>
   );

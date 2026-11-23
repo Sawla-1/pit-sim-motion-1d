@@ -71,9 +71,6 @@ function Charts({ charts, data, simulation, pins, onSeek, showScrubHint, inputs 
   const lastIndex = charts.map(({ key }) => !hidden[key]).lastIndexOf(true); // the lowest visible chart
   const bottomIndex = hasRecording ? lastIndex : -1;
 
-  // The top visible chart shows the scrub hint
-  const topIndex = charts.findIndex(({ key }) => !hidden[key]);
-
   // Identical across all three charts - the x-axis (time) is shared state,
   // not per-chart - so it's built once here instead of repeated 3x below.
   const xControls = (
@@ -97,6 +94,9 @@ function Charts({ charts, data, simulation, pins, onSeek, showScrubHint, inputs 
           isPlayback ? "touch-pan-y" : ""
         }`}
       >
+        {/* Every visible chart shows the scrub hint (one drag on any chart hides them all).
+            The hints are pictures only; screen readers hear this one line, not 3 times */}
+        {showScrubHint && <p role="status" className="sr-only">Drag sideways on a chart to move time</p>}
         {charts.map(({ key, label }, index) => {
           const yDisabled = getYDisabled(key);
           const isBottom = index === bottomIndex;
@@ -123,7 +123,7 @@ function Charts({ charts, data, simulation, pins, onSeek, showScrubHint, inputs 
               xControls={xControls}
               isBottom={isBottom}
               isLast={index === lastIndex}
-              scrubHint={showScrubHint && index === topIndex}
+              scrubHint={showScrubHint}
               onReset={() => handleReset(key, isBottom)}
               resetDisabled={isResetDisabled(key, isBottom)}
               onZoomToPins={() => zoomToPins(pins)}
