@@ -39,9 +39,13 @@ function PhysicsInput({ id, label, symbol, unit, value, min, max, color, disable
         className={KAREN_INPUT.arrowCheck}
         style={{ accentColor: color }}
       />
-      <svg viewBox="0 0 20 10" className={KAREN_INPUT.arrowIcon} aria-hidden="true">
-        <path d="M1 5 H13" stroke={color} strokeWidth="2.5" />
-        <path d="M12 1 L19 5 L12 9 Z" fill={color} />
+      {/* The vector symbol like in the textbooks: the letter with a small arrow over it. It is drawn
+          (not a special character), so it looks the same on every device. */}
+      <svg viewBox="0 0 20 16" className={KAREN_INPUT.arrowIcon} aria-hidden="true">
+        <path d="M4.5 3.5 H15.5 M12.5 1 L15.5 3.5 L12.5 6" fill="none" stroke={color} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+        <text x="10" y="15" textAnchor="middle" fontSize="12" fontStyle="italic" fontWeight="700" fontFamily="Georgia, 'Times New Roman', serif" fill={color}>
+          {symbol}
+        </text>
       </svg>
       <span className="sr-only">Show the {label.toLowerCase()} arrow</span>
     </label>
