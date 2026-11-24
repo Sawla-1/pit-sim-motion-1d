@@ -28,7 +28,7 @@
  * this same function, so they always agree.
  */
 export function resolvePlaybackState(recordedData, targetTime) {
-  const lastState = recordedData[recordedData.length - 1];
+  const lastState = recordedData.at(-1);
   if (targetTime >= lastState.time) return { simulation: lastState, isEndOfPlayback: true };
   return { simulation: interpolateStateAtTime(recordedData, targetTime), isEndOfPlayback: false };
 }

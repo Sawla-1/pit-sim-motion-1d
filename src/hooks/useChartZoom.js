@@ -79,7 +79,7 @@ export function useChartZoom(data, valueKeys) {
     setYRanges({});
   }
 
-  const maxTime = data.recordedData[data.recordedData.length - 1].time;
+  const maxTime = data.recordedData.at(-1).time;
 
   // ---- X-axis: shared time window across all 3 charts ----
 

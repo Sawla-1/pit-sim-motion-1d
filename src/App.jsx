@@ -177,7 +177,7 @@ function App() {
   };
 
   // How long the recording is, for the Reset popup text
-  const recordedSeconds = data.recordedData[data.recordedData.length - 1].time;
+  const recordedSeconds = data.recordedData.at(-1).time;
 
   // Reset All only asks when there is a recording to lose
   const requestReset = () => (data.recordedData.length > 1 ? setConfirmingReset(true) : reset());
@@ -194,7 +194,7 @@ function App() {
     if (mode === "playback") setPlaybackTried(true);
     // Playback starts at the first recorded point. Record continues from the last.
     const points = data.recordedData;
-    setSimulation(mode === "playback" ? points[0] : points[points.length - 1]);
+    setSimulation(mode === "playback" ? points[0] : points.at(-1));
   };
 
   // Clear all recorded data

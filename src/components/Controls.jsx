@@ -81,7 +81,7 @@ function Controls({
   // Pin buttons are removed on the Intro tab (no charts to pin on)
   const pinLook = showPins ? hideInRecord : "hidden";
   const canStepFrames = !playing;
-  const lastTime = data.recordedData[data.recordedData.length - 1].time;
+  const lastTime = data.recordedData.at(-1).time;
   const noRecording = data.recordedData.length <= 1;
   const pinAction = PIN_ACTIONS[pinCount];
 
