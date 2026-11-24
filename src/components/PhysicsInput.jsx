@@ -8,7 +8,8 @@ import { KAREN_INPUT, KAREN_NUMBER } from "../styles/karenStyles";
 // shows the live value. No effect is needed to keep the two in sync.
 // readOnly (Playback: only look at the result): the number is plain text in the
 // same spot, and the slider still moves with the value but can't be dragged.
-function PhysicsInput({ id, label, symbol, unit, value, min, max, color, disabled, readOnly = false, onChange, horizontal = false }) {
+// arrowShown / onArrowToggle(on): the "show arrow" tick box. Left out = no tick box (Position).
+function PhysicsInput({ id, label, symbol, unit, value, min, max, color, disabled, readOnly = false, onChange, horizontal = false, arrowShown, onArrowToggle }) {
   const [draft, setDraft] = useState(null); // null = not typing right now
   const shown = String(Math.round(value * 100) / 100); // 2 decimals
   const text = draft ?? shown;
@@ -25,6 +26,24 @@ function PhysicsInput({ id, label, symbol, unit, value, min, max, color, disable
   const nameLabel = (
     <label htmlFor={id} className="text-base font-bold" style={{ color }}>
       {label}
+    </label>
+  );
+
+  // The "show arrow" tick box: works in every mode, even while playing (it only changes the picture)
+  const arrowToggle = onArrowToggle && (
+    <label className={KAREN_INPUT.arrowToggle} title={`Show the ${label.toLowerCase()} arrow`}>
+      <input
+        type="checkbox"
+        checked={arrowShown}
+        onChange={(e) => onArrowToggle(e.target.checked)}
+        className={KAREN_INPUT.arrowCheck}
+        style={{ accentColor: color }}
+      />
+      <svg viewBox="0 0 20 10" className={KAREN_INPUT.arrowIcon} aria-hidden="true">
+        <path d="M1 5 H13" stroke={color} strokeWidth="2.5" />
+        <path d="M12 1 L19 5 L12 9 Z" fill={color} />
+      </svg>
+      <span className="sr-only">Show the {label.toLowerCase()} arrow</span>
     </label>
   );
 
@@ -82,9 +101,12 @@ function PhysicsInput({ id, label, symbol, unit, value, min, max, color, disable
   // Charts tab: phones only (KAREN_INPUT.chartLine).
   const line = (className, inputId) => (
     <div className={className}>
-      <label htmlFor={inputId} className={KAREN_INPUT.name} style={{ color }}>
-        {label} <span className={KAREN_INPUT.symbol}>({symbol})</span>
-      </label>
+      <div className={KAREN_INPUT.name} style={{ color }}>
+        <label htmlFor={inputId}>
+          {label} <span className={KAREN_INPUT.symbol}>({symbol})</span>
+        </label>
+        {arrowToggle}
+      </div>
       <span className={KAREN_INPUT.min}>{min}</span>
       {slider(`hslider ${KAREN_INPUT.slider}`)}
       <span className={KAREN_INPUT.max}>{max}</span>
@@ -107,6 +129,7 @@ function PhysicsInput({ id, label, symbol, unit, value, min, max, color, disable
         <div className="flex-1 min-w-0 flex flex-col items-start gap-2 [@media(max-height:600px)]:gap-1.5">
           {nameLabel}
           <div className="self-end">{numberBox(id)}</div>
+          {arrowToggle && <div className="self-end">{arrowToggle}</div>}
         </div>
         {/* The slider starts and ends where the plot does: 13px from the row edge
             (panel padding 12 + 1, or on short screens 6 + 7) */}

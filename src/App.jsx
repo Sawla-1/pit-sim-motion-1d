@@ -23,11 +23,14 @@ const FORMULA_TOOK_OVER = "Formula stopped. You took control.";
 // Where everything starts: standing still at 0 (meters, m/s, m/s², seconds)
 const START_STATE = { position: 0, velocity: 0, acceleration: 0, time: 0 };
 // The 3 quantities, in screen order. `key` is the field name in the simulation state.
+// hasArrow = it can be shown as an arrow over the man (a tick box turns it on)
 const QUANTITIES = [
   { key: "position", label: "Position", symbol: "x", unit: "m" },
-  { key: "velocity", label: "Velocity", symbol: "v", unit: "m/s" },
-  { key: "acceleration", label: "Acceleration", symbol: "a", unit: "m/s²" },
+  { key: "velocity", label: "Velocity", symbol: "v", unit: "m/s", hasArrow: true },
+  { key: "acceleration", label: "Acceleration", symbol: "a", unit: "m/s²", hasArrow: true },
 ];
+// The arrows are hidden at the start (and after Reset All)
+const NO_ARROWS = { velocity: false, acceleration: false };
 
 function App() {
   // ============================================================================
@@ -49,6 +52,8 @@ function App() {
   const [playbackTried, setPlaybackTried] = useState(false);
   // Turns true the first time the user drags a chart; stops the scrub hint
   const [scrubTried, setScrubTried] = useState(false);
+  // Which arrows are shown over the man: { velocity, acceleration } (true = shown)
+  const [arrows, setArrows] = useState(NO_ARROWS);
 
   // Data and mode state
   const [data, setData] = useState({
@@ -174,6 +179,7 @@ function App() {
     stopAll();
     setSimulation(START_STATE);
     setPins([]);
+    setArrows(NO_ARROWS);
     setData({
       // A copy, not START_STATE itself: a new first point tells the charts
       // "new recording", so they forget the old zoom (see useChartZoom)
@@ -287,7 +293,7 @@ function App() {
 
   // Charts tab: the 3 inputs are beside their charts (Charts puts each in its row).
   // Intro tab: they sit in one row under the scene.
-  const inputs = QUANTITIES.map(({ key, label, symbol, unit }) => (
+  const inputs = QUANTITIES.map(({ key, label, symbol, unit, hasArrow }) => (
     <PhysicsInput
       key={key} id={key} label={label} symbol={symbol} unit={unit}
       value={simulation[key]} min={-10} max={10}
@@ -296,6 +302,8 @@ function App() {
       readOnly={!isRecording} // Playback: only look; change things in Record
       horizontal={!isCharts}
       onChange={(v) => handleSimulationChange({ [key]: v })}
+      arrowShown={hasArrow ? arrows[key] : undefined}
+      onArrowToggle={hasArrow ? (on) => setArrows((prev) => ({ ...prev, [key]: on })) : undefined}
     />
   ));
 
@@ -374,6 +382,8 @@ function App() {
           <SimulationScene
             position={simulation.position}
             velocity={simulation.velocity}
+            acceleration={simulation.acceleration}
+            arrows={arrows}
             pins={isCharts ? pins : []}
             tall={!isCharts}
             look={isCharts ? undefined : KAREN_RULER}
