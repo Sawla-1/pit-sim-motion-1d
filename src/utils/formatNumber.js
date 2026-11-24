@@ -3,5 +3,5 @@
  * Returns "0" for non-finite values.
  */
 export function formatNumber(n, decimals) {
-  return Number.isFinite(Number(n)) ? Number(n).toFixed(decimals) : "0";
+  return Number.isFinite(n) ? n.toFixed(decimals) : "0";
 }

@@ -79,7 +79,7 @@ export function useChartZoom(data, valueKeys) {
     setYRanges({});
   }
 
-  const maxTime = data.recordedData[data.recordedData.length - 1].time;
+  const maxTime = data.recordedData.at(-1).time;
 
   // ---- X-axis: shared time window across all 3 charts ----
 
@@ -195,11 +195,7 @@ export function useChartZoom(data, valueKeys) {
   // time window for all three charts.
   const handleReset = (valueKey, withTime) => {
     if (withTime) setTimeZoom(null);
-    setYRanges((prev) => {
-      const next = { ...prev };
-      delete next[valueKey];
-      return next;
-    });
+    setYRanges((prev) => ({ ...prev, [valueKey]: undefined })); // undefined = not zoomed (as in handleYZoom)
   };
 
   // Off when there is nothing to reset (time only counts with `withTime`)

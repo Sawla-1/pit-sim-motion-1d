@@ -65,7 +65,7 @@ function App() {
   //   released = he was let go: the loop stops him in its next frame (see onDragStep).
   //     Not in the let-go handler: a change made there could be overwritten by the loop's next frame.
   // A mode switch, Clear Data or Reset All in the middle of a drag (e.g. a second
-  // finger tapping a button) ends the drag: they set it back to null.
+  // finger tapping a button) ends the drag: they set it back to null (see stopAll).
   const drag = useRef(null);
 
   // One frame of dragging: the engine does all the maths and hands back its photos
@@ -161,12 +161,18 @@ function App() {
   // CONTROL FUNCTIONS
   // ============================================================================
 
-  // Reset everything to initial state
-  const reset = () => {
+  // Stop everything that moves him: a formula, a drag, and the play loop.
+  // Reset All, a mode switch and Clear Data all start with this.
+  const stopAll = () => {
     stopFormula();
     drag.current = null;
-    setSimulation(START_STATE);
     setPlaying(false);
+  };
+
+  // Reset everything to initial state
+  const reset = () => {
+    stopAll();
+    setSimulation(START_STATE);
     setPins([]);
     setData({
       // A copy, not START_STATE itself: a new first point tells the charts
@@ -177,7 +183,7 @@ function App() {
   };
 
   // How long the recording is, for the Reset popup text
-  const recordedSeconds = data.recordedData[data.recordedData.length - 1].time;
+  const recordedSeconds = data.recordedData.at(-1).time;
 
   // Reset All only asks when there is a recording to lose
   const requestReset = () => (data.recordedData.length > 1 ? setConfirmingReset(true) : reset());
@@ -187,21 +193,17 @@ function App() {
 
   // Switch between Record and Playback modes
   const switchMode = (mode) => {
-    stopFormula();
-    drag.current = null;
-    setPlaying(false);
+    stopAll();
     setData((prev) => ({ ...prev, selectedMode: mode }));
     if (mode === "playback") setPlaybackTried(true);
     // Playback starts at the first recorded point. Record continues from the last.
     const points = data.recordedData;
-    setSimulation(mode === "playback" ? points[0] : points[points.length - 1]);
+    setSimulation(mode === "playback" ? points[0] : points.at(-1));
   };
 
   // Clear all recorded data
   const clearRecordedData = () => {
-    stopFormula();
-    drag.current = null;
-    setPlaying(false);
+    stopAll();
     setPins([]);
     // Keep the values he has now, and start the clock again at 0
     const start = { ...simulation, time: 0 };

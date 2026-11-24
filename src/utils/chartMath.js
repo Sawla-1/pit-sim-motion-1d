@@ -77,24 +77,15 @@ export function decimateMinMax(points, xMin, xMax, pixelWidth) {
   return result;
 }
 
-// First index whose x is >= the given x (points are sorted by x)
-function lowerBound(points, x) {
-  let low = 0;
-  let high = points.length;
-  while (low < high) {
-    const mid = (low + high) >> 1;
-    if (points[mid].x < x) low = mid + 1;
-    else high = mid;
-  }
-  return low;
-}
-
 // The data point closest to the pointer, if it is within `radius` pixels.
 // `scales` = { toX, toY, fromX } (value → pixel, and pixel → value for x).
 // Returns the point ({ x, y } in data units) or null.
 export function findNearestPoint(points, scales, pixelX, pixelY, radius) {
   const { toX, toY, fromX } = scales;
-  const start = lowerBound(points, fromX(pixelX));
+  // Start at the first point at or right of the pointer (none: past the end, look left only)
+  const pointerX = fromX(pixelX);
+  const found = points.findIndex((p) => p.x >= pointerX);
+  const start = found === -1 ? points.length : found;
   let best = null;
   let bestDistance = radius * radius;
 

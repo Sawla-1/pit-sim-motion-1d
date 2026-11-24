@@ -101,17 +101,17 @@ function SimulationScene({ position, velocity, pins = [], tall, look: baseLook =
   useEffect(() => {
     const observer = new ResizeObserver(([entry]) => {
       const css = getComputedStyle(entry.target);
-      const side = parseFloat(css.getPropertyValue("--side")) || 0;
-      const manScale = parseFloat(css.getPropertyValue("--man-scale")) || 0;
-      const groundAtBottom = css.getPropertyValue("--ground-at-bottom").trim() === "1";
-      const phoneLook = css.getPropertyValue("--phone-look").trim() === "1";
-      const numbersLikeCharts = css.getPropertyValue("--numbers-like-charts").trim() === "1";
-      const manPinsScale = parseFloat(css.getPropertyValue("--man-pins-scale")) || 1;
+      const number = (name, unset) => parseFloat(css.getPropertyValue(name)) || unset; // a CSS number (`unset` if not set)
+      const isOn = (name) => css.getPropertyValue(name).trim() === "1"; // a CSS switch: 1 = on
       // the ruler's width with this phone held upright: the screen's short side minus the sides (0 = not set)
       const uprightSide = parseFloat(css.getPropertyValue("--upright-side"));
-      const uprightRuler = isNaN(uprightSide) ? 0 : Math.min(window.screen.width, window.screen.height) - 2 * uprightSide;
-      const fillRoom = css.getPropertyValue("--fill-room").trim() === "1"; // see fitScale
-      setSize({ width: entry.contentRect.width, height: entry.contentRect.height, side, manScale, groundAtBottom, phoneLook, numbersLikeCharts, manPinsScale, uprightRuler, fillRoom });
+      setSize({
+        width: entry.contentRect.width, height: entry.contentRect.height,
+        side: number("--side", 0), manScale: number("--man-scale", 0), manPinsScale: number("--man-pins-scale", 1),
+        groundAtBottom: isOn("--ground-at-bottom"), phoneLook: isOn("--phone-look"), numbersLikeCharts: isOn("--numbers-like-charts"),
+        uprightRuler: isNaN(uprightSide) ? 0 : Math.min(window.screen.width, window.screen.height) - 2 * uprightSide,
+        fillRoom: isOn("--fill-room"), // see fitScale
+      });
     });
     observer.observe(ref.current);
     return () => observer.disconnect();

@@ -1,6 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { makeScale, invertScale, makeTicks, evenTicks, decimateMinMax, toPath, findNearestPoint } from "../utils/chartMath";
-import { placePinLabels } from "../utils/pinLabels";
+import { placePinLabels, labelWidth } from "../utils/pinLabels";
 import { formatNumber } from "../utils/formatNumber";
 
 // Space around the plot (px). The bottom is 26 when this chart shows the
@@ -191,7 +191,7 @@ function SvgChart({ points, color, xMin, xMax, yMin, yMax, showXNumbers, label, 
           {/* hover: a dot on the point and a dark box with (time, value) */}
           {hover && (() => {
             const text = `(${formatNumber(hover.point.x, 2)}, ${formatNumber(hover.point.y, 2)})`;
-            const width = text.length * 7 + 12;
+            const width = labelWidth(text);
             const boxX = Math.max(left, Math.min(hover.x - width / 2, right - width)); // stay inside the plot
             const boxY = hover.y - 40 >= top ? hover.y - 40 : hover.y + 14; // above, or below if no room
             return (

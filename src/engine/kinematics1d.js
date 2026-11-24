@@ -47,7 +47,7 @@ export function calculateDragStep(simulation, deltaTime, mouseX, photos) {
   const recent = all.filter((photo) => photo.t >= time - DRAG_WINDOW);
   const kept = recent.length >= 2 ? recent : all.slice(-2);
   const oldest = kept[0];
-  const newest = kept[kept.length - 1];
+  const newest = kept.at(-1);
   const span = newest.t - oldest.t;
 
   // How much of the way to the new value to go this frame (0..1)
