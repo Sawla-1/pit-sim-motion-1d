@@ -194,8 +194,12 @@ function App() {
   // Reset All only asks when there is a recording to lose
   const requestReset = () => (data.recordedData.length > 1 ? setConfirmingReset(true) : reset());
 
-  // Toggle play/pause
-  const togglePlayPause = () => setPlaying((p) => !p);
+  // Toggle play/pause. Play at the end of the recording (Playback) starts again from the beginning:
+  // without this, the first frame sees "end" and stops at once, so nothing seems to happen.
+  const togglePlayPause = () => {
+    if (!playing && !isRecording && simulation.time >= recordedSeconds) setSimulation(data.recordedData[0]);
+    setPlaying((p) => !p);
+  };
 
   // Switch between Record and Playback modes
   const switchMode = (mode) => {
