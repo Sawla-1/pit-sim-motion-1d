@@ -53,6 +53,8 @@ const ARROW_LINE = 0.3; // how thick the line is
 const ARROW_TIP = 0.6; // how long and how wide the tip is
 const ARROW_SEE_THROUGH = 0.75; // fill opacity: 1 = solid
 const ARROW_OUTLINE = "#1f2937"; // thin dark edge, the same dark as the pins
+const ARROW_MIN_PX = 30; // the shortest arrow on screen (pixels), so a small value still shows its way
+const ARROW_ZERO = 0.005; // below this the number box shows 0 (2 decimals), so there is no arrow
 
 // How far the lowest part of the ruler (the bar or a long stick) reaches below the ground line
 const rulerLowest = (look) => Math.max(look.groundHeight / 2, look.tickDrop + look.tickLabeledHeight / 2);
@@ -285,13 +287,15 @@ function SimulationScene({ position, velocity, acceleration, arrows, pins = [], 
   };
 
   // One arrow on the ruler: it starts at the man's feet and points right for + and left for -.
-  // No arrow for 0. A short arrow gets a smaller tip (at most half its length), so it still looks
+  // No arrow when the number box shows 0. A small value still gets a short arrow (ARROW_MIN_PX),
+  // so its way shows. A short arrow gets a smaller tip (at most half its length), so it still looks
   // like an arrow. Drawn as one shape: along the line, round the tip, and back along the line.
   const arrow = (value, color) => {
-    if (value === 0) return null;
+    if (Math.abs(value) < ARROW_ZERO) return null;
     const direction = Math.sign(value);
     const startX = toWorldX(position);
-    const tipX = startX + value * ARROW_LENGTH;
+    const length = Math.max(Math.abs(value) * ARROW_LENGTH, ARROW_MIN_PX / view.zoom); // world units
+    const tipX = startX + direction * length;
     const thick = compact ? RULER_SCALE_BIG : 1; // the phone look: 2 times thicker, like the ruler
     const tip = Math.min(ARROW_TIP * thick, Math.abs(tipX - startX) / 2); // the tip is as wide as it is long
     const neckX = tipX - direction * tip; // where the line meets the tip
