@@ -16,11 +16,11 @@ const Y_NUMBERS = new Intl.NumberFormat(undefined, { maximumFractionDigits: 1 })
 // A line chart drawn with SVG. Props in only; it knows nothing about
 // "position" or "velocity" (so simulation #2 can use it too).
 // points = [{ x, y }, ...] sorted by x.
-// nowX = where to draw the "now" band (data units, or leave out for none).
+// nowX = where to draw the "now" band (data units, or leave out for none). nowColor = its color.
 // pins = [{ name, x, y, text }] in data units; `text` is the label's words.
 // onScrub(xValue) = called with the x under the pointer while it is pressed
 // and dragged. Leave it out and the chart can't be dragged.
-function SvgChart({ points, color, xMin, xMax, yMin, yMax, showXNumbers, label, nowX, pins = [], onScrub }) {
+function SvgChart({ points, color, xMin, xMax, yMin, yMax, showXNumbers, label, nowX, nowColor = "#f59e0b", pins = [], onScrub }) {
   const ref = useRef(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
   const [hover, setHover] = useState(null); // the point under the pointer, in pixels
@@ -139,13 +139,13 @@ function SvgChart({ points, color, xMin, xMax, yMin, yMax, showXNumbers, label, 
             <path d={path} transform="scale(0.1)" fill="none" stroke={color} strokeWidth="30" strokeLinejoin="round"
               pointerEvents="none" />
 
-            {/* "now" band: see-through orange, 8px wide, dashed edges */}
+            {/* "now" band: see-through, 8px wide, dashed edges (orange unless nowColor says otherwise) */}
             {nowX != null && (
               <g>
-                <rect x={toX(nowX) - 4} y={top} width="8" height={bottom - top} fill="rgba(245, 158, 11, 0.5)" />
+                <rect x={toX(nowX) - 4} y={top} width="8" height={bottom - top} fill={nowColor} fillOpacity="0.5" />
                 {[-4, 4].map((d) => (
                   <line key={d} x1={toX(nowX) + d} x2={toX(nowX) + d} y1={top} y2={bottom}
-                    stroke="#f59e0b" strokeDasharray="4 4" />
+                    stroke={nowColor} strokeDasharray="4 4" />
                 ))}
               </g>
             )}

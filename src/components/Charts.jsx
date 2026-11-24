@@ -5,6 +5,7 @@ import { useChartZoom } from "../hooks/useChartZoom";
 import { ChartZoomControls, ChartPanel } from "./ChartControls";
 import SvgChart from "./SvgChart";
 import { SERIES_COLORS } from "../styles/seriesColors";
+import { MODE_COLORS } from "../styles/karenStyles";
 
 // Each chart's line as {x, y} points. `old` = the lines for an earlier version
 // of the recording: only the new points are turned into {x, y}.
@@ -140,6 +141,7 @@ function Charts({ charts, data, simulation, pins, onSeek, showScrubHint, inputs 
                 yMax={yWindow.max}
                 showXNumbers={isBottom}
                 nowX={simulation.time}
+                nowColor={isPlayback ? MODE_COLORS.playback : MODE_COLORS.record}
                 pins={pins.map((pin) => ({
                   name: pin.name,
                   x: pin.time,

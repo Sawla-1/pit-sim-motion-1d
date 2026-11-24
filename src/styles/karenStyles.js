@@ -70,7 +70,7 @@ export const KAREN_PAGE = {
 };
 
 // Dark wood (Stitch look): light brown at the top to dark brown at the bottom, gold edge, light-gold text
-const WOOD = "border-2 border-[#D97706]/40 bg-[linear-gradient(180deg,#6C4122_0%,#4B2B13_50%,#341C0C_100%)] text-[#FDE68A] shadow-[inset_0_1px_1px_rgba(255,255,255,0.25),0_3px_6px_rgba(0,0,0,0.35)]";
+const WOOD = "border-2 border-[#D97706]/40 bg-[linear-gradient(180deg,#6C4122_0%,#4B2B13_50%,#341C0C_100%)] text-(--bar-icon) shadow-[inset_0_1px_1px_rgba(255,255,255,0.25),0_3px_6px_rgba(0,0,0,0.35)]";
 // Mouse on it: brighter and a little bigger. Pressed: a little smaller. "Reduce motion": no animation.
 const PRESSABLE = "transition motion-reduce:transition-none enabled:hover:brightness-125 enabled:hover:scale-108 enabled:active:scale-95";
 
@@ -80,6 +80,11 @@ const PRESSABLE = "transition motion-reduce:transition-none enabled:hover:bright
 // Phone turned sideways (short screen): one row, so the sliders still fit above it.
 // Laptops: a rounded pill with a dark edge, one row.
 export const KAREN_BAR = {
+  // The bar's colors, by mode. The icons and words (--bar-icon) and the red parts (--bar-accent: the chosen
+  // mode, the drum's centre; --bar-accent-dark: the drum's edge) read these, so Record is gold and red,
+  // and Playback is light blue and blue. Reset All stays red in both: it is a warning button.
+  recordColors: "[--bar-icon:#FDE68A] [--bar-accent:#B4262D] [--bar-accent-dark:#7E1A1F]",
+  playbackColors: "[--bar-icon:#BFDBFE] [--bar-accent:#2563EB] [--bar-accent-dark:#1E3A8A]",
   box: "karen-rattan relative isolate w-full flex flex-wrap items-center gap-y-2 max-lg:justify-center max-lg:border-t-2 max-lg:border-[#5C3716] max-lg:py-3.5 max-lg:gap-y-2.5 max-sm:px-2 max-sm:gap-x-[5px] sm:max-lg:px-6 sm:max-lg:gap-x-3 sideways:gap-x-2 lg:max-w-[1000px] xl:max-w-[1150px] lg:justify-between lg:py-[18px] lg:[@media(max-height:600px)]:py-[10px] lg:rounded-full lg:border-2 lg:border-[#5C3716]",
   // Laptops: side padding and gaps. The Charts tab uses `compact` instead, so all the buttons fit
   // in one row from 1024px wide.
@@ -101,22 +106,27 @@ export const KAREN_BAR = {
   modeBox: `flex gap-1 p-1 rounded-full ${WOOD} max-lg:order-2 sideways:order-1 max-sm:p-0.5 sideways:p-0.5`,
   // One part of the mode switch (phones: smaller)
   modeOption: "relative px-4 h-8 flex items-center gap-2 rounded-full text-sm font-bold transition-colors max-sm:h-[26px] max-sm:px-2.5 max-sm:text-xs max-sm:gap-1.5 sideways:h-[26px] sideways:px-2.5 sideways:text-xs sideways:gap-1.5",
-  modeOn: "bg-[#B4262D] text-[#FEF3C7]",
-  modeOff: "text-[#FDE68A]",
+  modeOn: "bg-(--bar-accent) text-[#FEF3C7]",
+  modeOff: "text-(--bar-icon)",
   // The drum: 80% of the art's size (86 x 66px) on every screen
-  drum: "relative w-[86px] h-[66px] -my-[14px] shrink-0 cursor-pointer transition hover:brightness-110 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B4262D]",
-  // The drum's red centre drawn on top at its full 32px, so only the gold ring and the horns get smaller
-  drumRed: "absolute left-1/2 top-[32px] size-8 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#7E1A1F] bg-[#B4262D]",
+  drum: "relative w-[86px] h-[66px] -my-[14px] shrink-0 cursor-pointer transition hover:brightness-110 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--bar-accent)",
+  // The drum's centre (red in Record, blue in Playback) drawn on top at its full 32px, so only the gold ring and the horns get smaller
+  drumRed: "absolute left-1/2 top-[32px] size-8 -translate-x-1/2 -translate-y-1/2 rounded-full border border-(--bar-accent-dark) bg-(--bar-accent)",
   // The Play / Pause icon on the red centre
   drumIcon: "absolute left-1/2 top-[32px] -translate-x-1/2 -translate-y-1/2 text-white",
 };
 
+// The mode colors: red = Record, blue = Playback. The bottom bar (KAREN_BAR) and the time box (KAREN_TIME_EDGE)
+// use the same blues and reds (Tailwind needs them written out in full there), and the charts' "now" band uses these.
+export const MODE_COLORS = { record: "#B4262D", playback: "#2563EB" };
+
 // The row across the top of the scene: the mode badge and the time box. The time box is at the right
 // end on every screen (the tabs are at the top-left). Taps go through it to the scene and the tabs.
 export const KAREN_TOP_ROW = "absolute top-2 inset-x-2 z-10 flex items-center justify-end gap-3 pointer-events-none";
-// The time box (Stitch look): a beige box with a brown edge, dark text.
+// The time box (Stitch look): a beige box with an edge (brown in Record, blue in Playback), dark text.
 // Phones (upright or sideways): smaller (28px tall, 16px numbers), so the boy has more room.
-export const KAREN_TIME = "h-9 min-w-[96px] px-3 flex items-center justify-center rounded-md border-2 border-[#82542A] bg-[#EBD9BC] shadow-sm font-mono text-xl font-bold text-[#1C1917] max-sm:h-7 max-sm:min-w-[72px] max-sm:px-2 max-sm:text-base sideways:h-7 sideways:min-w-[72px] sideways:px-2 sideways:text-base";
+export const KAREN_TIME_EDGE = { record: "[--time-edge:#82542A]", playback: "[--time-edge:#2563EB]" };
+export const KAREN_TIME = "h-9 min-w-[96px] px-3 flex items-center justify-center rounded-md border-2 border-(--time-edge) bg-[#EBD9BC] shadow-sm font-mono text-xl font-bold text-[#1C1917] max-sm:h-7 max-sm:min-w-[72px] max-sm:px-2 max-sm:text-base sideways:h-7 sideways:min-w-[72px] sideways:px-2 sideways:text-base";
 
 // The number box (Stitch look), on every screen and both tabs: beige, thin brown edge,
 // number + unit inside. The digits stay 16px, so iPhones don't zoom in.
