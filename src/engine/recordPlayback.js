@@ -34,33 +34,17 @@ export function resolvePlaybackState(recordedData, targetTime) {
 }
 
 /**
- * First recorded point whose time is at or after `time` (the last point if
- * none is). recordedData is sorted by time, so a binary search works.
- */
-function firstIndexAtOrAfter(recordedData, time) {
-  let lo = 0;
-  let hi = recordedData.length - 1;
-  while (lo < hi) {
-    const mid = (lo + hi) >> 1;
-    if (recordedData[mid].time < time) {
-      lo = mid + 1;
-    } else {
-      hi = mid;
-    }
-  }
-  return lo;
-}
-
-/**
  * Work out what the simulation looked like at a time that wasn't
  * recorded exactly. Finds the two recorded points right before and
- * after that time (recordedData is sorted, so a binary search works),
- * then blends position and velocity between them. Acceleration is NOT
- * blended — it only changes when the user changes it, so it just uses
- * the earlier point's value instead of faking a smooth ramp.
+ * after that time, then blends position and velocity between them.
+ * Acceleration is NOT blended — it only changes when the user changes
+ * it, so it just uses the earlier point's value instead of faking a
+ * smooth ramp.
  */
 function interpolateStateAtTime(recordedData, targetTime) {
-  const lo = firstIndexAtOrAfter(recordedData, targetTime);
+  // The first point at or after targetTime. There always is one: resolvePlaybackState
+  // has already stopped at the last point.
+  const lo = recordedData.findIndex((point) => point.time >= targetTime);
   const next = recordedData[lo];
   if (next.time <= targetTime) return next;
 
