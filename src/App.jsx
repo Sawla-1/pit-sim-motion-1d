@@ -330,11 +330,11 @@ function App() {
 
   return (
     <div className={`relative min-h-svh lg:h-svh w-full flex flex-col box-border ${KAREN_PAGE.bg} text-gray-800 overflow-x-clip`}>
-      {/* Introduction only: bamboo down both sides of the whole page (hidden on phones: no room) */}
+      {/* Introduction only: bamboo down both sides of the whole page (hidden on phones, also turned sideways: no room) */}
       {!isCharts && (
         <>
-          <img src={KAREN_ART.bambooLeft} alt="" aria-hidden="true" className="hidden sm:block absolute left-[-12px] top-0 w-[84px] h-full z-[5] pointer-events-none" />
-          <img src={KAREN_ART.bambooRight} alt="" aria-hidden="true" className="hidden sm:block absolute right-[-12px] top-0 w-[84px] h-full z-[5] pointer-events-none" />
+          <img src={KAREN_ART.bambooLeft} alt="" aria-hidden="true" className="hidden sm:block sideways:hidden absolute left-[-12px] top-0 w-[84px] h-full z-[5] pointer-events-none" />
+          <img src={KAREN_ART.bambooRight} alt="" aria-hidden="true" className="hidden sm:block sideways:hidden absolute right-[-12px] top-0 w-[84px] h-full z-[5] pointer-events-none" />
         </>
       )}
       {/* Top: the scene (with the time), with the tabs floating on its top-left corner.
