@@ -109,12 +109,13 @@ function PhysicsInput({ id, label, symbol, unit, value, min, max, color, disable
         <label htmlFor={inputId}>
           {label} <span className={KAREN_INPUT.symbol}>({symbol})</span>
         </label>
-        {arrowToggle}
+        {arrowToggle && <span className={KAREN_INPUT.arrowInName}>{arrowToggle}</span>}
       </div>
       <span className={KAREN_INPUT.min}>{min}</span>
       {slider(`hslider ${KAREN_INPUT.slider}`)}
       <span className={KAREN_INPUT.max}>{max}</span>
       <div className={KAREN_INPUT.box}>{numberBox(inputId)}</div>
+      {arrowToggle && <div className={KAREN_INPUT.arrowInRow3}>{arrowToggle}</div>}
     </div>
   );
 

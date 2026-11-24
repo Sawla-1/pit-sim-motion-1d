@@ -147,13 +147,16 @@ export const KAREN_NUMBER = {
 // The Intro tab's 3 sliders. Phones (Stitch look): one line each, and the 3 lines share
 // columns so the bars line up: name (x) | bar | number box.
 // Tablets and laptops: name + box, the bar under them, -10 / 10 under its ends.
-const INPUT_END = "hidden sm:block sideways:hidden sm:text-sm sm:leading-none sm:text-gray-600 sm:row-start-3"; // -10 and 10: not on phones (longer bar), and not on phones turned sideways (no room)
+// -10 and 10: not on phones (longer bar), and not on phones turned sideways (no room). On a narrow
+// tall tablet (640 to 833px) the tick box sits between them (see arrowInRow3), so they stay at the top.
+const INPUT_END = "hidden sm:block sideways:hidden sm:text-sm sm:leading-none sm:text-gray-600 sm:row-start-3 sm:max-[833px]:self-start";
 export const KAREN_INPUT = {
   // Phones: one grid with 3 columns. sm and up: side by side, as before.
-  // Phone turned sideways: less room on the left (36px), so the right input clears the bamboo basket
-  area: "shrink-0 grid grid-cols-[max-content_1fr_max-content] items-center gap-x-1.5 gap-y-2.5 px-3 py-3 sm:flex sm:flex-row sm:gap-2 sm:px-[72px] sideways:pl-9 sm:py-2",
-  // One value. Phones: one line using the area's columns. sm and up: 2 columns, 3 lines.
-  row: "col-span-3 grid grid-cols-subgrid items-center sm:flex-1 sm:min-w-0 sm:grid-cols-[1fr_auto] sm:gap-2 sm:p-3 sideways:py-1",
+  // Phone turned sideways: no bamboo there (see App.jsx), so no side space at all: the inputs get the whole width
+  area: "shrink-0 grid grid-cols-[max-content_1fr_max-content] items-center gap-x-1.5 gap-y-2.5 px-3 py-3 sm:flex sm:flex-row sm:gap-2 sm:px-[60px] lg:px-[72px] sideways:px-0 sm:py-2 sm:max-[833px]:items-start",
+  // One value. Phones: one line using the area's columns. sm and up: 2 columns, 3 lines. 640 to 1023px:
+  // only 4px at the sides (the bamboo already has its 72px in the area), so the 3 inputs get all the room they can.
+  row: "col-span-3 grid grid-cols-subgrid items-center sm:flex-1 sm:min-w-0 sm:grid-cols-[1fr_auto] sm:gap-2 sm:px-1 sm:py-3 lg:px-3 sideways:py-1",
   name: "flex items-center gap-1 whitespace-nowrap text-xs font-bold sm:text-base sm:col-start-1 sm:row-start-1",
   symbol: "text-xs text-stone-700 sm:hidden", // (x) (v) (a): phones only
   min: `${INPUT_END} sm:col-start-1`,
@@ -167,6 +170,11 @@ export const KAREN_INPUT = {
   // (v or a with a small arrow over it) in the value's color. The symbol is 24px high and sets the
   // row's height, so it is easy to tap.
   arrowToggle: "flex items-center gap-0.5 cursor-pointer",
+  // On the Intro tab the tick box is drawn twice and CSS shows one. Next to the name (phones, and
+  // laptops and wide tablets). Or, on a tall tablet 640 to 833px wide, where each column is too narrow
+  // to hold the name, the tick box and the number box in one line: in the third line, between -10 and 10.
+  arrowInName: "flex sm:max-[833px]:hidden",
+  arrowInRow3: "hidden sm:max-[833px]:block sm:max-[833px]:col-start-1 sm:max-[833px]:col-span-2 sm:max-[833px]:row-start-3 sm:max-[833px]:justify-self-center",
   arrowCheck: "w-4 h-4 cursor-pointer",
   arrowIcon: "w-[30px] h-6",
 };
