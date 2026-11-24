@@ -27,7 +27,7 @@ const PIN_ACTIONS = ["Pin A", "Pin B", "Clear pins"];
 // Chosen = solid red, light text. Not chosen = gold text on wood; a soft light patch on hover.
 function ModeOption({ value, label, icon, iconOff = "", title, hint, selectedMode, disabled, onModeChange }) {
   return (
-    <label title={title} className={`${KAREN_BAR.modeOption} has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[#FDE68A] ${
+    <label title={title} className={`${KAREN_BAR.modeOption} has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-(--bar-icon) ${
       selectedMode === value
         ? KAREN_BAR.modeOn
         : `${KAREN_BAR.modeOff} ${disabled ? "" : "hover:bg-white/15"}`
@@ -91,7 +91,8 @@ function Controls({
     // Clear Data, Reset All. The two groups below are "contents" there, so CSS order can move each
     // button; the order in this code stays the same. (App.jsx places the bar.)
     // Phone turned sideways: one row: mode, Formula, prev / play / next, Clear Data, Reset All.
-    <div className={`${KAREN_BAR.box} ${compact ? KAREN_BAR.compact : KAREN_BAR.roomy}`}>
+    // The colors follow the mode: gold and red in Record, light blue and blue in Playback (also when paused).
+    <div className={`${KAREN_BAR.box} ${compact ? KAREN_BAR.compact : KAREN_BAR.roomy} ${data.selectedMode === "playback" ? KAREN_BAR.playbackColors : KAREN_BAR.recordColors}`}>
         {/* Left group: Clear Data + Formula (laptops: one block, so the bar keeps its 3 parts) */}
         <div className="flex items-center gap-2 max-lg:contents">
           <button
@@ -108,7 +109,7 @@ function Controls({
             onClick={onFormulaClick}
             aria-pressed={formulaOpen}
             title="Type a position formula x(t)"
-            className={`${KAREN_BAR.word} ${KAREN_BAR.clear} ${KAREN_BAR.iconOnly} ${KAREN_BAR.iconSideways} max-lg:order-3 sideways:order-2 ${formulaOpen ? "ring-2 ring-[#FDE68A]" : ""}`}
+            className={`${KAREN_BAR.word} ${KAREN_BAR.clear} ${KAREN_BAR.iconOnly} ${KAREN_BAR.iconSideways} max-lg:order-3 sideways:order-2 ${formulaOpen ? "ring-2 ring-(--bar-icon)" : ""}`}
           >
             {/* Phones: only "ƒ", like Clear Data and Reset All (screen readers still hear "Formula") */}
             <FormulaIcon />

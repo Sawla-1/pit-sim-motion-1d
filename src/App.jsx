@@ -8,7 +8,7 @@ import Tabs from "./components/Tabs";
 import FormulaPanel from "./components/FormulaPanel";
 import InstallButton from "./components/InstallButton";
 import { SERIES_COLORS } from "./styles/seriesColors";
-import { KAREN_ART, KAREN_BACKDROP, KAREN_SCENE_FIT, KAREN_BANNER, KAREN_PAGE, KAREN_RULER, KAREN_SCENE_PLACEHOLDER, KAREN_TAB, KAREN_TIME, KAREN_TOP_ROW, KAREN_INPUT } from "./styles/karenStyles";
+import { KAREN_ART, KAREN_BACKDROP, KAREN_SCENE_FIT, KAREN_BANNER, KAREN_PAGE, KAREN_RULER, KAREN_SCENE_PLACEHOLDER, KAREN_TAB, KAREN_TIME, KAREN_TIME_EDGE, KAREN_TOP_ROW, KAREN_INPUT } from "./styles/karenStyles";
 import { useSimulationLoop } from "./hooks/useSimulationLoop";
 import { resolvePlaybackState } from "./engine/recordPlayback";
 import { calculatePhysicsStep, calculateDragStep } from "./engine/kinematics1d";
@@ -407,7 +407,7 @@ function App() {
               {isRecording ? "Recording" : "Playing back"}
             </span>
           )}
-          <div className={KAREN_TIME}>
+          <div className={`${KAREN_TIME} ${isRecording ? KAREN_TIME_EDGE.record : KAREN_TIME_EDGE.playback}`}>
             {playing && <span className="hidden max-lg:flex mr-1.5">{statusDot}</span>}
             {formatNumber(simulation.time, 1)} s
           </div>
