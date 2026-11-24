@@ -156,8 +156,8 @@ export const KAREN_INPUT = {
   area: "shrink-0 grid grid-cols-[max-content_1fr_max-content] items-center gap-x-1.5 gap-y-2.5 px-3 py-3 sm:flex sm:flex-row sm:gap-2 sm:px-[60px] lg:px-[72px] sideways:px-0 sm:py-2 sm:max-[833px]:items-start",
   // One value. Phones: one line using the area's columns. sm and up: 2 columns, 3 lines. 640 to 1023px:
   // only 4px at the sides (the bamboo already has its 72px in the area), so the 3 inputs get all the room they can.
-  row: "col-span-3 grid grid-cols-subgrid items-center sm:flex-1 sm:min-w-0 sm:grid-cols-[1fr_auto] sm:gap-2 sm:px-1 sm:py-3 lg:px-3 sideways:py-1",
-  name: "flex items-center gap-1 whitespace-nowrap text-xs font-bold sm:text-base sm:col-start-1 sm:row-start-1",
+  row: "col-span-3 grid grid-cols-subgrid items-center sm:flex-1 sm:min-w-0 sm:grid-cols-[1fr_auto] sm:gap-2 sm:max-[700px]:gap-x-1 sm:px-1 sm:py-3 lg:px-3 sideways:py-1",
+  name: "flex items-center gap-1 whitespace-nowrap text-xs font-bold sm:text-base sm:max-[700px]:text-sm sm:col-start-1 sm:row-start-1",
   symbol: "text-xs text-stone-700 sm:hidden", // (x) (v) (a): phones only
   min: `${INPUT_END} sm:col-start-1`,
   max: `${INPUT_END} sm:col-start-2 sm:justify-self-end`,
