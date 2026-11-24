@@ -153,6 +153,10 @@ export const KAREN_INPUT = {
   // Charts tab, phones only: one line above each chart. Each line is its own grid; a fixed
   // name column (it can still grow) and the fixed-width box make the 3 lines line up.
   chartLine: "w-full grid grid-cols-[minmax(6rem,max-content)_1fr_max-content] items-center gap-x-1.5 sm:hidden",
+  // The "show arrow" tick box (Velocity and Acceleration only): the box, then a small arrow in the value's color
+  arrowToggle: "flex items-center gap-0.5 cursor-pointer py-1",
+  arrowCheck: "w-4 h-4 cursor-pointer",
+  arrowIcon: "w-5 h-2.5",
 };
 
 export const KAREN_RULER = {

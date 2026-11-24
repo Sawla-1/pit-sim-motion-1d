@@ -44,6 +44,16 @@ const PIN_SCALE_BIG = 2; // a short ruler: the flag, letter, pole and dot are 2 
 const MAN_ASPECT = 30 / 44; // the boy art is 30 wide and 44 tall
 const MOVING_THRESHOLD = 0.1; // m/s; at or below this he stands
 
+// The velocity and acceleration arrows lie on the ruler and start at the man's feet, one over the
+// other. You can see through them, so both arrows and the ruler still show where they overlap.
+// Sizes are in world units, so they follow the ruler: 1 m/s (or 1 m/s²) is ARROW_LENGTH long
+// (10 is 40% of the ruler). With the phone look they are 2 times thicker, like the ruler.
+const ARROW_LENGTH = 0.8;
+const ARROW_LINE = 0.3; // how thick the line is
+const ARROW_TIP = 0.6; // how long and how wide the tip is
+const ARROW_SEE_THROUGH = 0.75; // fill opacity: 1 = solid
+const ARROW_OUTLINE = "#1f2937"; // thin dark edge, the same dark as the pins
+
 // How far the lowest part of the ruler (the bar or a long stick) reaches below the ground line
 const rulerLowest = (look) => Math.max(look.groundHeight / 2, look.tickDrop + look.tickLabeledHeight / 2);
 
@@ -81,12 +91,13 @@ function stopScrollOnTouch(element) {
 }
 
 // The scene (ruler, pins and the man) drawn with SVG. Props:
-// position, velocity = the man (meters, meters per second)
+// position, velocity, acceleration = the man (meters, meters per second, meters per second²)
+// arrows = { velocity, acceleration }: which arrows to show at his feet (true = shown)
 // pins = [{ name, position }], tall = Introduction size, look = the ruler colours
 // backdrop = the picture behind the scene, so the ground stands on it (see makeBackdropView)
 // canDrag = the man can be dragged (Record). Playback only looks, so a press on him does nothing.
 // onManDragStart / onManDragSample(meters) / onManDragEnd = the man being dragged
-function SimulationScene({ position, velocity, pins = [], tall, look: baseLook = DEFAULT_RULER, backdrop, canDrag, onManDragStart, onManDragSample, onManDragEnd }) {
+function SimulationScene({ position, velocity, acceleration, arrows, pins = [], tall, look: baseLook = DEFAULT_RULER, backdrop, canDrag, onManDragStart, onManDragSample, onManDragEnd }) {
   const ref = useRef(null);
   const drag = useRef(null); // while dragging: the scale from the moment of the press; null = not dragging
   const [size, setSize] = useState({ width: 0, height: 0, side: 0, manScale: 0, groundAtBottom: false, phoneLook: false, numbersLikeCharts: false, manPinsScale: 1, uprightRuler: 0, fillRoom: false });
@@ -273,6 +284,36 @@ function SimulationScene({ position, velocity, pins = [], tall, look: baseLook =
     );
   };
 
+  // One arrow on the ruler: it starts at the man's feet and points right for + and left for -.
+  // No arrow for 0. A short arrow gets a smaller tip (at most half its length), so it still looks
+  // like an arrow. Drawn as one shape: along the line, round the tip, and back along the line.
+  const arrow = (value, color) => {
+    if (value === 0) return null;
+    const direction = Math.sign(value);
+    const startX = toWorldX(position);
+    const tipX = startX + value * ARROW_LENGTH;
+    const thick = compact ? RULER_SCALE_BIG : 1; // the phone look: 2 times thicker, like the ruler
+    const tip = Math.min(ARROW_TIP * thick, Math.abs(tipX - startX) / 2); // the tip is as wide as it is long
+    const neckX = tipX - direction * tip; // where the line meets the tip
+    const line = Math.min(ARROW_LINE * thick, tip / 2) / 2; // half the line's thickness
+    const half = tip / 2; // half the tip's width
+    const y = GROUND_Y;
+    const corners = [
+      [startX, y + line], [neckX, y + line], [neckX, y + half], [tipX, y],
+      [neckX, y - half], [neckX, y - line], [startX, y - line],
+    ];
+    return (
+      <polygon
+        points={corners.map(([x, cornerY]) => `${view.toX(x)},${view.toY(cornerY)}`).join(" ")}
+        fill={color}
+        fillOpacity={ARROW_SEE_THROUGH}
+        stroke={ARROW_OUTLINE}
+        strokeWidth={1}
+        strokeLinejoin="round"
+      />
+    );
+  };
+
   return (
     <svg ref={ref} width="100%" height="100%" className="block rounded-[inherit] select-none">
       {view && (
@@ -377,6 +418,13 @@ function SimulationScene({ position, velocity, pins = [], tall, look: baseLook =
           >
             {manPicture(KAREN_ART.boyStanding, isStanding, false)}
             {manPicture(KAREN_ART.boyWalking, !isStanding, velocity <= 0)}
+          </g>
+
+          {/* The arrows at his feet, in front of him (a big man on a phone would hide a short arrow):
+              velocity, then acceleration over it. A press goes through them to the man. */}
+          <g pointerEvents="none">
+            {arrows?.velocity && arrow(velocity, SERIES_COLORS.velocity.color)}
+            {arrows?.acceleration && arrow(acceleration, SERIES_COLORS.acceleration.color)}
           </g>
 
           {/* The pins' dots on the ground, in front of the bar: dark ring, white middle (like the chart's) */}
