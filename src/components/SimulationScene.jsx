@@ -26,6 +26,9 @@ const DEFAULT_RULER = {
   zero: "#ff4444", zeroTick: "#ff4444", label: "#2d5016", outline: null,
   edgeMark: SERIES_COLORS.position.color, // the end marks when the ruler grows past 10 m: same blue as the Position chart, so it is not mistaken for a normal ruler number
 };
+// The same ruler on phones and tablets (the phone look): 2 times thicker, the sticks across the
+// line instead of hanging below it, and the numbers lower by as much as the bar grew
+const DEFAULT_RULER_PHONE = { ...DEFAULT_RULER, groundHeight: 0.2, tickDrop: 0, tickHeight: 0.3, tickLabeledHeight: 0.6, labelDrop: 0.35 };
 
 // The thin dark edge is a little bigger than the bar, all round (world units)
 const EDGE_EXTRA_WIDTH = 0.06;
@@ -56,29 +59,6 @@ const ARROW_OUTLINE = "#1f2937"; // thin dark edge, the same dark as the pins
 const ARROW_MIN_PX = 30; // the shortest arrow on screen (pixels), so a small value still shows its way
 const ARROW_ZERO = 0.005; // below this the number box shows 0 (2 decimals), so there is no arrow
 
-// How far the lowest part of the ruler (the bar or a long stick) reaches below the ground line
-const rulerLowest = (look) => Math.max(look.groundHeight / 2, look.tickDrop + look.tickLabeledHeight / 2);
-
-// The same ruler look with the sticks across the line (like the bamboo joints) instead of hanging
-// below it: the numbers move up by as much as the sticks did
-function sticksAcrossLine(look) {
-  const across = { ...look, tickDrop: 0 };
-  return { ...across, labelDrop: look.labelDrop + rulerLowest(across) - rulerLowest(look) };
-}
-
-// The same ruler look, `scale` times thicker: the bar and the sticks grow, and the numbers move
-// down by as much as the lowest part did, so they keep the same gap
-function thickerRuler(look, scale) {
-  const thick = {
-    ...look,
-    groundHeight: look.groundHeight * scale,
-    tickHeight: look.tickHeight * scale,
-    tickLabeledHeight: look.tickLabeledHeight * scale,
-    tickDrop: look.tickDrop * scale,
-  };
-  return { ...thick, labelDrop: look.labelDrop + rulerLowest(thick) - rulerLowest(look) };
-}
-
 // Phones: a finger that starts on the man must drag him, not scroll the page (only while he can
 // be dragged; in Playback a swipe on him scrolls the page as anywhere else). Chrome ignores
 // `touch-action` on parts of an SVG, so the scroll is stopped in touchstart. It must be a real
@@ -96,10 +76,11 @@ function stopScrollOnTouch(element) {
 // position, velocity, acceleration = the man (meters, meters per second, meters per second²)
 // arrows = { velocity, acceleration }: which arrows to show at his feet (true = shown)
 // pins = [{ name, position }], tall = Introduction size, look = the ruler colours
+// phoneRuler = the same ruler for the phone look (give it whenever you give `look`)
 // backdrop = the picture behind the scene, so the ground stands on it (see makeBackdropView)
 // canDrag = the man can be dragged (Record). Playback only looks, so a press on him does nothing.
 // onManDragStart / onManDragSample(meters) / onManDragEnd = the man being dragged
-function SimulationScene({ position, velocity, acceleration, arrows, pins = [], tall, look: baseLook = DEFAULT_RULER, backdrop, canDrag, onManDragStart, onManDragSample, onManDragEnd }) {
+function SimulationScene({ position, velocity, acceleration, arrows, pins = [], tall, look: baseLook = DEFAULT_RULER, phoneRuler = DEFAULT_RULER_PHONE, backdrop, canDrag, onManDragStart, onManDragSample, onManDragEnd }) {
   const ref = useRef(null);
   const drag = useRef(null); // while dragging: the scale from the moment of the press; null = not dragging
   const [size, setSize] = useState({ width: 0, height: 0, side: 0, manScale: 0, groundAtBottom: false, phoneLook: false, numbersLikeCharts: false, manPinsScale: 1, uprightRuler: 0, fillRoom: false });
@@ -140,7 +121,7 @@ function SimulationScene({ position, velocity, acceleration, arrows, pins = [], 
   const wantPinScale = compact ? PIN_SCALE_BIG : 1;
   const wantPins = wantPole + PIN_FLAG_HEIGHT * wantPinScale; // a whole pin: pole and flag
   const wantMan = compact && !tall ? wantPins : wantPole; // Charts with the phone look: as tall as a whole pin
-  const look = compact ? thickerRuler(sticksAcrossLine(baseLook), RULER_SCALE_BIG) : baseLook;
+  const look = compact ? phoneRuler : baseLook;
   const fit = {
     labelMinPx: compact ? LABEL_MIN_PX_BIG : undefined,
     labelMaxPx: compact ? LABEL_MAX_PX_BIG : undefined,

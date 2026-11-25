@@ -212,3 +212,5 @@ export const KAREN_RULER = {
   label: "#FFFFFF",
   outline: "#1F3A0C", // dark edge, so the numbers stand out on any grass
 };
+// The same ruler on phones and tablets (SimulationScene's phone look): 2 times thicker, numbers lower
+export const KAREN_RULER_PHONE = { ...KAREN_RULER, groundHeight: 0.48, tickHeight: 0.48, tickLabeledHeight: 0.48, labelDrop: 0.32 };
