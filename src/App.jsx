@@ -8,7 +8,7 @@ import Tabs from "./components/Tabs";
 import FormulaPanel from "./components/FormulaPanel";
 import InstallButton from "./components/InstallButton";
 import { SERIES_COLORS } from "./styles/seriesColors";
-import { KAREN_ART, KAREN_BACKDROP, KAREN_SCENE_FIT, KAREN_BANNER, KAREN_PAGE, KAREN_RULER, KAREN_SCENE_PLACEHOLDER, KAREN_TAB, KAREN_TIME, KAREN_TIME_EDGE, KAREN_TOP_ROW, KAREN_INPUT, KAREN_CHARTS_STRIP, KAREN_GLOW } from "./styles/karenStyles";
+import { KAREN_ART, KAREN_BACKDROP, KAREN_SCENE_FIT, KAREN_BANNER, KAREN_PAGE, KAREN_RULER, KAREN_RULER_PHONE, KAREN_SCENE_PLACEHOLDER, KAREN_TAB, KAREN_TIME, KAREN_TIME_EDGE, KAREN_TOP_ROW, KAREN_INPUT, KAREN_CHARTS_STRIP, KAREN_GLOW } from "./styles/karenStyles";
 import { useSimulationLoop } from "./hooks/useSimulationLoop";
 import { resolvePlaybackState } from "./engine/recordPlayback";
 import { calculatePhysicsStep, calculateDragStep } from "./engine/kinematics1d";
@@ -396,6 +396,7 @@ function App() {
             pins={isCharts ? pins : []}
             tall={!isCharts}
             look={isCharts ? undefined : KAREN_RULER}
+            phoneRuler={isCharts ? undefined : KAREN_RULER_PHONE}
             backdrop={isCharts ? undefined : KAREN_BACKDROP}
             canDrag={isRecording}
             onManDragStart={handleManDragStart}
