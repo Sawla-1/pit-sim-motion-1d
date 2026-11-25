@@ -337,7 +337,7 @@ function App() {
   };
 
   return (
-    <div className={`relative min-h-svh lg:h-svh w-full flex flex-col box-border ${KAREN_PAGE.bg} text-gray-800 overflow-x-clip`}>
+    <div className={`relative min-h-dvh lg:h-dvh w-full flex flex-col box-border ${KAREN_PAGE.bg} text-gray-800 overflow-x-clip`}>
       {/* Introduction only: bamboo down both sides of the whole page (hidden on phones, also turned sideways: no room) */}
       {!isCharts && (
         <>
