@@ -181,6 +181,8 @@ export const KAREN_INPUT = {
   arrowInRow3: "hidden sm:max-[833px]:block sm:max-[833px]:col-start-1 sm:max-[833px]:col-span-2 sm:max-[833px]:row-start-3 sm:max-[833px]:justify-self-center",
   arrowCheck: "w-4 h-4 cursor-pointer",
   arrowIcon: "w-[30px] h-6",
+  // The slider knob in Playback: grey, because the slider can't move there
+  lockedKnob: "#A8A29E",
 };
 
 export const KAREN_RULER = {
