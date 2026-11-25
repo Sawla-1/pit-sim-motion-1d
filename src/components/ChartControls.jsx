@@ -130,10 +130,9 @@ export function ChartPanel({
 }) {
   if (!visible) {
     return (
-      // Hidden chart: its input hides too; one slim line with a round
-      // white "show" button (light grey on hover)
-      <div className="flex items-center justify-end gap-3 pr-16 py-1 text-lg font-semibold text-gray-700">
-        {label}
+      // Hidden chart: its input hides too; one slim line at the left (like the ✖): a round
+      // white "show" button (light grey on hover), then the chart's name
+      <div className="flex items-center gap-3 py-1 text-lg font-semibold text-gray-700">
         <button
           type="button"
           onClick={onShow}
@@ -147,6 +146,7 @@ export function ChartPanel({
             <line x1="5" y1="12" x2="19" y2="12" />
           </svg>
         </button>
+        {label}
       </div>
     );
   }
