@@ -151,6 +151,19 @@ export function ChartPanel({
     );
   }
 
+  // The hide button (✖). Drawn in two spots; CSS shows one: beside the chart's name on bigger
+  // screens (in line with the ⊕ buttons), or at the chart's top-left on phones held upright.
+  const hideButton = (where) => (
+    <button
+      type="button"
+      aria-label={`Hide ${label} chart`}
+      onClick={onHide}
+      className={`${where} absolute z-10 w-6 h-6 rounded bg-[#E31E24] text-white text-xs font-bold cursor-pointer`}
+    >
+      ✖
+    </button>
+  );
+
   return (
     // One row: input on the left, chart on the right (phones: input on top).
     // Phones: fixed chart heights. Tablets held upright: at least those heights, and the rows
@@ -172,20 +185,17 @@ export function ChartPanel({
       isLast ? "tablet-upright:flex-[1_0_216px]" : "tablet-upright:flex-[1_0_170px]"
     }`}>
       {/* Bottom row: 18px under the input, so its slider ends where the plot ends */}
-      <div className={`flex ${isBottom ? "sm:pb-[18px]" : ""}`}>{input}</div>
+      <div className={`relative flex ${isBottom ? "sm:pb-[18px]" : ""}`}>
+        {/* Bigger screens: beside the name (PhysicsInput leaves 32px for it, top 12px / short screens 6px) */}
+        {hideButton("hidden sm:block left-0 top-3 [@media(max-height:600px)]:top-1.5")}
+        {input}
+      </div>
       <div className={`relative flex-1 min-w-0 pt-0.5 pb-0.5 pr-12 max-lg:pr-14 ${
         isBottom ? "h-[172px] sm:h-auto" : "h-[126px] sm:h-auto"
       }`}>
-        {/* Hide button: top-left, beside the top y-axis number, outside the plot,
-            so it is not in the way of a finger dragging on the chart */}
-        <button
-          type="button"
-          aria-label={`Hide ${label} chart`}
-          onClick={onHide}
-          className="absolute top-0.5 left-0 z-10 w-6 h-6 rounded bg-[#E31E24] text-white text-xs font-bold cursor-pointer"
-        >
-          ✖
-        </button>
+        {/* Phones held upright: top-left of the chart, beside the top y-axis number (outside the
+            plot, so it is not in the way of a finger dragging on the chart) */}
+        {hideButton("sm:hidden top-0.5 left-0")}
         {scrubHint && <ScrubHint />}
         {/* Right edge: y pan + zoom pills (reset is inside the zoom pill).
             Bottom chart only: the time pills below, then one pill under both

@@ -132,7 +132,8 @@ function PhysicsInput({ id, label, symbol, unit, value, min, max, color, disable
       <div className="w-[184px] shrink-0 hidden sm:flex gap-2.5 py-3 [@media(max-height:600px)]:py-1.5">
         {/* flex-1 + min-w-0: same width in every row, so all 3 sliders line up */}
         <div className="flex-1 min-w-0 flex flex-col items-start gap-2 [@media(max-height:600px)]:gap-1.5">
-          {nameLabel}
+          {/* pl-8: room for the chart's hide button (ChartPanel draws it there) */}
+          <div className="pl-8">{nameLabel}</div>
           <div className="self-end">{numberBox(id)}</div>
           {arrowToggle && <div className="self-end">{arrowToggle}</div>}
         </div>
