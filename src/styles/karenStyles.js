@@ -36,6 +36,10 @@ export const KAREN_SCENE_FIT = "[--side:8px] sm:[--side:72px] sideways:[--side:4
 export const KAREN_SCENE_PLACEHOLDER =
   "bg-[linear-gradient(to_bottom,#5E9ED6_0%,#D6E9EF_55%,#6E9E48_62%,#46703A_100%)]";
 
+// The Charts tab's top strip (the short scene with the boy): cream in Record, light blue in
+// Playback, so blue only ever means Playback.
+export const KAREN_CHARTS_STRIP = { record: "bg-[#F3EBDD]", playback: "bg-blue-50" };
+
 // The two view tabs (Stitch look): the open tab is red, the other is light yellow.
 // They hang from the scene's top-left corner, so their bottom corners are round.
 export const KAREN_TAB = {
@@ -120,6 +124,15 @@ export const KAREN_BAR = {
 // use the same blues and reds (Tailwind needs them written out in full there), and the charts' "now" band uses these.
 export const MODE_COLORS = { record: "#B4262D", playback: "#2563EB" };
 
+// The scene's edge glow (index.css: .karen-flash, .karen-pulse), in the MODE_COLORS as "r g b".
+// pointer-events-none: taps go through it to the boy and the scene.
+export const KAREN_GLOW = {
+  flash: "karen-flash absolute inset-0 rounded-[inherit] pointer-events-none",
+  pulse: "karen-pulse absolute inset-0 rounded-[inherit] pointer-events-none",
+  record: "[--glow:180_38_45]", // #B4262D
+  playback: "[--glow:37_99_235]", // #2563EB
+};
+
 // The row across the top of the scene: the mode badge and the time box. The time box is at the right
 // end on every screen (the tabs are at the top-left). Taps go through it to the scene and the tabs.
 export const KAREN_TOP_ROW = "absolute top-2 inset-x-2 z-10 flex items-center justify-end gap-3 pointer-events-none";
@@ -177,6 +190,8 @@ export const KAREN_INPUT = {
   arrowInRow3: "hidden sm:max-[833px]:block sm:max-[833px]:col-start-1 sm:max-[833px]:col-span-2 sm:max-[833px]:row-start-3 sm:max-[833px]:justify-self-center",
   arrowCheck: "w-4 h-4 cursor-pointer",
   arrowIcon: "w-[30px] h-6",
+  // The slider knob in Playback: grey, because the slider can't move there
+  lockedKnob: "#A8A29E",
 };
 
 export const KAREN_RULER = {

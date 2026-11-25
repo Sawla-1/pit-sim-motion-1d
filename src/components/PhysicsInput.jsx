@@ -94,9 +94,9 @@ function PhysicsInput({ id, label, symbol, unit, value, min, max, color, disable
       disabled={disabled || readOnly}
       aria-label={`${label} slider`}
       onChange={(e) => onChange(Number(e.target.value))}
-      // Read-only: locked but not greyed (it still shows the value). Disabled: greyed.
+      // Read-only (Playback): locked, with a grey knob (it still shows the value). Disabled: greyed.
       className={`${className} ${readOnly ? "cursor-default" : "disabled:opacity-50 disabled:cursor-not-allowed"}`}
-      style={{ color }}
+      style={{ color: readOnly ? KAREN_INPUT.lockedKnob : color }}
     />
   );
 
