@@ -6,6 +6,7 @@ export const KAREN_ART = {
   bambooLeft: `${ART}/bamboo-left.svg`,
   bambooRight: `${ART}/bamboo-right.svg`,
   titleBanner: `${ART}/title-banner.svg`,
+  titleBannerPhone: `${ART}/title-banner-phone.svg`, // phones held upright: the same sign on long ropes
   bottomStrip: `${ART}/bottom-background.svg`,
   drum: `${ART}/drum-horns-empty.svg`, // the drum without its ▶: our Play/Pause icon goes on top
   boyStanding: `${ART}/boy-standing.svg`,
@@ -58,9 +59,10 @@ export const KAREN_INSTALL = {
   hint: "absolute right-0 top-full mt-2 z-30 w-56 rounded-md border border-[#78350F]/30 bg-[#EBD9BC] px-3 py-2 text-sm text-[#3B2A14] shadow-lg",
 };
 
-// The hanging title sign: its ropes start at the top edge of the scene, centered (Introduction only; hidden on phones).
+// The hanging title sign: its ropes start at the top edge of the scene, centered (Introduction only).
 // Short laptop screens: 200px. Tablets and phones turned sideways: 150px, so it stays clear of the Install button.
-export const KAREN_BANNER = "absolute top-0 left-1/2 -translate-x-1/2 hidden sm:block w-[300px] h-[88px] lg:[@media(max-height:600px)]:w-[200px] lg:[@media(max-height:600px)]:h-[59px] max-lg:w-[150px] max-lg:h-[44px] pointer-events-none";
+// Phones held upright: 200px wide on long ropes (title-banner-phone.svg), hanging in the sky under the tabs.
+export const KAREN_BANNER = "absolute top-0 left-1/2 -translate-x-1/2 w-[300px] h-[88px] lg:[@media(max-height:600px)]:w-[200px] lg:[@media(max-height:600px)]:h-[59px] max-lg:w-[150px] max-lg:h-[44px] max-sm:w-[200px] max-sm:h-[115px] pointer-events-none";
 
 // The page behind everything under the scene: light cream, with the rice-field strip along the bottom
 export const KAREN_PAGE = {

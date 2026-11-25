@@ -380,7 +380,11 @@ function App() {
         {!isCharts && (
           <>
             <img src={KAREN_ART.scene} alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover object-bottom rounded-[inherit]" />
-            <img src={KAREN_ART.titleBanner} alt="Karen" className={KAREN_BANNER} />
+            {/* Phones held upright: the same sign on long ropes (the browser picks the picture by screen width) */}
+            <picture>
+              <source media="(max-width: 639.98px)" srcSet={KAREN_ART.titleBannerPhone} />
+              <img src={KAREN_ART.titleBanner} alt="Karen" className={KAREN_BANNER} />
+            </picture>
           </>
         )}
         {/* Fills the scene box. Charts on phones/tablets: below the 32px strip with the tabs.
