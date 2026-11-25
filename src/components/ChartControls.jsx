@@ -176,13 +176,13 @@ export function ChartPanel({
       <div className={`relative flex-1 min-w-0 pt-0.5 pb-0.5 pr-12 max-lg:pr-14 ${
         isBottom ? "h-[172px] sm:h-auto" : "h-[126px] sm:h-auto"
       }`}>
-        {/* Hide button: inside the plot's top-right corner
-            (48px button column + 16px chart padding + 4px gap) */}
+        {/* Hide button: top-left, beside the top y-axis number, outside the plot,
+            so it is not in the way of a finger dragging on the chart */}
         <button
           type="button"
           aria-label={`Hide ${label} chart`}
           onClick={onHide}
-          className="absolute top-[14px] right-[68px] max-lg:right-[76px] z-10 w-6 h-6 rounded bg-[#E31E24] text-white text-xs font-bold cursor-pointer"
+          className="absolute top-0.5 left-0 z-10 w-6 h-6 rounded bg-[#E31E24] text-white text-xs font-bold cursor-pointer"
         >
           ✖
         </button>
