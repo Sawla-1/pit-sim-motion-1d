@@ -39,7 +39,7 @@ function SvgChart({ points, color, xMin, xMax, yMin, yMax, showXNumbers, label, 
 
   // Layout: the plot rectangle is left..right, top..bottom
   const narrow = size.width < 500;
-  const left = narrow ? 56 : 70; // y numbers; a fixed width so all 3 plots line up
+  const left = narrow ? 74 : 70; // y numbers (phones: and the hide button beside the top one, up to "-9,999"); a fixed width so all 3 plots line up
   const right = size.width - RIGHT;
   const top = TOP;
   const bottom = size.height - (showXNumbers ? 26 : 8);
