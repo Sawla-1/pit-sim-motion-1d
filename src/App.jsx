@@ -8,7 +8,7 @@ import Tabs from "./components/Tabs";
 import FormulaPanel from "./components/FormulaPanel";
 import InstallButton from "./components/InstallButton";
 import { SERIES_COLORS } from "./styles/seriesColors";
-import { KAREN_ART, KAREN_BACKDROP, KAREN_SCENE_FIT, KAREN_BANNER, KAREN_PAGE, KAREN_RULER, KAREN_SCENE_PLACEHOLDER, KAREN_TAB, KAREN_TIME, KAREN_TIME_EDGE, KAREN_TOP_ROW, KAREN_INPUT, KAREN_CHARTS_STRIP } from "./styles/karenStyles";
+import { KAREN_ART, KAREN_BACKDROP, KAREN_SCENE_FIT, KAREN_BANNER, KAREN_PAGE, KAREN_RULER, KAREN_SCENE_PLACEHOLDER, KAREN_TAB, KAREN_TIME, KAREN_TIME_EDGE, KAREN_TOP_ROW, KAREN_INPUT, KAREN_CHARTS_STRIP, KAREN_GLOW } from "./styles/karenStyles";
 import { useSimulationLoop } from "./hooks/useSimulationLoop";
 import { resolvePlaybackState } from "./engine/recordPlayback";
 import { calculatePhysicsStep, calculateDragStep } from "./engine/kinematics1d";
@@ -54,6 +54,8 @@ function App() {
   const [scrubTried, setScrubTried] = useState(false);
   // Which arrows are shown over the man: { velocity, acceleration } (true = shown)
   const [arrows, setArrows] = useState(NO_ARROWS);
+  // How many times the mode was switched: each switch starts the scene's flash again (KAREN_GLOW)
+  const [modeSwitches, setModeSwitches] = useState(0);
 
   // Data and mode state
   const [data, setData] = useState({
@@ -204,6 +206,7 @@ function App() {
   // Switch between Record and Playback modes
   const switchMode = (mode) => {
     stopAll();
+    setModeSwitches((n) => n + 1);
     setData((prev) => ({ ...prev, selectedMode: mode }));
     if (mode === "playback") setPlaybackTried(true);
     // Playback starts at the first recorded point. Record continues from the last.
@@ -322,6 +325,7 @@ function App() {
       }`} />
     </span>
   );
+  const glowColor = isRecording ? KAREN_GLOW.record : KAREN_GLOW.playback;
 
   // The panel's message line (an error, if any, is shown first by the panel)
   const formulaStatus = () => {
@@ -399,6 +403,11 @@ function App() {
             onManDragEnd={handleManDragEnd}
           />
         </div>
+
+        {/* The scene's edge glows in the mode's color: a slow pulse while it runs, and one flash after
+            each mode switch (a new key = a new flash). Under the time box, the tabs and the bamboo. */}
+        {playing && <div className={`${KAREN_GLOW.pulse} ${glowColor}`} />}
+        {modeSwitches > 0 && <div key={modeSwitches} className={`${KAREN_GLOW.flash} ${glowColor}`} />}
 
         {/* The top row: the mode badge (only while playing) and the time box at the right end */}
         <div className={KAREN_TOP_ROW}>

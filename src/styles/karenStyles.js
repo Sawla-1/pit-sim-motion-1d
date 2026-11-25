@@ -124,6 +124,15 @@ export const KAREN_BAR = {
 // use the same blues and reds (Tailwind needs them written out in full there), and the charts' "now" band uses these.
 export const MODE_COLORS = { record: "#B4262D", playback: "#2563EB" };
 
+// The scene's edge glow (index.css: .karen-flash, .karen-pulse), in the MODE_COLORS as "r g b".
+// pointer-events-none: taps go through it to the boy and the scene.
+export const KAREN_GLOW = {
+  flash: "karen-flash absolute inset-0 rounded-[inherit] pointer-events-none",
+  pulse: "karen-pulse absolute inset-0 rounded-[inherit] pointer-events-none",
+  record: "[--glow:180_38_45]", // #B4262D
+  playback: "[--glow:37_99_235]", // #2563EB
+};
+
 // The row across the top of the scene: the mode badge and the time box. The time box is at the right
 // end on every screen (the tabs are at the top-left). Taps go through it to the scene and the tabs.
 export const KAREN_TOP_ROW = "absolute top-2 inset-x-2 z-10 flex items-center justify-end gap-3 pointer-events-none";

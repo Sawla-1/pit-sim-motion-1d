@@ -30,6 +30,26 @@ body {
   box-shadow: inset 0 2px 5px rgba(54, 28, 12, 0.35);
 }
 
+/* The scene's edge glow (KAREN_GLOW). --glow = the color as "r g b": red in Record, blue in Playback */
+/* A mode switch: one half-second flash */
+.karen-flash {
+  opacity: 0;
+  box-shadow: inset 0 0 0 4px rgb(var(--glow) / 0.95), inset 0 0 70px 18px rgb(var(--glow) / 0.45);
+  animation: karen-flash 0.5s ease-out;
+}
+@keyframes karen-flash { from { opacity: 1; } to { opacity: 0; } }
+/* Recording or playing back: a softer glow that pulses strong, soft, strong every 2 s */
+.karen-pulse {
+  box-shadow: inset 0 0 0 3px rgb(var(--glow) / 0.85), inset 0 0 45px 8px rgb(var(--glow) / 0.35);
+  animation: karen-pulse 2s ease-in-out infinite;
+}
+@keyframes karen-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+/* Less motion: no flash, and a steady glow instead of the pulse */
+@media (prefers-reduced-motion: reduce) {
+  .karen-flash { animation: none; }
+  .karen-pulse { animation: none; opacity: 0.8; }
+}
+
 /* Vertical slider: max at the top (rtl flips it). Handle uses the text color. */
 input[type="range"].vslider {
   appearance: none;
