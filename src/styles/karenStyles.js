@@ -36,6 +36,10 @@ export const KAREN_SCENE_FIT = "[--side:8px] sm:[--side:72px] sideways:[--side:4
 export const KAREN_SCENE_PLACEHOLDER =
   "bg-[linear-gradient(to_bottom,#5E9ED6_0%,#D6E9EF_55%,#6E9E48_62%,#46703A_100%)]";
 
+// The Charts tab's top strip (the short scene with the boy): cream in Record, light blue in
+// Playback, so blue only ever means Playback.
+export const KAREN_CHARTS_STRIP = { record: "bg-[#F3EBDD]", playback: "bg-blue-50" };
+
 // The two view tabs (Stitch look): the open tab is red, the other is light yellow.
 // They hang from the scene's top-left corner, so their bottom corners are round.
 export const KAREN_TAB = {

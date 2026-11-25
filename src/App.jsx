@@ -8,7 +8,7 @@ import Tabs from "./components/Tabs";
 import FormulaPanel from "./components/FormulaPanel";
 import InstallButton from "./components/InstallButton";
 import { SERIES_COLORS } from "./styles/seriesColors";
-import { KAREN_ART, KAREN_BACKDROP, KAREN_SCENE_FIT, KAREN_BANNER, KAREN_PAGE, KAREN_RULER, KAREN_SCENE_PLACEHOLDER, KAREN_TAB, KAREN_TIME, KAREN_TIME_EDGE, KAREN_TOP_ROW, KAREN_INPUT } from "./styles/karenStyles";
+import { KAREN_ART, KAREN_BACKDROP, KAREN_SCENE_FIT, KAREN_BANNER, KAREN_PAGE, KAREN_RULER, KAREN_SCENE_PLACEHOLDER, KAREN_TAB, KAREN_TIME, KAREN_TIME_EDGE, KAREN_TOP_ROW, KAREN_INPUT, KAREN_CHARTS_STRIP } from "./styles/karenStyles";
 import { useSimulationLoop } from "./hooks/useSimulationLoop";
 import { resolvePlaybackState } from "./engine/recordPlayback";
 import { calculatePhysicsStep, calculateDragStep } from "./engine/kinematics1d";
@@ -368,7 +368,8 @@ function App() {
             // 1024px tablets turned sideways: 153px, so the boy and the pins (they fill the room above
             // the ruler) come out at 3/4 size, with no empty space above them.
             // Tablets held upright: it also grows (from 188px) into the free space.
-            ? "bg-blue-50 h-[125px] [@media(max-height:600px)]:h-[112px] tablet:h-[188px] tablet-1024:h-[153px] tablet-upright:flex-[1_0_auto] box-content max-lg:pt-8 tablet:pt-11"
+            // Its color follows the mode (KAREN_CHARTS_STRIP).
+            ? `${isRecording ? KAREN_CHARTS_STRIP.record : KAREN_CHARTS_STRIP.playback} h-[125px] [@media(max-height:600px)]:h-[112px] tablet:h-[188px] tablet-1024:h-[153px] tablet-upright:flex-[1_0_auto] box-content max-lg:pt-8 tablet:pt-11`
             : `${KAREN_SCENE_PLACEHOLDER} flex-1 min-h-0`
         }`}>
         {/* Introduction only: the scene picture, and the hanging title sign at the top (behind the boy) */}
