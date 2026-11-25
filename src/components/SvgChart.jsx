@@ -17,10 +17,11 @@ const Y_NUMBERS = new Intl.NumberFormat(undefined, { maximumFractionDigits: 1 })
 // "position" or "velocity" (so simulation #2 can use it too).
 // points = [{ x, y }, ...] sorted by x.
 // nowX = where to draw the "now" band (data units, or leave out for none). nowColor = its color.
+// fadeAfterNow = the line is light after nowX and strong up to it (needs nowX).
 // pins = [{ name, x, y, text }] in data units; `text` is the label's words.
 // onScrub(xValue) = called with the x under the pointer while it is pressed
 // and dragged. Leave it out and the chart can't be dragged.
-function SvgChart({ points, color, xMin, xMax, yMin, yMax, showXNumbers, label, nowX, nowColor = "#f59e0b", pins = [], onScrub }) {
+function SvgChart({ points, color, xMin, xMax, yMin, yMax, showXNumbers, label, nowX, nowColor = "#f59e0b", fadeAfterNow = false, pins = [], onScrub }) {
   const ref = useRef(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
   const [hover, setHover] = useState(null); // the point under the pointer, in pixels
@@ -56,6 +57,9 @@ function SvgChart({ points, color, xMin, xMax, yMin, yMax, showXNumbers, label, 
     if (!ready) return "";
     return toPath(decimateMinMax(points, xMin, xEnd, right - left), toX, toY);
   }, [ready, points, xMin, xEnd, left, right, toX, toY]);
+
+  // The data line's look (drawn twice when fadeAfterNow)
+  const line = { d: path, transform: "scale(0.1)", fill: "none", stroke: color, strokeWidth: "30", strokeLinejoin: "round", pointerEvents: "none" };
 
   const xTicks = ready ? makeTicks(xMin, xEnd, Math.max(1, Math.floor((right - left) / 50))) : [];
   const yTicks = evenTicks(yMin, yMax, 5);
@@ -133,11 +137,22 @@ function SvgChart({ points, color, xMin, xMax, yMin, yMax, showXNumbers, label, 
           <clipPath id={clipId}>
             <rect x={left} y={top} width={right - left} height={bottom - top} />
           </clipPath>
+          {/* fadeAfterNow: a second cut that ends at "now" (0 wide when "now" is left of the plot) */}
+          {fadeAfterNow && (
+            <clipPath id={`${clipId}-past`}>
+              <rect x={left} y={top} width={Math.max(0, toX(nowX) - left)} height={bottom - top} />
+            </clipPath>
+          )}
           <g clipPath={`url(#${clipId})`}>
             {/* the path is in tenths of a pixel (see toPath): scale(0.1) puts it back; 30 × 0.1 = a 3 px line.
                 pointerEvents none: hover and scrub are handled by the svg, so the browser needn't hit-test the line */}
-            <path d={path} transform="scale(0.1)" fill="none" stroke={color} strokeWidth="30" strokeLinejoin="round"
-              pointerEvents="none" />
+            <path {...line} opacity={fadeAfterNow ? 0.25 : 1} />
+            {/* fadeAfterNow: the same line again, strong, but only up to "now" */}
+            {fadeAfterNow && (
+              <g clipPath={`url(#${clipId}-past)`}>
+                <path {...line} />
+              </g>
+            )}
 
             {/* "now" band: see-through, 8px wide, dashed edges (orange unless nowColor says otherwise) */}
             {nowX != null && (

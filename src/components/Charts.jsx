@@ -142,6 +142,7 @@ function Charts({ charts, data, simulation, pins, onSeek, showScrubHint, inputs 
                 showXNumbers={isBottom}
                 nowX={simulation.time}
                 nowColor={isPlayback ? MODE_COLORS.playback : MODE_COLORS.record}
+                fadeAfterNow={isPlayback}
                 pins={pins.map((pin) => ({
                   name: pin.name,
                   x: pin.time,
